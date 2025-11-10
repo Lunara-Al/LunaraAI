@@ -22,7 +22,7 @@ export default function Home() {
   const [length, setLength] = useState(10);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string; length: number; aspectRatio: string; style?: string }>({
     mutationFn: async (data) => {
@@ -175,7 +175,7 @@ export default function Home() {
                 Length
               </Label>
               <div className="flex gap-2">
-                {[5, 10, 15].map((len) => (
+                {[5, 10].map((len) => (
                   <Button
                     key={len}
                     type="button"
