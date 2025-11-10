@@ -28,6 +28,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete video generation
+  app.delete("/api/history/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        const errorResponse: ErrorResponse = {
+          error: "Invalid ID",
+          message: "Video ID must be a number"
+        };
+        return res.status(400).json(errorResponse);
+      }
+
+      const deleted = await storage.deleteVideoGeneration(id);
+      
+      if (!deleted) {
+        const errorResponse: ErrorResponse = {
+          error: "Not found",
+          message: "Video not found"
+        };
+        return res.status(404).json(errorResponse);
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting video:", error);
+      const errorResponse: ErrorResponse = {
+        error: "Server error",
+        message: "Failed to delete video"
+      };
+      return res.status(500).json(errorResponse);
+    }
+  });
+
   app.post("/api/generate", async (req, res) => {
     try {
       // Validate request body

@@ -1,12 +1,45 @@
-import { useQuery } from "@tanstack/react-query";
-import { Download, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Download, Sparkles, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { VideoGeneration } from "@shared/schema";
 
+const VIDEOS_PER_PAGE = 12;
+
 export default function Gallery() {
+  const { toast } = useToast();
+  const [limit, setLimit] = useState(VIDEOS_PER_PAGE);
+
   const { data: videos, isLoading } = useQuery<VideoGeneration[]>({
-    queryKey: ["/api/history"],
+    queryKey: ["/api/history", limit],
+    queryFn: async () => {
+      const response = await fetch(`/api/history?limit=${limit}`);
+      return await response.json();
+    },
+  });
+
+  const deleteVideoMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/history/${id}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/history", limit] });
+      toast({
+        title: "Video deleted",
+        description: "The video has been removed from your gallery",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete video. Please try again.",
+      });
+    },
   });
 
   const handleDownload = async (videoUrl: string, prompt: string) => {
@@ -116,13 +149,40 @@ export default function Gallery() {
                       <Download className="w-4 h-4 mr-1" />
                       Download
                     </Button>
-                    <span className="text-xs text-white/70">
-                      {video.length}s • {video.aspectRatio}
-                    </span>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteVideoMutation.mutate(video.id)}
+                      disabled={deleteVideoMutation.isPending}
+                      data-testid={`button-delete-${video.id}`}
+                    >
+                      {deleteVideoMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </Button>
                   </div>
+                  <span className="text-xs text-white/70">
+                    {video.length}s • {video.aspectRatio}
+                  </span>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {!isLoading && videos && videos.length >= limit && (
+          <div className="flex justify-center pt-8" data-testid="load-more-container">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setLimit(limit + VIDEOS_PER_PAGE)}
+              data-testid="button-load-more"
+            >
+              Load More
+            </Button>
           </div>
         )}
       </div>

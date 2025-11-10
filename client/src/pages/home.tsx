@@ -3,10 +3,18 @@ import { Sparkles, AlertCircle, Loader2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
+
+const PROMPT_SUGGESTIONS = [
+  { category: "Cosmic", prompts: ["a glowing nebula swirling in deep space", "stars forming in a cosmic dust cloud", "aurora borealis dancing across the night sky"] },
+  { category: "Nature", prompts: ["ocean waves crashing in slow motion", "cherry blossoms falling gently", "raindrops on a leaf in macro"] },
+  { category: "Abstract", prompts: ["liquid gold flowing and morphing", "colorful ink dispersing in water", "geometric shapes transforming seamlessly"] },
+  { category: "Food", prompts: ["a glowing crystal peach sliced in slow motion", "chocolate melting on warm strawberries", "steam rising from hot coffee"] },
+];
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -14,6 +22,7 @@ export default function Home() {
   const [length, setLength] = useState(10);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
   const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string; length: number; aspectRatio: string; style?: string }>({
     mutationFn: async (data) => {
@@ -107,6 +116,56 @@ export default function Home() {
               )}
             </Button>
           </div>
+
+          {/* Prompt Suggestions */}
+          {showSuggestions && !prompt && (
+            <div className="space-y-4" data-testid="prompt-suggestions">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-muted-foreground">Suggestions</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowSuggestions(false)}
+                  data-testid="button-hide-suggestions"
+                >
+                  Hide
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {PROMPT_SUGGESTIONS.map((category) => (
+                  <div key={category.category} className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">{category.category}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {category.prompts.map((suggestion, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="cursor-pointer hover-elevate active-elevate-2 transition-all"
+                          onClick={() => setPrompt(suggestion)}
+                          data-testid={`suggestion-${category.category.toLowerCase()}-${index}`}
+                        >
+                          {suggestion}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!showSuggestions && !prompt && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowSuggestions(true)}
+              data-testid="button-show-suggestions"
+            >
+              Show Suggestions
+            </Button>
+          )}
 
           {/* Parameters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
