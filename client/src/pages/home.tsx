@@ -1,17 +1,21 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, AlertCircle, Loader2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [length, setLength] = useState(10);
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [style, setStyle] = useState<string>("");
 
-  const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string }>({
+  const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string; length: number; aspectRatio: string; style?: string }>({
     mutationFn: async (data) => {
       const response = await apiRequest("POST", "/api/generate", data);
       return await response.json();
@@ -24,11 +28,26 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setVideoUrl(null);
-    generateVideoMutation.mutate({ prompt });
+    generateVideoMutation.mutate({ 
+      prompt, 
+      length, 
+      aspectRatio,
+      ...(style && { style })
+    });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
+      {/* Gallery Button - Top Right */}
+      <div className="fixed top-4 right-4 z-10">
+        <Link href="/gallery">
+          <Button variant="secondary" size="lg" data-testid="button-view-gallery">
+            <History className="w-5 h-5 mr-2" />
+            Gallery
+          </Button>
+        </Link>
+      </div>
+
       <div className="w-full max-w-4xl mx-auto space-y-8 md:space-y-12">
         {/* Header Section */}
         <div className="text-center space-y-4">
@@ -49,7 +68,8 @@ export default function Home() {
         </div>
 
         {/* Generation Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Prompt Input */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Label htmlFor="prompt" className="sr-only">
@@ -86,6 +106,72 @@ export default function Home() {
                 </>
               )}
             </Button>
+          </div>
+
+          {/* Parameters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Length */}
+            <div className="space-y-2">
+              <Label htmlFor="length" className="text-sm text-muted-foreground">
+                Length
+              </Label>
+              <div className="flex gap-2">
+                {[5, 10, 15].map((len) => (
+                  <Button
+                    key={len}
+                    type="button"
+                    size="sm"
+                    variant={length === len ? "default" : "outline"}
+                    onClick={() => setLength(len)}
+                    disabled={generateVideoMutation.isPending}
+                    className={length === len ? "bg-primary text-primary-foreground" : ""}
+                    data-testid={`button-length-${len}`}
+                  >
+                    {len}s
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Aspect Ratio */}
+            <div className="space-y-2">
+              <Label htmlFor="aspectRatio" className="text-sm text-muted-foreground">
+                Aspect Ratio
+              </Label>
+              <div className="flex gap-2">
+                {["1:1", "16:9", "9:16"].map((ratio) => (
+                  <Button
+                    key={ratio}
+                    type="button"
+                    size="sm"
+                    variant={aspectRatio === ratio ? "default" : "outline"}
+                    onClick={() => setAspectRatio(ratio)}
+                    disabled={generateVideoMutation.isPending}
+                    className={aspectRatio === ratio ? "bg-primary text-primary-foreground" : ""}
+                    data-testid={`button-ratio-${ratio.replace(':', '-')}`}
+                  >
+                    {ratio}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Style (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="style" className="text-sm text-muted-foreground">
+                Style (Optional)
+              </Label>
+              <Input
+                id="style"
+                type="text"
+                placeholder="e.g. cinematic"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                disabled={generateVideoMutation.isPending}
+                className="h-9"
+                data-testid="input-style"
+              />
+            </div>
           </div>
         </form>
 

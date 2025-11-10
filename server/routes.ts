@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { videoGenerationSchema } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
+import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const PIKA_API_KEY = process.env.PIKA_API_KEY;
@@ -10,6 +11,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!PIKA_API_KEY) {
     console.error("PIKA_API_KEY is not set in environment variables");
   }
+
+  // Get video generation history
+  app.get("/api/history", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const videos = await storage.getVideoGenerations(limit);
+      return res.json(videos);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      const errorResponse: ErrorResponse = {
+        error: "Server error",
+        message: "Failed to fetch video history"
+      };
+      return res.status(500).json(errorResponse);
+    }
+  });
 
   app.post("/api/generate", async (req, res) => {
     try {
@@ -24,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt } = validation.data;
+      const { prompt, length = 10, aspectRatio = "1:1", style } = validation.data;
 
       // Check if API key is available
       if (!PIKA_API_KEY) {
@@ -44,8 +61,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify({
           prompt,
-          length: 10,
-          aspect_ratio: "1:1"
+          length,
+          aspect_ratio: aspectRatio,
+          ...(style && { style })
         })
       });
 
@@ -74,9 +92,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json(errorResponse);
       }
 
+      // Save to database
+      const savedVideo = await storage.createVideoGeneration({
+        prompt,
+        videoUrl,
+        length,
+        aspectRatio,
+        style: style || null,
+      });
+
       const successResponse: VideoGenerationResponse = {
         videoUrl,
-        prompt
+        prompt,
+        id: savedVideo.id
       };
 
       return res.json(successResponse);

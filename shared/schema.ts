@@ -1,8 +1,33 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, timestamp, integer } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Video generation history table
+export const videoGenerations = pgTable("video_generations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  prompt: text("prompt").notNull(),
+  videoUrl: text("video_url").notNull(),
+  length: integer("length").default(10),
+  aspectRatio: varchar("aspect_ratio", { length: 10 }).default("1:1"),
+  style: text("style"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertVideoGeneration = z.infer<typeof insertVideoGenerationSchema>;
+export type VideoGeneration = typeof videoGenerations.$inferSelect;
 
 // Video generation request schema
 export const videoGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(500, "Prompt must be less than 500 characters"),
+  length: z.number().optional().default(10),
+  aspectRatio: z.string().optional().default("1:1"),
+  style: z.string().optional(),
 });
 
 export type VideoGenerationRequest = z.infer<typeof videoGenerationSchema>;
@@ -11,6 +36,7 @@ export type VideoGenerationRequest = z.infer<typeof videoGenerationSchema>;
 export interface VideoGenerationResponse {
   videoUrl: string;
   prompt: string;
+  id?: number;
 }
 
 // Error response schema
