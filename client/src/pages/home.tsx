@@ -55,8 +55,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
-      {/* Moon Icon - Top Left */}
+      {/* Gallery Button - Top Left */}
       <div className="fixed top-4 left-4 z-10">
+        <Link href="/gallery">
+          <Button variant="secondary" size="lg" data-testid="button-view-gallery">
+            <History className="w-5 h-5 mr-2" />
+            Gallery
+          </Button>
+        </Link>
+      </div>
+
+      {/* Moon Icon - Top Right */}
+      <div className="fixed top-4 right-4 z-10">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" data-testid="button-moon-menu">
@@ -98,16 +108,6 @@ export default function Home() {
             </div>
           </SheetContent>
         </Sheet>
-      </div>
-
-      {/* Gallery Button - Top Right */}
-      <div className="fixed top-4 right-4 z-10">
-        <Link href="/gallery">
-          <Button variant="secondary" size="lg" data-testid="button-view-gallery">
-            <History className="w-5 h-5 mr-2" />
-            Gallery
-          </Button>
-        </Link>
       </div>
 
       <div className="w-full max-w-4xl mx-auto space-y-8 md:space-y-12">

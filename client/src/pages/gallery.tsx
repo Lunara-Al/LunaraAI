@@ -69,8 +69,8 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card p-4 md:p-8">
-      {/* Moon Icon - Top Left */}
-      <div className="fixed top-4 left-4 z-10">
+      {/* Moon Icon - Top Right */}
+      <div className="fixed top-4 right-4 z-10">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" data-testid="button-moon-menu-gallery">
