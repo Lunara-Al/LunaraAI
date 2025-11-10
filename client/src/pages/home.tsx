@@ -3,7 +3,6 @@ import { Sparkles, AlertCircle, Loader2, History, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -17,20 +16,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 
-const PROMPT_SUGGESTIONS = [
-  { category: "Cosmic", prompts: ["a glowing nebula swirling in deep space", "stars forming in a cosmic dust cloud", "aurora borealis dancing across the night sky"] },
-  { category: "Nature", prompts: ["ocean waves crashing in slow motion", "cherry blossoms falling gently", "raindrops on a leaf in macro"] },
-  { category: "Abstract", prompts: ["liquid gold flowing and morphing", "colorful ink dispersing in water", "geometric shapes transforming seamlessly"] },
-  { category: "Food", prompts: ["a glowing crystal peach sliced in slow motion", "chocolate melting on warm strawberries", "steam rising from hot coffee"] },
-];
-
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(10);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string; length: number; aspectRatio: string; style?: string }>({
     mutationFn: async (data) => {
@@ -55,16 +46,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
-      {/* Gallery Button - Top Left */}
-      <div className="fixed top-4 left-4 z-10">
-        <Link href="/gallery">
-          <Button variant="secondary" size="lg" data-testid="button-view-gallery">
-            <History className="w-5 h-5 mr-2" />
-            Gallery
-          </Button>
-        </Link>
-      </div>
-
       {/* Moon Icon - Top Right */}
       <div className="fixed top-4 right-4 z-10">
         <Sheet>
@@ -170,55 +151,15 @@ export default function Home() {
             </Button>
           </div>
 
-          {/* Prompt Suggestions */}
-          {showSuggestions && !prompt && (
-            <div className="space-y-4" data-testid="prompt-suggestions">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm text-muted-foreground">Suggestions</Label>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowSuggestions(false)}
-                  data-testid="button-hide-suggestions"
-                >
-                  Hide
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {PROMPT_SUGGESTIONS.map((category) => (
-                  <div key={category.category} className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">{category.category}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {category.prompts.map((suggestion, index) => (
-                        <Badge
-                          key={index}
-                          variant="outline"
-                          className="cursor-pointer hover-elevate active-elevate-2 transition-all"
-                          onClick={() => setPrompt(suggestion)}
-                          data-testid={`suggestion-${category.category.toLowerCase()}-${index}`}
-                        >
-                          {suggestion}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!showSuggestions && !prompt && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => setShowSuggestions(true)}
-              data-testid="button-show-suggestions"
-            >
-              Show Suggestions
-            </Button>
-          )}
+          {/* Gallery Button */}
+          <div className="flex justify-center">
+            <Link href="/gallery">
+              <Button variant="outline" size="lg" className="w-full md:w-auto" data-testid="button-view-gallery">
+                <History className="w-5 h-5 mr-2" />
+                View Gallery
+              </Button>
+            </Link>
+          </div>
 
           {/* Parameters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
