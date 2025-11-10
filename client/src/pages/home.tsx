@@ -13,7 +13,8 @@ export default function Home() {
 
   const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string }>({
     mutationFn: async (data) => {
-      return await apiRequest("POST", "/api/generate", data);
+      const response = await apiRequest("POST", "/api/generate", data);
+      return await response.json();
     },
     onSuccess: (data) => {
       setVideoUrl(data.videoUrl);
