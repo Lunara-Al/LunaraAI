@@ -1,0 +1,126 @@
+# === LUNARA AI AUTO-SETUP (REPLIT EDITION) ===
+echo "🌌  Setting up Lunara AI v1 (Replit Edition)..."
+
+# make folders
+mkdir -p templates static utils
+
+# main backend
+cat > main.py <<'PYCODE'
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import os, requests
+from dotenv import load_dotenv
+
+load_dotenv()
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+PIKA_API_KEY = os.getenv("PIKA_API_KEY")
+PIKA_URL = "https://api.pika.art/v1/videos"
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "video_url": None, "error": None})
+
+@app.post("/generate", response_class=HTMLResponse)
+async def generate(request: Request, prompt: str = Form(...)):
+    headers = {"Authorization": f"Bearer {PIKA_API_KEY}", "Content-Type": "application/json"}
+    data = {"prompt": prompt, "length": 10, "aspect_ratio": "1:1"}
+    r = requests.post(PIKA_URL, json=data, headers=headers)
+    if r.status_code != 200:
+        return templates.TemplateResponse("index.html",
+            {"request": request, "video_url": None, "error": "Generation failed"})
+    out = r.json()
+    vid = out.get("video_url") or out.get("url") or ""
+    return templates.TemplateResponse("index.html",
+        {"request": request, "video_url": vid, "error": None})
+PYCODE
+
+# html ui
+cat > templates/index.html <<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Lunara AI</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">Lunara AI</h1>
+    <p class="subtitle">Type a prompt to generate a 10-second cosmic ASMR video ✨</p>
+    <form method="post" action="/generate">
+      <input type="text" name="prompt" placeholder="e.g. a glowing crystal peach sliced in slow motion" required />
+      <button type="submit">Generate Video</button>
+    </form>
+    {% if error %}<p class="error">{{error}}</p>{% endif %}
+    {% if video_url %}
+      <div class="video-box"><video src="{{video_url}}" controls autoplay loop></video></div>
+    {% endif %}
+  </div>
+</body>
+</html>
+HTML
+
+# css
+cat > static/style.css <<'CSS'
+body {
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  background:radial-gradient(circle at 20% 20%,#0d0b1f,#000);
+  color:#fff;
+  text-align:center;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+.title {
+  font-size:3rem;
+  background:linear-gradient(90deg,#6b5bff,#ff4fe1);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:0.5em;
+}
+.subtitle {color:#bfbff7;margin-bottom:1.5em;}
+input {
+  width:60%;padding:12px;border-radius:8px;border:none;outline:none;font-size:1rem;
+}
+button {
+  margin-left:10px;padding:12px 20px;
+  background:linear-gradient(90deg,#6b5bff,#ff4fe1);
+  border:none;border-radius:8px;color:white;font-weight:600;
+  cursor:pointer;transition:transform .2s;
+}
+button:hover {transform:scale(1.05);}
+.video-box {margin-top:2em;}
+video {
+  width:80%;border:2px solid rgba(255,255,255,0.2);
+  border-radius:10px;box-shadow:0 0 20px rgba(255,80,220,0.4);
+}
+.error {color:#ff8080;margin-top:1em;}
+CSS
+
+# requirements
+cat > requirements.txt <<'REQ'
+fastapi
+uvicorn
+jinja2
+requests
+python-dotenv
+REQ
+
+# install deps
+pip install -r requirements.txt
+
+# ask for API key
+read -p "🔑 Enter your Pika Labs API Key: " KEY
+echo "PIKA_API_KEY=$KEY" > .env
+echo "✅  Saved to .env"
+
+echo "🚀  Launching Lunara AI..."
+uvicorn main:app --host 0.0.0.0 --port 8080
