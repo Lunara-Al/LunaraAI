@@ -1,9 +1,17 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, Loader2, History } from "lucide-react";
+import { Sparkles, AlertCircle, Loader2, History, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -47,6 +55,51 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
+      {/* Moon Icon - Top Left */}
+      <div className="fixed top-4 left-4 z-10">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" data-testid="button-moon-menu">
+              <Moon className="w-6 h-6 text-primary" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle className="text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Lunara AI
+              </SheetTitle>
+              <SheetDescription>
+                Cosmic ASMR Video Generation
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">About</h3>
+                <p className="text-sm text-muted-foreground">
+                  Generate stunning 10-second cosmic ASMR videos from text prompts using AI-powered video generation.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Features</h3>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Customizable video length (5s or 10s)</li>
+                  <li>• Multiple aspect ratios</li>
+                  <li>• Style customization</li>
+                  <li>• Video gallery & downloads</li>
+                  <li>• Curated prompt suggestions</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Tips</h3>
+                <p className="text-sm text-muted-foreground">
+                  Be descriptive with your prompts. Include motion, lighting, and mood for best results.
+                </p>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
       {/* Gallery Button - Top Right */}
       <div className="fixed top-4 right-4 z-10">
         <Link href="/gallery">

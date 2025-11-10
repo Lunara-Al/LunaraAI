@@ -121,9 +121,10 @@ The application follows professional design guidelines including:
 ### Feature Enhancements (Session 2)
 - ✅ **Database & Persistence** - PostgreSQL database with video_generations table, proper Drizzle schema using $inferInsert
 - ✅ **Gallery View** - Complete gallery page with grid layout, hover-to-play videos, pagination (Load More button), delete functionality with 404 handling
-- ✅ **Customizable Parameters** - Length selection (5s/10s/15s), aspect ratio (1:1/16:9/9:16), optional style input, backend validation with Zod constraints
+- ✅ **Customizable Parameters** - Length selection (5s/10s), aspect ratio (1:1/16:9/9:16), optional style input, backend validation with Zod constraints
 - ✅ **Video Download** - Download button in gallery with proper filename handling
-- ✅ **Prompt Suggestions** - Categorized suggestions (Cosmic, Nature, Abstract, Food) with click-to-fill, show/hide toggle
+- ✅ **Prompt Suggestions** - Categorized suggestions (Cosmic, Nature, Abstract, Food) with click-to-fill, hidden by default with show/hide toggle
+- ✅ **Moon Menu UI** - Lunar moon icon in top left corner that opens sliding panel with app info, features, and tips
 
 ### Technical Improvements
 - Fixed schema validation using Drizzle's native type inference

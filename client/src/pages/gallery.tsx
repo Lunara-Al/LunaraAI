@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2 } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -61,6 +69,51 @@ export default function Gallery() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card p-4 md:p-8">
+      {/* Moon Icon - Top Left */}
+      <div className="fixed top-4 left-4 z-10">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" data-testid="button-moon-menu-gallery">
+              <Moon className="w-6 h-6 text-primary" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle className="text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Lunara AI
+              </SheetTitle>
+              <SheetDescription>
+                Cosmic ASMR Video Generation
+              </SheetDescription>
+            </SheetHeader>
+            <div className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">About</h3>
+                <p className="text-sm text-muted-foreground">
+                  Generate stunning 10-second cosmic ASMR videos from text prompts using AI-powered video generation.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Features</h3>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Customizable video length (5s or 10s)</li>
+                  <li>• Multiple aspect ratios</li>
+                  <li>• Style customization</li>
+                  <li>• Video gallery & downloads</li>
+                  <li>• Curated prompt suggestions</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Gallery Tips</h3>
+                <p className="text-sm text-muted-foreground">
+                  Hover over videos to preview them. Click download to save, or delete to remove from your gallery.
+                </p>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
