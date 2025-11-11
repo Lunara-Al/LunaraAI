@@ -192,7 +192,11 @@ export default function Home() {
                 Aspect Ratio
               </Label>
               <div className="flex gap-2">
-                {["1:1", "16:9", "9:16"].map((ratio) => (
+                {[
+                  { ratio: "1:1", label: "1:1 Instagram" },
+                  { ratio: "16:9", label: "16:9 YouTube" },
+                  { ratio: "9:16", label: "9:16 TikTok" }
+                ].map(({ ratio, label }) => (
                   <Button
                     key={ratio}
                     type="button"
@@ -203,7 +207,7 @@ export default function Home() {
                     className={aspectRatio === ratio ? "bg-primary text-primary-foreground" : ""}
                     data-testid={`button-ratio-${ratio.replace(':', '-')}`}
                   >
-                    {ratio}
+                    {label}
                   </Button>
                 ))}
               </div>

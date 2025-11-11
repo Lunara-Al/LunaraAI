@@ -123,7 +123,9 @@ The application follows professional design guidelines including:
 - ✅ **Gallery View** - Complete gallery page with grid layout, hover-to-play videos, pagination (Load More button), delete functionality with 404 handling
 - ✅ **Customizable Parameters** - Length selection (5s/10s), aspect ratio (1:1/16:9/9:16), optional style input, backend validation with Zod constraints
 - ✅ **Video Download** - Download button in gallery with proper filename handling
-- ✅ **Moon Menu UI** - Lunar moon icon in top left corner that opens sliding panel with app info, features, and tips
+- ✅ **Moon Menu UI** - Lunar moon icon in top right corner that opens sliding panel with app info, features, and tips
+- ✅ **Platform Labels** - Aspect ratios now include platform labels (1:1 Instagram, 16:9 YouTube, 9:16 TikTok)
+- ✅ **Simplified Navigation** - Gallery button moved to main content area, suggestions feature removed for cleaner UX
 
 ### Technical Improvements
 - Fixed schema validation using Drizzle's native type inference
