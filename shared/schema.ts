@@ -1,11 +1,71 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, index, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table (Required for Replit Auth)
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table (Required for Replit Auth)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  membershipTier: varchar("membership_tier", { length: 20 }).default("free").notNull(),
+  videosGeneratedThisMonth: integer("videos_generated_this_month").default(0).notNull(),
+  lastResetDate: timestamp("last_reset_date").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
+// Subscription plans configuration
+export const MEMBERSHIP_TIERS = {
+  free: {
+    name: "Free",
+    price: 0,
+    monthlyVideos: 5,
+    maxLength: 10,
+    quality: "basic",
+  },
+  pro: {
+    name: "Pro",
+    price: 19,
+    monthlyVideos: 50,
+    maxLength: 15,
+    quality: "hd",
+    stripePriceId: "price_pro", // Will be replaced with actual Stripe price ID
+  },
+  premium: {
+    name: "Premium",
+    price: 49,
+    monthlyVideos: -1, // unlimited
+    maxLength: 30,
+    quality: "4k",
+    stripePriceId: "price_premium", // Will be replaced with actual Stripe price ID
+  },
+} as const;
+
+export type MembershipTier = keyof typeof MEMBERSHIP_TIERS;
 
 // Video generation history table
 export const videoGenerations = pgTable("video_generations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id),
   prompt: text("prompt").notNull(),
   videoUrl: text("video_url").notNull(),
   length: integer("length").default(10),
