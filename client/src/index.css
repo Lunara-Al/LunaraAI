@@ -93,10 +93,10 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 258 70% 4%;
+  --background: 258 90% 2%;
   --foreground: 250 25% 92%;
   --border: 258 40% 15%;
-  --card: 258 60% 6%;
+  --card: 258 80% 4%;
   --card-foreground: 250 25% 92%;
   --card-border: 258 45% 12%;
   --sidebar: 258 55% 8%;
@@ -172,6 +172,73 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Space Background with Stars */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(107, 91, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(255, 79, 225, 0.15) 0%, transparent 50%),
+      radial-gradient(2px 2px at 20% 30%, white, transparent),
+      radial-gradient(2px 2px at 60% 70%, white, transparent),
+      radial-gradient(1px 1px at 50% 50%, white, transparent),
+      radial-gradient(1px 1px at 80% 10%, white, transparent),
+      radial-gradient(2px 2px at 90% 60%, white, transparent),
+      radial-gradient(1px 1px at 33% 50%, white, transparent),
+      radial-gradient(1px 1px at 66% 33%, white, transparent);
+    background-size: 
+      200% 200%,
+      200% 200%,
+      200px 200px,
+      200px 200px,
+      300px 300px,
+      250px 250px,
+      200px 200px,
+      300px 300px,
+      250px 250px;
+    background-position: 
+      0% 0%,
+      100% 100%,
+      0% 0%,
+      40% 60%,
+      50% 50%,
+      80% 10%,
+      90% 60%,
+      33% 50%,
+      66% 33%;
+    animation: twinkle 8s ease-in-out infinite alternate;
+  }
+
+  /* Twinkling stars animation */
+  @keyframes twinkle {
+    0%, 100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Dark space overlay for better contrast */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 5, 30, 0.4) 100%);
+    pointer-events: none;
   }
 
   html, body, #root {
