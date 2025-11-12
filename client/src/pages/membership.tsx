@@ -68,7 +68,7 @@ export default function Membership() {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Priority generation</span>
+                <span className="text-sm">Faster generation</span>
               </li>
             </ul>
             
@@ -98,7 +98,7 @@ export default function Membership() {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm">Instant generation</span>
+                <span className="text-sm">Priority generation</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
