@@ -54,12 +54,42 @@ export default function Home() {
   };
 
   const showcaseVideos = [
-    { image: aiTech1, title: "Futuristic AI Dreams", description: "Holographic neural networks" },
-    { image: meditation1, title: "Cosmic Meditation", description: "Journey through space" },
-    { image: aiTech2, title: "Digital Harmony", description: "AI-powered visuals" },
-    { image: meditation2, title: "Zen Universe", description: "Peaceful cosmic flow" },
-    { image: aiTech3, title: "Tech Aurora", description: "Glowing data streams" },
-    { image: meditation3, title: "Stellar Peace", description: "Tranquil star fields" },
+    { 
+      image: aiTech1, 
+      title: "Futuristic AI Dreams", 
+      description: "Holographic neural networks",
+      videoUrl: "https://example.com/video1.mp4" // Replace with actual video URL
+    },
+    { 
+      image: meditation1, 
+      title: "Cosmic Meditation", 
+      description: "Journey through space",
+      videoUrl: "https://example.com/video2.mp4" // Replace with actual video URL
+    },
+    { 
+      image: aiTech2, 
+      title: "Digital Harmony", 
+      description: "AI-powered visuals",
+      videoUrl: "https://example.com/video3.mp4" // Replace with actual video URL
+    },
+    { 
+      image: meditation2, 
+      title: "Zen Universe", 
+      description: "Peaceful cosmic flow",
+      videoUrl: "https://example.com/video4.mp4" // Replace with actual video URL
+    },
+    { 
+      image: aiTech3, 
+      title: "Tech Aurora", 
+      description: "Glowing data streams",
+      videoUrl: "https://example.com/video5.mp4" // Replace with actual video URL
+    },
+    { 
+      image: meditation3, 
+      title: "Stellar Peace", 
+      description: "Tranquil star fields",
+      videoUrl: "https://example.com/video6.mp4" // Replace with actual video URL
+    },
   ];
 
   return (
@@ -314,23 +344,21 @@ export default function Home() {
           {showcaseVideos.map((video, index) => (
             <div
               key={index}
-              className="group relative bg-card rounded-lg overflow-hidden border border-card-border hover-elevate transition-all cursor-pointer"
+              className="group relative bg-card rounded-lg overflow-hidden border border-card-border hover-elevate transition-all"
               data-testid={`showcase-${index}`}
             >
               <div className="aspect-video relative overflow-hidden">
-                <img
-                  src={video.image}
-                  alt={video.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                
-                {/* Play Icon Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-sm">
-                    <Play className="w-6 h-6 md:w-8 md:h-8 text-primary-foreground ml-1" fill="currentColor" />
-                  </div>
-                </div>
+                <video
+                  poster={video.image}
+                  controls
+                  loop
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                  data-testid={`showcase-video-${index}`}
+                >
+                  <source src={video.videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
 
               {/* Content */}
