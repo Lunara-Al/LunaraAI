@@ -90,8 +90,8 @@ export default function Contact() {
                 <div className="flex items-start gap-3">
                   <MessageSquare className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-medium">Live Chat</h3>
-                    <p className="text-sm text-muted-foreground">Available Mon-Fri, 9am-5pm EST</p>
+                    <h3 className="font-medium">Our Discord</h3>
+                    <p className="text-sm text-muted-foreground">Join our community for real-time support</p>
                   </div>
                 </div>
               </div>
