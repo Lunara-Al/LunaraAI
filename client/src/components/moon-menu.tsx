@@ -1,4 +1,4 @@
-import { Moon, Home, User, Crown, Settings, Mail } from "lucide-react";
+import { Moon, Home, User, Crown, Settings, Mail, Film } from "lucide-react";
 import { SiTiktok, SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -18,6 +18,7 @@ export default function MoonMenu() {
 
   const menuItems = [
     { icon: Home, label: "Home", path: "/", testId: "nav-home" },
+    { icon: Film, label: "Gallery", path: "/gallery", testId: "nav-gallery" },
     { icon: User, label: "Profile", path: "/profile", testId: "nav-profile" },
     { icon: Crown, label: "Membership", path: "/membership", testId: "nav-membership" },
     { icon: Settings, label: "Settings", path: "/settings", testId: "nav-settings" },

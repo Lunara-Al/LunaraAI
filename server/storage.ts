@@ -1,11 +1,15 @@
 import { 
   videoGenerations, 
   users,
+  userSettings,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
   type UpsertUser,
-  type MembershipTier 
+  type MembershipTier,
+  type UserSettings,
+  type InsertUserSettings,
+  type UpdateUserSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -18,6 +22,11 @@ export interface IStorage {
   incrementVideoCount(userId: string): Promise<User>;
   resetMonthlyVideoCount(userId: string): Promise<User>;
   checkAndResetVideoCount(userId: string): Promise<User>;
+  
+  // User settings operations
+  getUserSettings(userId: string): Promise<UserSettings | undefined>;
+  createUserSettings(settings: InsertUserSettings): Promise<UserSettings>;
+  updateUserSettings(userId: string, settings: UpdateUserSettings): Promise<UserSettings>;
   
   // Video generation operations
   createVideoGeneration(video: InsertVideoGeneration): Promise<VideoGeneration>;
@@ -102,6 +111,32 @@ export class DatabaseStorage implements IStorage {
     }
 
     return user;
+  }
+
+  // User settings operations
+  async getUserSettings(userId: string): Promise<UserSettings | undefined> {
+    const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
+    return settings;
+  }
+
+  async createUserSettings(settings: InsertUserSettings): Promise<UserSettings> {
+    const [newSettings] = await db
+      .insert(userSettings)
+      .values(settings)
+      .returning();
+    return newSettings;
+  }
+
+  async updateUserSettings(userId: string, updates: UpdateUserSettings): Promise<UserSettings> {
+    const [updated] = await db
+      .update(userSettings)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(userSettings.userId, userId))
+      .returning();
+    return updated;
   }
 
   // Video generation operations

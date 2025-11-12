@@ -1,7 +1,7 @@
 // Server routes with Auth and Stripe integration
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier } from "@shared/schema";
+import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -190,6 +190,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error canceling subscription:", error);
       res.status(500).json({ error: "Failed to cancel subscription" });
+    }
+  });
+
+  // Get user settings
+  app.get("/api/settings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let settings = await storage.getUserSettings(userId);
+      
+      // If settings don't exist, create default settings
+      if (!settings) {
+        settings = await storage.createUserSettings({
+          userId,
+          defaultLength: 10,
+          defaultAspectRatio: "1:1",
+          emailNotifications: 1,
+          galleryView: "grid",
+          theme: "dark",
+          autoSave: 1,
+        });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // Update user settings
+  app.patch("/api/settings", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const validation = updateUserSettingsSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Invalid request",
+          message: validation.error.errors[0]?.message || "Invalid settings data"
+        });
+      }
+      
+      // Ensure settings exist
+      let settings = await storage.getUserSettings(userId);
+      if (!settings) {
+        settings = await storage.createUserSettings({
+          userId,
+          defaultLength: 10,
+          defaultAspectRatio: "1:1",
+          emailNotifications: 1,
+          galleryView: "grid",
+          theme: "dark",
+          autoSave: 1,
+        });
+      }
+      
+      // Update settings
+      const updated = await storage.updateUserSettings(userId, validation.data);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      res.status(500).json({ error: "Failed to update settings" });
     }
   });
 

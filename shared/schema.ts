@@ -99,20 +99,9 @@ export const userSettings = pgTable("user_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const insertUserSettingsSchema = createInsertSchema(userSettings);
 
-export const updateUserSettingsSchema = z.object({
-  defaultLength: z.number().optional(),
-  defaultAspectRatio: z.string().optional(),
-  emailNotifications: z.number().optional(),
-  galleryView: z.string().optional(),
-  theme: z.string().optional(),
-  autoSave: z.number().optional(),
-});
+export const updateUserSettingsSchema = insertUserSettingsSchema.partial().omit({ userId: true });
 
 export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
 export type UpdateUserSettings = z.infer<typeof updateUserSettingsSchema>;
