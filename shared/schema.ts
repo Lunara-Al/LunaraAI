@@ -85,6 +85,39 @@ export const insertVideoGenerationSchema = createInsertSchema(videoGenerations).
 export type InsertVideoGeneration = typeof videoGenerations.$inferInsert;
 export type VideoGeneration = typeof videoGenerations.$inferSelect;
 
+// User settings table
+export const userSettings = pgTable("user_settings", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id).unique().notNull(),
+  defaultLength: integer("default_length").default(10).notNull(),
+  defaultAspectRatio: varchar("default_aspect_ratio", { length: 10 }).default("1:1").notNull(),
+  emailNotifications: integer("email_notifications").default(1).notNull(), // 1 = enabled, 0 = disabled
+  galleryView: varchar("gallery_view", { length: 10 }).default("grid").notNull(),
+  theme: varchar("theme", { length: 10 }).default("dark").notNull(),
+  autoSave: integer("auto_save").default(1).notNull(), // 1 = enabled, 0 = disabled
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateUserSettingsSchema = z.object({
+  defaultLength: z.number().optional(),
+  defaultAspectRatio: z.string().optional(),
+  emailNotifications: z.number().optional(),
+  galleryView: z.string().optional(),
+  theme: z.string().optional(),
+  autoSave: z.number().optional(),
+});
+
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+export type UpdateUserSettings = z.infer<typeof updateUserSettingsSchema>;
+export type UserSettings = typeof userSettings.$inferSelect;
+
 // Video generation request schema
 export const videoGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(500, "Prompt must be less than 500 characters"),
