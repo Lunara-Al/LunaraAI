@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, Loader2, History, Moon } from "lucide-react";
+import { Sparkles, AlertCircle, Loader2, History, Moon, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -15,6 +16,14 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
+
+// Advertisement Images
+import aiTech1 from "@assets/stock_images/futuristic_ai_techno_780c4237.jpg";
+import aiTech2 from "@assets/stock_images/futuristic_ai_techno_2bbcd194.jpg";
+import aiTech3 from "@assets/stock_images/futuristic_ai_techno_50511b21.jpg";
+import meditation1 from "@assets/stock_images/peaceful_meditation__f0b4b6f6.jpg";
+import meditation2 from "@assets/stock_images/peaceful_meditation__b7f215c8.jpg";
+import meditation3 from "@assets/stock_images/peaceful_meditation__45257c38.jpg";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -44,8 +53,17 @@ export default function Home() {
     });
   };
 
+  const showcaseVideos = [
+    { image: aiTech1, title: "Futuristic AI Dreams", description: "Holographic neural networks" },
+    { image: meditation1, title: "Cosmic Meditation", description: "Journey through space" },
+    { image: aiTech2, title: "Digital Harmony", description: "AI-powered visuals" },
+    { image: meditation2, title: "Zen Universe", description: "Peaceful cosmic flow" },
+    { image: aiTech3, title: "Tech Aurora", description: "Glowing data streams" },
+    { image: meditation3, title: "Stellar Peace", description: "Tranquil star fields" },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card">
       {/* Moon Icon - Top Right */}
       <div className="fixed top-3 right-3 md:top-4 md:right-4 z-10">
         <Sheet>
@@ -90,7 +108,7 @@ export default function Home() {
         </Sheet>
       </div>
 
-      <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10">
+      <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
         {/* Header Section */}
         <div className="text-center space-y-3 md:space-y-4">
           <h1 
@@ -275,6 +293,69 @@ export default function Home() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Advertisement Showcase Section */}
+      <div className="w-full max-w-6xl mx-auto mt-16 md:mt-24 px-4 pb-16">
+        <div className="text-center space-y-3 mb-8 md:mb-12">
+          <Badge variant="secondary" className="mb-2">
+            Showcase
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+            AI ASMR Examples
+          </h2>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+            Experience the mesmerizing fusion of artificial intelligence and ASMR visuals
+          </p>
+        </div>
+
+        {/* Showcase Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {showcaseVideos.map((video, index) => (
+            <div
+              key={index}
+              className="group relative bg-card rounded-lg overflow-hidden border border-card-border hover-elevate transition-all cursor-pointer"
+              data-testid={`showcase-${index}`}
+            >
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src={video.image}
+                  alt={video.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                
+                {/* Play Icon Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-sm">
+                    <Play className="w-6 h-6 md:w-8 md:h-8 text-primary-foreground ml-1" fill="currentColor" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-3 md:p-4">
+                <h3 className="text-sm md:text-base font-semibold mb-1">{video.title}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">{video.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-8 md:mt-12">
+          <p className="text-sm md:text-base text-muted-foreground mb-4">
+            Ready to create your own cosmic ASMR masterpiece?
+          </p>
+          <Button
+            size="lg"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="bg-gradient-to-r from-primary to-secondary text-primary-foreground"
+          >
+            <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+            Start Creating
+          </Button>
+        </div>
       </div>
 
       <style>{`
