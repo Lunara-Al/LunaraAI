@@ -23,8 +23,16 @@ localPort = 34601
 externalPort = 3003
 
 [[ports]]
+localPort = 39589
+externalPort = 6000
+
+[[ports]]
 localPort = 41597
 externalPort = 3000
+
+[[ports]]
+localPort = 43917
+externalPort = 5173
 
 [[ports]]
 localPort = 44239
@@ -61,3 +69,6 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[agent]
+integrations = ["javascript_log_in_with_replit:1.0.0"]
