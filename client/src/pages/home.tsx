@@ -1,20 +1,13 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, Loader2, History, Moon, Play } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import MoonMenu from "@/components/moon-menu";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 
 // Advertisement Images
@@ -94,49 +87,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card">
-      {/* Moon Icon - Top Right */}
-      <div className="fixed top-3 right-3 md:top-4 md:right-4 z-10">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" data-testid="button-moon-menu">
-              <Moon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[85vw] max-w-sm">
-            <SheetHeader>
-              <SheetTitle className="text-xl md:text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Lunara AI
-              </SheetTitle>
-              <SheetDescription>
-                Cosmic ASMR Video Generation
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-6 space-y-4">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">About</h3>
-                <p className="text-sm text-muted-foreground">
-                  Generate stunning 10-second cosmic ASMR videos from text prompts using AI-powered video generation.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Features</h3>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Customizable video length (5s or 10s)</li>
-                  <li>• Multiple aspect ratios</li>
-                  <li>• Style customization</li>
-                  <li>• Video gallery & downloads</li>
-                </ul>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Tips</h3>
-                <p className="text-sm text-muted-foreground">
-                  Be descriptive with your prompts. Include motion, lighting, and mood for best results.
-                </p>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+      <MoonMenu />
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
         {/* Header Section */}

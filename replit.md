@@ -77,16 +77,25 @@ To use the video generation feature, you need a valid Pika Labs API key:
 client/
 ├── src/
 │   ├── pages/
-│   │   └── home.tsx          # Main video generation page
-│   ├── components/ui/         # Shadcn UI components
+│   │   ├── home.tsx           # Main video generation page
+│   │   ├── gallery.tsx        # Video gallery with download/delete
+│   │   ├── settings.tsx       # Settings page
+│   │   ├── profile.tsx        # User profile page
+│   │   ├── membership.tsx     # Membership plans page
+│   │   └── contact.tsx        # Contact form page
+│   ├── components/
+│   │   ├── moon-menu.tsx      # Reusable navigation menu
+│   │   └── ui/                # Shadcn UI components
 │   ├── lib/
 │   │   └── queryClient.ts     # TanStack Query setup
-│   ├── App.tsx                # App router
+│   ├── App.tsx                # App router with all routes
 │   └── index.css              # Cosmic theme styles
 ├── index.html                 # HTML with Poppins font
 
 server/
 ├── routes.ts                  # API endpoints
+├── storage.ts                 # Database storage interface
+├── db.ts                      # Drizzle database configuration
 └── index.ts                   # Express server
 
 shared/
@@ -123,12 +132,13 @@ The application follows professional design guidelines including:
 - ✅ **Gallery View** - Complete gallery page with grid layout, hover-to-play videos, pagination (Load More button), delete functionality with 404 handling
 - ✅ **Customizable Parameters** - Length selection (5s/10s), aspect ratio (1:1/16:9/9:16), optional style input, backend validation with Zod constraints
 - ✅ **Video Download** - Download button in gallery with proper filename handling
-- ✅ **Moon Menu UI** - Lunar moon icon in top right corner that opens sliding panel with app info, features, and tips
+- ✅ **Moon Navigation Menu** - Lunar moon icon in top right corner opens sliding navigation panel with 5 pages: Home, Profile, Membership, Settings, and Contact
 - ✅ **Platform Labels** - Aspect ratios now include platform labels (1:1 Instagram, 16:9 YouTube, 9:16 TikTok)
 - ✅ **Simplified Navigation** - Gallery button moved to main content area, suggestions feature removed for cleaner UX
 - ✅ **Space Background** - Deep cosmic background with twinkling stars and nebula effects for immersive lunar atmosphere
 - ✅ **Responsive Design** - Fully optimized UI for both mobile phones and desktop computers with adaptive layouts
 - ✅ **Advertisement Showcase** - Scrollable section with 6 AI ASMR example videos using HTML5 video elements, poster images, built-in controls, and call-to-action button
+- ✅ **Multi-Page Application** - Added Settings, Profile, Membership, and Contact pages accessible via moon menu navigation
 
 ### Technical Improvements
 - Fixed schema validation using Drizzle's native type inference
