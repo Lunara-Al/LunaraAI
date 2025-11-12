@@ -1,79 +1,115 @@
-import { Sparkles, Video, Zap, Crown } from "lucide-react";
+import { Sparkles, Video, Zap, Crown, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-card -z-10" />
-      
-      <header className="px-4 py-4 md:px-8 md:py-6 flex justify-between items-center border-b border-card-border">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-          <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Glass header with blur */}
+      <header className="glass sticky top-0 z-50 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Moon className="w-8 h-8 md:w-10 md:h-10 text-primary moon-glow" />
+            <Sparkles className="w-4 h-4 text-secondary absolute -top-1 -right-1 animate-pulse" />
+          </div>
+          <span className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
             Lunara AI
           </span>
         </div>
         
         <Button 
           onClick={() => window.location.href = '/api/login'}
-          className="bg-gradient-to-r from-primary to-secondary"
+          className="bg-gradient-to-r from-primary to-secondary moon-glow"
           data-testid="button-login"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           Sign In
         </Button>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-12 md:py-20">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
-              Create Cosmic ASMR Videos
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-              Transform your text into mesmerizing visual experiences with AI-powered video generation
+        <div className="max-w-6xl mx-auto text-center space-y-12">
+          {/* Hero Section */}
+          <div className="space-y-8">
+            <div className="relative inline-block">
+              <div className="absolute inset-0 blur-3xl bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 rounded-full" />
+              <h1 className="relative text-5xl md:text-7xl lg:text-8xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
+                Create Cosmic
+                <br />
+                ASMR Videos
+              </h1>
+            </div>
+            
+            <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+              Transform your imagination into mesmerizing visual experiences with AI-powered video generation
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-secondary text-lg px-10 py-7 moon-glow text-base md:text-lg"
+                data-testid="button-get-started"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Get Started Free
+              </Button>
+              
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                size="lg"
+                variant="outline"
+                className="text-lg px-10 py-7 text-base md:text-lg"
+              >
+                <Moon className="w-5 h-5 mr-2" />
+                Explore Plans
+              </Button>
+            </div>
           </div>
 
-          <Button 
-            onClick={() => window.location.href = '/api/login'}
-            size="lg"
-            className="bg-gradient-to-r from-primary to-secondary text-lg px-8 py-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300"
-            data-testid="button-get-started"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Get Started Free
-          </Button>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <div className="bg-card border border-card-border rounded-lg p-6 space-y-3">
-              <Video className="w-10 h-10 text-primary mx-auto" />
-              <h3 className="text-lg font-semibold">AI-Powered</h3>
-              <p className="text-sm text-muted-foreground">
+          {/* Feature Cards with Glass Effect */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
+                <Video className="w-14 h-14 text-primary mx-auto relative" />
+              </div>
+              <h3 className="text-xl font-bold">AI-Powered</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Advanced AI creates stunning cosmic ASMR videos from your text prompts
               </p>
-            </div>
+            </Card>
             
-            <div className="bg-card border border-card-border rounded-lg p-6 space-y-3">
-              <Zap className="w-10 h-10 text-primary mx-auto" />
-              <h3 className="text-lg font-semibold">Lightning Fast</h3>
-              <p className="text-sm text-muted-foreground">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 blur-2xl bg-secondary/20 rounded-full group-hover:bg-secondary/30 transition-all" />
+                <Zap className="w-14 h-14 text-secondary mx-auto relative" />
+              </div>
+              <h3 className="text-xl font-bold">Lightning Fast</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 Generate professional-quality videos in seconds, not hours
               </p>
-            </div>
+            </Card>
             
-            <div className="bg-card border border-card-border rounded-lg p-6 space-y-3">
-              <Crown className="w-10 h-10 text-primary mx-auto" />
-              <h3 className="text-lg font-semibold">Premium Quality</h3>
-              <p className="text-sm text-muted-foreground">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+              <div className="relative inline-block">
+                <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
+                <Crown className="w-14 h-14 text-primary mx-auto relative" />
+              </div>
+              <h3 className="text-xl font-bold">Premium Quality</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 From basic to 4K quality, choose the perfect plan for your needs
               </p>
-            </div>
+            </Card>
           </div>
         </div>
       </main>
 
-      <footer className="px-4 py-6 border-t border-card-border text-center text-sm text-muted-foreground">
-        <p>Lunara AI - Cosmic Video Generation Platform</p>
+      <footer className="glass px-4 py-8 text-center backdrop-blur-xl">
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Moon className="w-4 h-4 text-primary" />
+          <span>Lunara AI - Cosmic Video Generation Platform</span>
+        </div>
       </footer>
     </div>
   );

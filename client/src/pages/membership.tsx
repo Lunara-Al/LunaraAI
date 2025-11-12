@@ -1,6 +1,7 @@
-import { Crown, Check, LogOut, Loader2 } from "lucide-react";
+import { Crown, Check, LogOut, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import MoonMenu from "@/components/moon-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -164,14 +165,14 @@ export default function Membership() {
           <p className="text-muted-foreground">Choose the perfect plan for your cosmic journey</p>
           
           {!isLoading && subscription && (
-            <div className="inline-flex items-center gap-2 bg-card border border-card-border rounded-full px-4 py-2">
-              <Badge variant="outline" className="capitalize">{currentTier}</Badge>
-              <span className="text-sm text-muted-foreground">
+            <Card className="inline-flex items-center gap-3 px-6 py-3">
+              <Badge className="capitalize moon-glow">{currentTier}</Badge>
+              <span className="text-sm text-muted-foreground font-medium">
                 {subscription.videosLimit === -1 
                   ? `${subscription.videosUsed} videos created this month`
                   : `${subscription.videosUsed}/${subscription.videosLimit} videos used`}
               </span>
-            </div>
+            </Card>
           )}
         </div>
 
@@ -182,14 +183,17 @@ export default function Membership() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Free Tier */}
-            <div className={`bg-card rounded-lg p-6 space-y-6 ${currentTier === "free" ? "border-2 border-primary" : "border border-card-border"}`}>
+            <Card className={`p-8 space-y-6 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`}>
               {currentTier === "free" && (
-                <Badge className="bg-primary">Current Plan</Badge>
+                <Badge className="moon-glow">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Current Plan
+                </Badge>
               )}
               
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Free</h2>
-                <p className="text-3xl font-bold">$0<span className="text-sm text-muted-foreground">/month</span></p>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold">Free</h2>
+                <p className="text-4xl font-bold">$0<span className="text-base text-muted-foreground font-normal">/month</span></p>
               </div>
               
               <ul className="space-y-3">
@@ -225,23 +229,25 @@ export default function Membership() {
                   Downgrade to Free
                 </Button>
               )}
-            </div>
+            </Card>
 
             {/* Pro Tier */}
-            <div className={`rounded-lg p-6 space-y-6 relative ${currentTier === "pro" ? "border-2 border-primary bg-card" : "bg-card border-2 border-primary"}`}>
+            <Card className={`p-8 space-y-6 relative ring-2 ring-primary ${currentTier === "pro" ? "moon-glow" : ""}`}>
               {currentTier === "pro" ? (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow">
+                  <Sparkles className="w-3 h-3 mr-1" />
                   Current Plan
                 </Badge>
               ) : (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary moon-glow">
+                  <Crown className="w-3 h-3 mr-1" />
                   Popular
                 </Badge>
               )}
               
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Pro</h2>
-                <p className="text-3xl font-bold">$19<span className="text-sm text-muted-foreground">/month</span></p>
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold">Pro</h2>
+                <p className="text-4xl font-bold">$19<span className="text-base text-muted-foreground font-normal">/month</span></p>
               </div>
               
               <ul className="space-y-3">
@@ -271,28 +277,33 @@ export default function Membership() {
                 <Button variant="outline" className="w-full" disabled>Current Plan</Button>
               ) : (
                 <Button 
-                  className="w-full bg-gradient-to-r from-primary to-secondary" 
+                  className="w-full bg-gradient-to-r from-primary to-secondary moon-glow" 
                   onClick={() => handleUpgrade("pro")}
                   disabled={subscribeMutation.isPending}
                   data-testid="button-upgrade-pro"
                 >
-                  {subscribeMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   {currentTier === "premium" ? "Downgrade to Pro" : "Upgrade to Pro"}
                 </Button>
               )}
-            </div>
+            </Card>
 
             {/* Premium Tier */}
-            <div className={`bg-card rounded-lg p-6 space-y-6 ${currentTier === "premium" ? "border-2 border-primary" : "border border-card-border"}`}>
+            <Card className={`p-8 space-y-6 ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`}>
               {currentTier === "premium" && (
-                <Badge className="bg-primary">Current Plan</Badge>
+                <Badge className="moon-glow">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Current Plan
+                </Badge>
               )}
               
-              <div className="space-y-2 flex items-center gap-2">
-                <h2 className="text-2xl font-bold">Premium</h2>
-                <Crown className="w-6 h-6 text-primary" />
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold flex items-center gap-2">
+                  Premium
+                  <Crown className="w-7 h-7 text-primary" />
+                </h2>
+                <p className="text-4xl font-bold">$49<span className="text-base text-muted-foreground font-normal">/month</span></p>
               </div>
-              <p className="text-3xl font-bold">$49<span className="text-sm text-muted-foreground">/month</span></p>
               
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
@@ -325,17 +336,16 @@ export default function Membership() {
                 <Button variant="outline" className="w-full" disabled>Current Plan</Button>
               ) : (
                 <Button 
-                  variant="outline" 
-                  className="w-full" 
+                  className="w-full bg-gradient-to-r from-primary via-secondary to-primary moon-glow" 
                   onClick={() => handleUpgrade("premium")}
                   disabled={subscribeMutation.isPending}
                   data-testid="button-upgrade-premium"
                 >
-                  {subscribeMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Crown className="w-4 h-4 mr-2" />}
                   Upgrade to Premium
                 </Button>
               )}
-            </div>
+            </Card>
           </div>
         )}
       </div>

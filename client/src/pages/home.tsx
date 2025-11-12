@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, History, Loader2 } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
@@ -110,13 +111,14 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Generation Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-          {/* Prompt Input */}
-          <div className="flex flex-col gap-3">
-            <div className="flex-1">
-              <Label htmlFor="prompt" className="sr-only">
-                Video Prompt
+        {/* Generation Form with Glass Card */}
+        <Card className="p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+            {/* Prompt Input */}
+            <div className="space-y-3">
+              <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-2">
+                <Moon className="w-4 h-4 text-primary" />
+                Your Cosmic Vision
               </Label>
               <Input
                 id="prompt"
@@ -126,72 +128,59 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 required
                 disabled={generateVideoMutation.isPending}
-                className="px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base h-auto focus:ring-2 focus:ring-primary transition-all"
+                className="text-base h-12"
                 data-testid="input-prompt"
               />
             </div>
-            <Button
-              type="submit"
-              size="lg"
-              disabled={generateVideoMutation.isPending || !prompt.trim()}
-              className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold"
-              data-testid="button-generate"
-            >
-              {generateVideoMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                  Generate Video
-                </>
-              )}
-            </Button>
-          </div>
 
-          {/* Gallery Button */}
-          <div className="flex justify-center pt-2">
-            <Link href="/gallery" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full" data-testid="button-view-gallery">
-                <History className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                View Gallery
-              </Button>
-            </Link>
-          </div>
+            {/* Parameters in Glass Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Length */}
+              <div className="space-y-3">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Video Length
+                </Label>
+                <div className="flex gap-2">
+                  {[5, 10].map((len) => (
+                    <Button
+                      key={len}
+                      type="button"
+                      size="sm"
+                      variant={length === len ? "default" : "outline"}
+                      onClick={() => setLength(len)}
+                      disabled={generateVideoMutation.isPending}
+                      className={`flex-1 ${length === len ? "moon-glow" : ""}`}
+                      data-testid={`button-length-${len}`}
+                    >
+                      {len}s
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Parameters */}
-          <div className="space-y-4">
-            {/* Length */}
-            <div className="space-y-2">
-              <Label htmlFor="length" className="text-xs md:text-sm text-muted-foreground">
-                Length
-              </Label>
-              <div className="flex gap-2">
-                {[5, 10].map((len) => (
-                  <Button
-                    key={len}
-                    type="button"
-                    size="sm"
-                    variant={length === len ? "default" : "outline"}
-                    onClick={() => setLength(len)}
-                    disabled={generateVideoMutation.isPending}
-                    className={`flex-1 ${length === len ? "bg-primary text-primary-foreground" : ""}`}
-                    data-testid={`button-length-${len}`}
-                  >
-                    {len}s
-                  </Button>
-                ))}
+              {/* Style */}
+              <div className="space-y-3">
+                <Label htmlFor="style" className="text-xs font-semibold text-muted-foreground">
+                  Style (Optional)
+                </Label>
+                <Input
+                  id="style"
+                  type="text"
+                  placeholder="e.g. cinematic"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  disabled={generateVideoMutation.isPending}
+                  data-testid="input-style"
+                />
               </div>
             </div>
 
             {/* Aspect Ratio */}
-            <div className="space-y-2">
-              <Label htmlFor="aspectRatio" className="text-xs md:text-sm text-muted-foreground">
+            <div className="space-y-3">
+              <Label className="text-xs font-semibold text-muted-foreground">
                 Aspect Ratio
               </Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {[
                   { ratio: "1:1", label: "1:1", platform: "Instagram" },
                   { ratio: "16:9", label: "16:9", platform: "YouTube" },
@@ -200,38 +189,49 @@ export default function Home() {
                   <Button
                     key={ratio}
                     type="button"
-                    size="sm"
                     variant={aspectRatio === ratio ? "default" : "outline"}
                     onClick={() => setAspectRatio(ratio)}
                     disabled={generateVideoMutation.isPending}
-                    className={`flex flex-col items-center justify-center h-auto py-2 ${aspectRatio === ratio ? "bg-primary text-primary-foreground" : ""}`}
+                    className={`flex flex-col items-center justify-center h-auto py-3 ${aspectRatio === ratio ? "moon-glow" : ""}`}
                     data-testid={`button-ratio-${ratio.replace(':', '-')}`}
                   >
-                    <span className="text-xs md:text-sm font-semibold">{label}</span>
-                    <span className="text-[10px] md:text-xs opacity-70">{platform}</span>
+                    <span className="text-sm font-bold">{label}</span>
+                    <span className="text-xs opacity-70">{platform}</span>
                   </Button>
                 ))}
               </div>
             </div>
 
-            {/* Style (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="style" className="text-xs md:text-sm text-muted-foreground">
-                Style (Optional)
-              </Label>
-              <Input
-                id="style"
-                type="text"
-                placeholder="e.g. cinematic"
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                disabled={generateVideoMutation.isPending}
-                className="text-sm"
-                data-testid="input-style"
-              />
-            </div>
-          </div>
-        </form>
+            {/* Generate Button */}
+            <Button
+              type="submit"
+              size="lg"
+              disabled={generateVideoMutation.isPending || !prompt.trim()}
+              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow"
+              data-testid="button-generate"
+            >
+              {generateVideoMutation.isPending ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate Video
+                </>
+              )}
+            </Button>
+
+            {/* Gallery Button */}
+            <Link href="/gallery" className="block">
+              <Button variant="outline" size="lg" className="w-full" data-testid="button-view-gallery">
+                <History className="w-5 h-5 mr-2" />
+                View Gallery
+              </Button>
+            </Link>
+          </form>
+        </Card>
 
         {/* Error State */}
         {generateVideoMutation.isError && (
