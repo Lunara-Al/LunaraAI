@@ -205,6 +205,10 @@ export default function Membership() {
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm">Basic quality</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">Lunar AI watermark</span>
+                </li>
               </ul>
               
               {currentTier === "free" ? (
@@ -257,6 +261,10 @@ export default function Membership() {
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm">Faster generation</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">No watermark</span>
+                </li>
               </ul>
               
               {currentTier === "pro" ? (
@@ -306,6 +314,10 @@ export default function Membership() {
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm">Commercial license</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm">No watermark</span>
                 </li>
               </ul>
               

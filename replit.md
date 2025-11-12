@@ -172,9 +172,9 @@ The application follows professional design guidelines including:
 - ✅ **Replit Authentication** - Complete login/logout system using Replit Auth with session management
 - ✅ **Database Schema** - Extended with `users`, `sessions`, and `subscriptions` tables
 - ✅ **Membership Tiers** - Three tiers with access control:
-  - **Free**: 5 videos/month, 5-second max length, Basic quality
-  - **Pro**: 100 videos/month, 10-second max length, HD quality, Faster generation ($19/month)
-  - **Premium**: Unlimited videos, 15-second max length, 4K quality, Priority generation, Commercial license ($49/month)
+  - **Free**: 5 videos/month, 5-second max length, Basic quality, Lunar AI watermark
+  - **Pro**: 100 videos/month, 10-second max length, HD quality, Faster generation, No watermark ($19/month)
+  - **Premium**: Unlimited videos, 15-second max length, 4K quality, Priority generation, Commercial license, No watermark ($49/month)
 - ✅ **Stripe Integration** - Payment processing with checkout flow and simulation fallback when keys not configured
 - ✅ **Access Control** - Video generation enforces membership limits with automatic monthly reset
 - ✅ **Subscription Management** - Easy one-click upgrade/downgrade/cancel on membership page
