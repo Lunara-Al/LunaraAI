@@ -45,18 +45,18 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card">
       {/* Moon Icon - Top Right */}
-      <div className="fixed top-4 right-4 z-10">
+      <div className="fixed top-3 right-3 md:top-4 md:right-4 z-10">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" data-testid="button-moon-menu">
-              <Moon className="w-6 h-6 text-primary" />
+              <Moon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80">
+          <SheetContent side="right" className="w-[85vw] max-w-sm">
             <SheetHeader>
-              <SheetTitle className="text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <SheetTitle className="text-xl md:text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Lunara AI
               </SheetTitle>
               <SheetDescription>
@@ -77,7 +77,6 @@ export default function Home() {
                   <li>• Multiple aspect ratios</li>
                   <li>• Style customization</li>
                   <li>• Video gallery & downloads</li>
-                  <li>• Curated prompt suggestions</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -91,11 +90,11 @@ export default function Home() {
         </Sheet>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto space-y-8 md:space-y-12">
+      <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10">
         {/* Header Section */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-3 md:space-y-4">
           <h1 
-            className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient"
             style={{
               backgroundSize: '200% 200%',
               animation: 'gradient 8s ease infinite'
@@ -104,16 +103,18 @@ export default function Home() {
           >
             Lunara AI
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto flex items-center justify-center gap-2" data-testid="text-subtitle">
-            <span>Type a prompt to generate a 10-second cosmic ASMR video</span>
-            <Sparkles className="w-5 h-5 text-primary" />
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4" data-testid="text-subtitle">
+            <span className="inline-flex items-center gap-2 flex-wrap justify-center">
+              <span>Type a prompt to generate cosmic ASMR videos</span>
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+            </span>
           </p>
         </div>
 
         {/* Generation Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
           {/* Prompt Input */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col gap-3">
             <div className="flex-1">
               <Label htmlFor="prompt" className="sr-only">
                 Video Prompt
@@ -126,7 +127,7 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 required
                 disabled={generateVideoMutation.isPending}
-                className="px-4 py-3 text-base md:text-lg h-auto focus:ring-2 focus:ring-primary transition-all"
+                className="px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base h-auto focus:ring-2 focus:ring-primary transition-all"
                 data-testid="input-prompt"
               />
             </div>
@@ -134,17 +135,17 @@ export default function Home() {
               type="submit"
               size="lg"
               disabled={generateVideoMutation.isPending || !prompt.trim()}
-              className="bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold"
+              className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold"
               data-testid="button-generate"
             >
               {generateVideoMutation.isPending ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
                   Generating...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2" />
+                  <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                   Generate Video
                 </>
               )}
@@ -152,20 +153,20 @@ export default function Home() {
           </div>
 
           {/* Gallery Button */}
-          <div className="flex justify-center">
-            <Link href="/gallery">
-              <Button variant="outline" size="lg" className="w-full md:w-auto" data-testid="button-view-gallery">
-                <History className="w-5 h-5 mr-2" />
+          <div className="flex justify-center pt-2">
+            <Link href="/gallery" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full" data-testid="button-view-gallery">
+                <History className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 View Gallery
               </Button>
             </Link>
           </div>
 
           {/* Parameters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {/* Length */}
             <div className="space-y-2">
-              <Label htmlFor="length" className="text-sm text-muted-foreground">
+              <Label htmlFor="length" className="text-xs md:text-sm text-muted-foreground">
                 Length
               </Label>
               <div className="flex gap-2">
@@ -177,7 +178,7 @@ export default function Home() {
                     variant={length === len ? "default" : "outline"}
                     onClick={() => setLength(len)}
                     disabled={generateVideoMutation.isPending}
-                    className={length === len ? "bg-primary text-primary-foreground" : ""}
+                    className={`flex-1 ${length === len ? "bg-primary text-primary-foreground" : ""}`}
                     data-testid={`button-length-${len}`}
                   >
                     {len}s
@@ -188,15 +189,15 @@ export default function Home() {
 
             {/* Aspect Ratio */}
             <div className="space-y-2">
-              <Label htmlFor="aspectRatio" className="text-sm text-muted-foreground">
+              <Label htmlFor="aspectRatio" className="text-xs md:text-sm text-muted-foreground">
                 Aspect Ratio
               </Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
-                  { ratio: "1:1", label: "1:1 Instagram" },
-                  { ratio: "16:9", label: "16:9 YouTube" },
-                  { ratio: "9:16", label: "9:16 TikTok" }
-                ].map(({ ratio, label }) => (
+                  { ratio: "1:1", label: "1:1", platform: "Instagram" },
+                  { ratio: "16:9", label: "16:9", platform: "YouTube" },
+                  { ratio: "9:16", label: "9:16", platform: "TikTok" }
+                ].map(({ ratio, label, platform }) => (
                   <Button
                     key={ratio}
                     type="button"
@@ -204,10 +205,11 @@ export default function Home() {
                     variant={aspectRatio === ratio ? "default" : "outline"}
                     onClick={() => setAspectRatio(ratio)}
                     disabled={generateVideoMutation.isPending}
-                    className={aspectRatio === ratio ? "bg-primary text-primary-foreground" : ""}
+                    className={`flex flex-col items-center justify-center h-auto py-2 ${aspectRatio === ratio ? "bg-primary text-primary-foreground" : ""}`}
                     data-testid={`button-ratio-${ratio.replace(':', '-')}`}
                   >
-                    {label}
+                    <span className="text-xs md:text-sm font-semibold">{label}</span>
+                    <span className="text-[10px] md:text-xs opacity-70">{platform}</span>
                   </Button>
                 ))}
               </div>
@@ -215,7 +217,7 @@ export default function Home() {
 
             {/* Style (Optional) */}
             <div className="space-y-2">
-              <Label htmlFor="style" className="text-sm text-muted-foreground">
+              <Label htmlFor="style" className="text-xs md:text-sm text-muted-foreground">
                 Style (Optional)
               </Label>
               <Input
@@ -225,7 +227,7 @@ export default function Home() {
                 value={style}
                 onChange={(e) => setStyle(e.target.value)}
                 disabled={generateVideoMutation.isPending}
-                className="h-9"
+                className="text-sm"
                 data-testid="input-style"
               />
             </div>

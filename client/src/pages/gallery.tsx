@@ -68,18 +68,18 @@ export default function Gallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card px-4 py-6 md:p-8">
       {/* Moon Icon - Top Right */}
-      <div className="fixed top-4 right-4 z-10">
+      <div className="fixed top-3 right-3 md:top-4 md:right-4 z-10">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" data-testid="button-moon-menu-gallery">
-              <Moon className="w-6 h-6 text-primary" />
+              <Moon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-80">
+          <SheetContent side="right" className="w-[85vw] max-w-sm">
             <SheetHeader>
-              <SheetTitle className="text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <SheetTitle className="text-xl md:text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Lunara AI
               </SheetTitle>
               <SheetDescription>
@@ -100,7 +100,6 @@ export default function Gallery() {
                   <li>• Multiple aspect ratios</li>
                   <li>• Style customization</li>
                   <li>• Video gallery & downloads</li>
-                  <li>• Curated prompt suggestions</li>
                 </ul>
               </div>
               <div className="space-y-2">
@@ -114,23 +113,23 @@ export default function Gallery() {
         </Sheet>
       </div>
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1 md:space-y-2">
             <h1 
-              className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent"
               data-testid="text-gallery-title"
             >
               Video Gallery
             </h1>
-            <p className="text-muted-foreground" data-testid="text-gallery-subtitle">
+            <p className="text-sm md:text-base text-muted-foreground" data-testid="text-gallery-subtitle">
               Your cosmic video creations
             </p>
           </div>
           <Link href="/">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground" data-testid="button-create-new">
-              <Sparkles className="w-5 h-5 mr-2" />
+            <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-primary-foreground whitespace-nowrap" data-testid="button-create-new">
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Create New
             </Button>
           </Link>
@@ -138,7 +137,7 @@ export default function Gallery() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="loading-gallery">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" data-testid="loading-gallery">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="aspect-square bg-card rounded-lg animate-pulse"></div>
             ))}
@@ -147,13 +146,13 @@ export default function Gallery() {
 
         {/* Empty State */}
         {!isLoading && (!videos || videos.length === 0) && (
-          <div className="text-center py-16 space-y-4" data-testid="empty-gallery">
-            <Sparkles className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
-            <h3 className="text-xl font-semibold text-muted-foreground">No videos yet</h3>
-            <p className="text-muted-foreground">Generate your first cosmic video to get started</p>
+          <div className="text-center py-12 md:py-16 space-y-3 md:space-y-4" data-testid="empty-gallery">
+            <Sparkles className="w-12 h-12 md:w-16 md:h-16 mx-auto text-muted-foreground opacity-50" />
+            <h3 className="text-lg md:text-xl font-semibold text-muted-foreground">No videos yet</h3>
+            <p className="text-sm md:text-base text-muted-foreground">Generate your first cosmic video to get started</p>
             <Link href="/">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground mt-4" data-testid="button-start-creating">
-                <Sparkles className="w-5 h-5 mr-2" />
+              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground mt-2 md:mt-4" data-testid="button-start-creating">
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Start Creating
               </Button>
             </Link>
@@ -162,7 +161,7 @@ export default function Gallery() {
 
         {/* Gallery Grid */}
         {!isLoading && videos && videos.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="gallery-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" data-testid="gallery-grid">
             {videos.map((video) => (
               <div
                 key={video.id}
@@ -187,8 +186,8 @@ export default function Gallery() {
                 </div>
 
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 space-y-3">
-                  <p className="text-white text-sm line-clamp-2" data-testid={`prompt-${video.id}`}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3 md:p-4 space-y-2 md:space-y-3">
+                  <p className="text-white text-xs md:text-sm line-clamp-2" data-testid={`prompt-${video.id}`}>
                     {video.prompt}
                   </p>
                   <div className="flex items-center gap-2">
@@ -196,10 +195,10 @@ export default function Gallery() {
                       size="sm"
                       variant="secondary"
                       onClick={() => handleDownload(video.videoUrl, video.prompt)}
-                      className="flex-1"
+                      className="flex-1 text-xs md:text-sm"
                       data-testid={`button-download-${video.id}`}
                     >
-                      <Download className="w-4 h-4 mr-1" />
+                      <Download className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                       Download
                     </Button>
                     <Button
@@ -210,13 +209,13 @@ export default function Gallery() {
                       data-testid={`button-delete-${video.id}`}
                     >
                       {deleteVideoMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                       ) : (
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                       )}
                     </Button>
                   </div>
-                  <span className="text-xs text-white/70">
+                  <span className="text-[10px] md:text-xs text-white/70">
                     {video.length}s • {video.aspectRatio}
                   </span>
                 </div>
@@ -227,11 +226,12 @@ export default function Gallery() {
 
         {/* Load More Button */}
         {!isLoading && videos && videos.length >= limit && (
-          <div className="flex justify-center pt-8" data-testid="load-more-container">
+          <div className="flex justify-center pt-4 md:pt-8" data-testid="load-more-container">
             <Button
               size="lg"
               variant="outline"
               onClick={() => setLimit(limit + VIDEOS_PER_PAGE)}
+              className="w-full sm:w-auto"
               data-testid="button-load-more"
             >
               Load More
