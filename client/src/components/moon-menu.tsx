@@ -1,4 +1,5 @@
 import { Moon, Home, User, Crown, Settings, Mail } from "lucide-react";
+import { SiTiktok, SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
 import {
@@ -60,6 +61,22 @@ export default function MoonMenu() {
                 </Link>
               );
             })}
+          </div>
+
+          <div className="absolute bottom-4 left-0 right-0 px-6">
+            <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-primary/5 to-secondary/5 p-4 border border-primary/10">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
+              <div className="relative space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground/60">
+                  <SiTiktok className="w-4 h-4" />
+                  <span className="text-xs font-medium">@lunaralabsai</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground/60">
+                  <SiInstagram className="w-4 h-4" />
+                  <span className="text-xs font-medium">@lunaralabsai</span>
+                </div>
+              </div>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

@@ -139,6 +139,7 @@ The application follows professional design guidelines including:
 - ✅ **Responsive Design** - Fully optimized UI for both mobile phones and desktop computers with adaptive layouts
 - ✅ **Advertisement Showcase** - Scrollable section with 6 AI ASMR example videos using HTML5 video elements, poster images, built-in controls, and call-to-action button
 - ✅ **Multi-Page Application** - Added Settings, Profile, Membership, and Contact pages accessible via moon menu navigation
+- ✅ **Social Media Watermark** - Added @lunaralabsai handles for TikTok and Instagram at bottom of navigation menu with cosmic-themed watermark styling
 
 ### Technical Improvements
 - Fixed schema validation using Drizzle's native type inference
