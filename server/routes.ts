@@ -14,9 +14,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Stripe (optional - will work without Stripe keys for simulation)
   let stripe: Stripe | null = null;
   if (process.env.STRIPE_SECRET_KEY) {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-11-20.acacia",
-    });
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   } else {
     console.warn("STRIPE_SECRET_KEY not set - payment processing will be simulated");
   }
@@ -260,8 +258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // Get user and check membership limits
-      const user = await storage.checkAndResetVideoCount(userId);
+      // Get user and check/reset monthly video count if needed
+      let user = await storage.checkAndResetVideoCount(userId);
       const tierConfig = MEMBERSHIP_TIERS[user.membershipTier as MembershipTier];
       
       // Check video limit

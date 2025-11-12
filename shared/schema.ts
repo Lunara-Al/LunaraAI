@@ -39,14 +39,14 @@ export const MEMBERSHIP_TIERS = {
     name: "Free",
     price: 0,
     monthlyVideos: 5,
-    maxLength: 10,
+    maxLength: 5,
     quality: "basic",
   },
   pro: {
     name: "Pro",
     price: 19,
-    monthlyVideos: 50,
-    maxLength: 15,
+    monthlyVideos: 100,
+    maxLength: 10,
     quality: "hd",
     stripePriceId: "price_pro", // Will be replaced with actual Stripe price ID
   },
@@ -54,7 +54,7 @@ export const MEMBERSHIP_TIERS = {
     name: "Premium",
     price: 49,
     monthlyVideos: -1, // unlimited
-    maxLength: 30,
+    maxLength: 15,
     quality: "4k",
     stripePriceId: "price_premium", // Will be replaced with actual Stripe price ID
   },
