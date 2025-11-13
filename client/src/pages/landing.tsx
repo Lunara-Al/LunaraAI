@@ -1,8 +1,11 @@
 import { Sparkles, Video, Zap, Crown, Moon } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Glass header with blur */}
@@ -18,7 +21,7 @@ export default function Landing() {
         </div>
         
         <Button 
-          onClick={() => window.location.href = '/api/login'}
+          onClick={() => setLocation('/login')}
           className="bg-gradient-to-r from-primary to-secondary moon-glow"
           data-testid="button-login"
         >
@@ -46,7 +49,7 @@ export default function Landing() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
               <Button 
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => setLocation('/register')}
                 size="lg"
                 className="bg-gradient-to-r from-primary to-secondary text-lg px-10 py-7 moon-glow text-base md:text-lg"
                 data-testid="button-get-started"
@@ -56,13 +59,13 @@ export default function Landing() {
               </Button>
               
               <Button 
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => setLocation('/login')}
                 size="lg"
                 variant="outline"
                 className="text-lg px-10 py-7 text-base md:text-lg"
               >
                 <Moon className="w-5 h-5 mr-2" />
-                Explore Plans
+                Sign In
               </Button>
             </div>
           </div>
