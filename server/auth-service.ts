@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { nanoid } from "nanoid";
 import { db } from "./db";
 import { users, type User } from "@shared/schema";
 import { eq, or } from "drizzle-orm";
@@ -62,6 +63,7 @@ export class AuthService {
     const passwordHash = await this.hashPassword(password);
 
     const result = await db.insert(users).values({
+      id: nanoid(10), // Generate short 10-character ID
       email,
       username,
       passwordHash,

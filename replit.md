@@ -26,6 +26,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 - **Database:** PostgreSQL is used for data persistence, managed with Drizzle ORM, storing user, session, subscription, and video generation data.
 - **Authentication:** Implements dual authentication system supporting both Replit OIDC and local password-based authentication. Features include:
   - User registration with email/username/password
+  - Short 10-character user IDs using nanoid (e.g., `KgPhEIgVos`) instead of long UUIDs
   - Bcrypt password hashing (12 rounds)
   - Session persistence via PostgreSQL store
   - httpOnly, secure (production), sameSite: lax cookies
