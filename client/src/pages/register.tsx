@@ -40,11 +40,17 @@ export default function Register() {
       setTimeout(() => setLocation("/login"), 1500);
     },
     onError: (error: any) => {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Please try again",
-        variant: "destructive",
-      });
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, message]) => {
+          form.setError(field as any, { message: String(message) });
+        });
+      } else {
+        toast({
+          title: "Registration failed",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
     },
   });
 

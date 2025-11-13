@@ -31,9 +31,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validation = registerSchema.safeParse(req.body);
       
       if (!validation.success) {
+        const fieldErrors: Record<string, string> = {};
+        validation.error.errors.forEach(err => {
+          const field = err.path[0];
+          if (field) {
+            fieldErrors[field.toString()] = err.message;
+          }
+        });
+        
         return res.status(400).json({ 
-          error: "Invalid request",
-          message: validation.error.errors[0]?.message || "Invalid registration data"
+          message: "Validation failed",
+          errors: fieldErrors
         });
       }
 
@@ -59,25 +67,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error registering user:", error);
+      
+      const fieldErrors: Record<string, string> = {};
+      if (error.message === "Email already in use") {
+        fieldErrors.email = "This email is already registered";
+      } else if (error.message === "Username already in use") {
+        fieldErrors.username = "This username is already taken";
+      }
+      
       res.status(400).json({ 
-        error: "Registration failed",
-        message: error.message || "Failed to create account"
+        message: error.message || "Failed to create account",
+        errors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined
       });
     }
   });
 
   app.post('/api/auth/login', (req, res, next) => {
+    const validation = loginSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach(err => {
+        const field = err.path[0];
+        if (field) {
+          fieldErrors[field.toString()] = err.message;
+        }
+      });
+      
+      return res.status(400).json({ 
+        message: "Validation failed",
+        errors: fieldErrors
+      });
+    }
+    
     passport.authenticate('local', (err: any, session: any, info: any) => {
       if (err) {
         return res.status(500).json({ 
-          error: "Authentication error",
           message: "An error occurred during login"
         });
       }
       
       if (!session) {
         return res.status(401).json({ 
-          error: "Authentication failed",
           message: info?.message || "Invalid credentials"
         });
       }
@@ -85,7 +116,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.logIn(session, (err) => {
         if (err) {
           return res.status(500).json({ 
-            error: "Session error",
             message: "Failed to create session"
           });
         }

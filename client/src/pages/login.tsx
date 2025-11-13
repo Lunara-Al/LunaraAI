@@ -38,11 +38,17 @@ export default function Login() {
       setLocation("/");
     },
     onError: (error: any) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, message]) => {
+          form.setError(field as any, { message: String(message) });
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
     },
   });
 

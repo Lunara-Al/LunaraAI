@@ -45,21 +45,83 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+    if (!userData.email) {
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    }
+
+    const [existingUserByEmail] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, userData.email));
+    
+    if (existingUserByEmail && existingUserByEmail.id !== userData.id) {
+      const oldId = existingUserByEmail.id;
+      const newId = userData.id;
+      
+      const [user] = await db.transaction(async (tx) => {
+        await tx
+          .update(videoGenerations)
+          .set({ userId: newId })
+          .where(eq(videoGenerations.userId, oldId));
+        
+        await tx
+          .update(userSettings)
+          .set({ userId: newId })
+          .where(eq(userSettings.userId, oldId));
+        
+        await tx.delete(users).where(eq(users.id, oldId));
+        
+        return await tx
+          .insert(users)
+          .values({
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            username: userData.username || existingUserByEmail.username,
+            passwordHash: null,
+            profileImageUrl: userData.profileImageUrl,
+            membershipTier: existingUserByEmail.membershipTier,
+            videosGeneratedThisMonth: existingUserByEmail.videosGeneratedThisMonth,
+            lastResetDate: existingUserByEmail.lastResetDate,
+            stripeCustomerId: existingUserByEmail.stripeCustomerId,
+            stripeSubscriptionId: existingUserByEmail.stripeSubscriptionId,
+            createdAt: existingUserByEmail.createdAt,
+          })
+          .returning();
+      });
+      return user;
+    } else {
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    }
   }
 
   async updateUserMembership(userId: string, tier: MembershipTier, stripeSubscriptionId?: string): Promise<User> {
