@@ -14,10 +14,15 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table (Required for Replit Auth)
+// User storage table (Supports both Replit Auth and local password auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  username: varchar("username").unique(),
+  passwordHash: varchar("password_hash"), // bcrypt hash (includes salt)
+  verifiedAt: timestamp("verified_at"), // email verification timestamp
+  resetToken: varchar("reset_token"), // password reset token
+  resetTokenExpiry: timestamp("reset_token_expiry"), // when reset token expires
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -129,3 +134,27 @@ export interface ErrorResponse {
   error: string;
   message?: string;
 }
+
+// Authentication schemas
+export const registerSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be less than 20 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+});
+
+export const loginSchema = z.object({
+  usernameOrEmail: z.string().min(1, "Username or email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type RegisterRequest = z.infer<typeof registerSchema>;
+export type LoginRequest = z.infer<typeof loginSchema>;

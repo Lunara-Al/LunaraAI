@@ -1,10 +1,12 @@
 // Server routes with Auth and Stripe integration
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema } from "@shared/schema";
+import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from "./unified-auth";
+import { authService } from "./auth-service";
+import passport from "passport";
 import Stripe from "stripe";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -23,17 +25,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error("PIKA_API_KEY is not set in environment variables");
   }
 
-  // Setup Replit Auth middleware
-  await setupAuth(app);
-
-  // Auth routes (from Replit Auth blueprint)
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // New unified auth endpoints for local password authentication
+  app.post('/api/auth/register', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const validation = registerSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Invalid request",
+          message: validation.error.errors[0]?.message || "Invalid registration data"
+        });
+      }
+
+      const { email, username, password, firstName, lastName } = validation.data;
+      
+      const user = await authService.createUser({
+        email,
+        username,
+        password,
+        firstName,
+        lastName,
+      });
+
+      res.status(201).json({ 
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        }
+      });
+    } catch (error: any) {
+      console.error("Error registering user:", error);
+      res.status(400).json({ 
+        error: "Registration failed",
+        message: error.message || "Failed to create account"
+      });
+    }
+  });
+
+  app.post('/api/auth/login', (req, res, next) => {
+    passport.authenticate('local', (err: any, session: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ 
+          error: "Authentication error",
+          message: "An error occurred during login"
+        });
+      }
+      
+      if (!session) {
+        return res.status(401).json({ 
+          error: "Authentication failed",
+          message: info?.message || "Invalid credentials"
+        });
+      }
+
+      req.logIn(session, (err) => {
+        if (err) {
+          return res.status(500).json({ 
+            error: "Session error",
+            message: "Failed to create session"
+          });
+        }
+        
+        res.json({ success: true });
+      });
+    })(req, res, next);
+  });
+
+  app.get('/api/auth/me', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Legacy endpoint for backward compatibility
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -44,7 +129,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's current subscription status
   app.get("/api/subscription/status", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -71,7 +160,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or upgrade subscription
   app.post("/api/subscription/create", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const { tier } = req.body as { tier: MembershipTier };
 
       if (!tier || !MEMBERSHIP_TIERS[tier]) {
@@ -144,7 +237,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simulate subscription upgrade (when Stripe is not configured)
   app.post("/api/subscription/simulate-upgrade", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const { tier } = req.body as { tier: MembershipTier };
 
       if (!tier || !MEMBERSHIP_TIERS[tier]) {
@@ -167,7 +264,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cancel subscription (downgrade to free)
   app.post("/api/subscription/cancel", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -196,7 +297,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user settings
   app.get("/api/settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       let settings = await storage.getUserSettings(userId);
       
       // If settings don't exist, create default settings
@@ -222,7 +327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update user settings
   app.patch("/api/settings", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       
       // Validate request body
       const validation = updateUserSettingsSchema.safeParse(req.body);
@@ -264,9 +372,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If authenticated, get user-specific videos
       if (req.isAuthenticated && req.isAuthenticated()) {
-        const userId = (req.user as any).claims.sub;
-        const videos = await storage.getUserVideoGenerations(userId, limit);
-        return res.json(videos);
+        const userId = await getAuthenticatedUserId(req);
+        if (userId) {
+          const videos = await storage.getUserVideoGenerations(userId, limit);
+          return res.json(videos);
+        }
       }
       
       // Otherwise get all videos (for non-authenticated access)
@@ -286,7 +396,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/history/:id", isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       
       if (isNaN(id)) {
         const errorResponse: ErrorResponse = {
@@ -320,7 +433,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Video generation endpoint (protected - requires authentication)
   app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       
       // Get user and check/reset monthly video count if needed
       let user = await storage.checkAndResetVideoCount(userId);
