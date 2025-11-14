@@ -38,6 +38,11 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Frontend user object with computed fields (doesn't expose sensitive fields)
+export type FrontendUser = Omit<User, 'passwordHash' | 'resetToken' | 'resetTokenExpiry'> & {
+  hasPassword: boolean; // Computed from passwordHash existence
+};
+
 // Subscription plans configuration
 export const MEMBERSHIP_TIERS = {
   free: {
