@@ -160,9 +160,10 @@ export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 
 // Account audit log table - tracks account creation and deletion
+// NOTE: userId is NOT a foreign key - it's an immutable record that persists after user deletion
 export const accountAuditLog = pgTable("account_audit_log", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  userId: varchar("user_id").notNull(),
+  userId: varchar("user_id").notNull(), // Stored as plain text, not a foreign key reference
   email: varchar("email").notNull(),
   username: varchar("username"),
   action: varchar("action", { length: 20 }).notNull(), // "created" or "deleted"
