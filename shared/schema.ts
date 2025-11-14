@@ -158,3 +158,18 @@ export const loginSchema = z.object({
 
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
+
+// Account audit log table - tracks account creation and deletion
+export const accountAuditLog = pgTable("account_audit_log", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").notNull(),
+  email: varchar("email").notNull(),
+  username: varchar("username"),
+  action: varchar("action", { length: 20 }).notNull(), // "created" or "deleted"
+  authProvider: varchar("auth_provider", { length: 20 }).notNull(), // "local" or "replit"
+  metadata: jsonb("metadata"), // Additional data like IP, user agent, etc.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AccountAuditLog = typeof accountAuditLog.$inferSelect;
+export type InsertAccountAuditLog = typeof accountAuditLog.$inferInsert;

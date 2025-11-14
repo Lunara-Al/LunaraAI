@@ -1,15 +1,62 @@
-import { User, Mail, Calendar, LogOut, Crown } from "lucide-react";
+import { User, Mail, Calendar, LogOut, Crown, Trash2 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/auth/delete-account");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted.",
+      });
+      setTimeout(() => {
+        setLocation("/");
+      }, 1000);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    if (deleteConfirmation === "DELETE") {
+      deleteAccountMutation.mutate();
+      setIsDeleteDialogOpen(false);
+      setDeleteConfirmation("");
+    }
+  };
 
   // Handle unauthorized access
   useEffect(() => {
@@ -98,7 +145,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-4 space-y-3">
             <Button 
               variant="outline" 
               className="w-full"
@@ -108,9 +155,63 @@ export default function Profile() {
               <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </Button>
+            
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              data-testid="button-delete-account"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Account
+            </Button>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your account and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
+              Type <span className="font-bold">DELETE</span> to confirm
+            </label>
+            <Input
+              id="delete-confirmation"
+              type="text"
+              value={deleteConfirmation}
+              onChange={(e) => setDeleteConfirmation(e.target.value)}
+              placeholder="DELETE"
+              data-testid="input-delete-confirmation"
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteConfirmation("");
+              }}
+              data-testid="button-cancel-delete"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmation !== "DELETE" || deleteAccountMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

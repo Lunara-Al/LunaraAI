@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { db } from "./db";
 import { users, type User } from "@shared/schema";
 import { eq, or } from "drizzle-orm";
+import { storage } from "./storage";
 
 const SALT_ROUNDS = 12;
 
@@ -73,7 +74,17 @@ export class AuthService {
       videosGeneratedThisMonth: 0,
     }).returning();
 
-    return result[0];
+    const user = result[0];
+
+    await storage.logAccountAudit({
+      userId: user.id,
+      email: user.email || "",
+      username: user.username || undefined,
+      action: "created",
+      authProvider: "local",
+    });
+
+    return user;
   }
 
   async verifyCredentials(usernameOrEmail: string, password: string): Promise<User | null> {

@@ -2,6 +2,7 @@ import {
   videoGenerations, 
   users,
   userSettings,
+  accountAuditLog,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
@@ -9,7 +10,8 @@ import {
   type MembershipTier,
   type UserSettings,
   type InsertUserSettings,
-  type UpdateUserSettings
+  type UpdateUserSettings,
+  type InsertAccountAuditLog
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -22,6 +24,7 @@ export interface IStorage {
   incrementVideoCount(userId: string): Promise<User>;
   resetMonthlyVideoCount(userId: string): Promise<User>;
   checkAndResetVideoCount(userId: string): Promise<User>;
+  deleteUserAccount(userId: string): Promise<void>;
   
   // User settings operations
   getUserSettings(userId: string): Promise<UserSettings | undefined>;
@@ -35,6 +38,9 @@ export interface IStorage {
   getMonthlyVideoCount(userId: string): Promise<number>;
   getAllVideoGenerations(): Promise<VideoGeneration[]>;
   deleteVideoGeneration(id: number, userId?: string): Promise<boolean>;
+  
+  // Audit operations
+  logAccountAudit(data: { userId: string, email: string, username?: string, action: "created" | "deleted", authProvider: "local" | "replit", metadata?: any }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -253,6 +259,27 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: videoGenerations.id });
     
     return result.length > 0;
+  }
+
+  // Audit operations
+  async logAccountAudit(data: { userId: string, email: string, username?: string, action: "created" | "deleted", authProvider: "local" | "replit", metadata?: any }): Promise<void> {
+    await db.insert(accountAuditLog).values({
+      userId: data.userId,
+      email: data.email,
+      username: data.username || null,
+      action: data.action,
+      authProvider: data.authProvider,
+      metadata: data.metadata || null,
+    });
+  }
+
+  async deleteUserAccount(userId: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(videoGenerations).where(eq(videoGenerations.userId, userId));
+      await tx.delete(userSettings).where(eq(userSettings.userId, userId));
+      await tx.delete(accountAuditLog).where(eq(accountAuditLog.userId, userId));
+      await tx.delete(users).where(eq(users.id, userId));
+    });
   }
 }
 

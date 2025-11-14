@@ -156,6 +156,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete account endpoint
+  app.post('/api/auth/delete-account', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await storage.logAccountAudit({
+        userId: user.id,
+        email: user.email || "",
+        username: user.username || undefined,
+        action: "deleted",
+        authProvider: user.passwordHash ? "local" : "replit",
+      });
+
+      await storage.deleteUserAccount(user.id);
+
+      req.logout(() => {
+        res.json({ success: true, message: "Account deleted successfully" });
+      });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   // Get user's current subscription status
   app.get("/api/subscription/status", isAuthenticated, async (req: any, res) => {
     try {

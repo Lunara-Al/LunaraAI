@@ -79,13 +79,28 @@ export async function setupUnifiedAuth(app: Express) {
       expires_at: claims?.exp || 0,
     };
     
+    const userId = String(claims?.sub || '');
+    const email = String(claims?.email || '');
+    
+    const existingUser = await storage.getUser(userId);
+    const isNewUser = !existingUser;
+    
     await storage.upsertUser({
-      id: String(claims?.sub || ''),
-      email: String(claims?.email || ''),
+      id: userId,
+      email: email,
       firstName: String(claims?.first_name || ''),
       lastName: String(claims?.last_name || ''),
       profileImageUrl: String(claims?.profile_image_url || ''),
     });
+    
+    if (isNewUser) {
+      await storage.logAccountAudit({
+        userId: userId,
+        email: email,
+        action: "created",
+        authProvider: "replit",
+      });
+    }
     
     verified(null, session);
   };
