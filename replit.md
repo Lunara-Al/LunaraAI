@@ -34,15 +34,27 @@ The application employs a "Glass Bubble Moon" design system characterized by:
   - Transactional migration ensuring data integrity
   - Field-level form validation with inline error display
   - Glass bubble moon themed auth pages (Login, Register)
+  - Account deletion with verification (requires typing "DELETE")
+  - Comprehensive audit logging for account creation and deletion
 - **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows, with a fallback to simulation mode if Stripe API keys are not configured.
 - **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input.
 
 ### Feature Specifications
 - **Video Generation:** Users input text prompts to generate 10-second cosmic ASMR videos with autoplay and looping.
 - **User Authentication & Authorization:** Secure login/logout, protected routes, and role-based access control tied to subscription tiers.
+- **Account Management:** 
+  - User profile displaying account information
+  - Sign out functionality
+  - Delete account with confirmation dialog (requires typing "DELETE")
+  - All user data (videos, settings, account) removed on deletion
+  - Audit logs preserved for compliance
+- **Audit Logging:**
+  - Tracks all account creation events (local registration and OIDC sign-in)
+  - Tracks all account deletion events
+  - Immutable logs stored independently (persist after user deletion)
+  - Includes userId, email, username, action type, auth provider, and timestamp
 - **Subscription Management:** Three membership tiers (Free, Pro, Premium) with varying video limits, lengths, quality, and features. Users can upgrade, downgrade, or cancel subscriptions. Monthly video limits are automatically reset.
 - **Video Gallery:** Displays generated videos in a grid, with hover-to-play functionality, pagination, and deletion capabilities.
-- **User Profile:** Displays authenticated user data.
 - **Moon Navigation Menu:** A sliding navigation panel providing access to Home, Profile, Membership, Settings, and Contact pages.
 - **Advertisement Showcase:** A scrollable section featuring example AI ASMR videos.
 
