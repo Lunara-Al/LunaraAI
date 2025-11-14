@@ -34,7 +34,9 @@ The application employs a "Glass Bubble Moon" design system characterized by:
   - Transactional migration ensuring data integrity
   - Field-level form validation with inline error display
   - Glass bubble moon themed auth pages (Login, Register)
-  - Account deletion with verification (requires typing "DELETE")
+  - Account deletion with dual verification methods:
+    - Local auth: Password verification
+    - OIDC: Type "DELETE" to confirm
   - Comprehensive audit logging for account creation and deletion
 - **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows, with a fallback to simulation mode if Stripe API keys are not configured.
 - **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input.
@@ -45,7 +47,9 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 - **Account Management:** 
   - User profile displaying account information
   - Sign out functionality
-  - Delete account with confirmation dialog (requires typing "DELETE")
+  - Delete account with verification dialog:
+    - Local auth users: Must enter their password
+    - OIDC users: Type "DELETE" to confirm
   - All user data (videos, settings, account) removed on deletion
   - Audit logs preserved for compliance
 - **Audit Logging:**
