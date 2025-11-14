@@ -133,7 +133,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json(user);
+      // Add hasPassword flag (true if local auth, false if OIDC)
+      const userResponse = {
+        ...user,
+        hasPassword: !!user.passwordHash,
+      };
+      
+      // Remove sensitive fields before sending to frontend
+      delete (userResponse as any).passwordHash;
+      delete (userResponse as any).resetToken;
+      delete (userResponse as any).resetTokenExpiry;
+      
+      res.json(userResponse);
     } catch (error) {
       console.error("Error fetching current user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -156,13 +167,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete account endpoint
+  // Delete account endpoint - supports both password and text confirmation
   app.post('/api/auth/delete-account', isAuthenticated, async (req: any, res) => {
     try {
       const user = await getAuthenticatedUser(req);
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      const { method, password, confirmation } = req.body;
+
+      // Verify based on method
+      if (method === "password") {
+        // Local users must verify with password
+        if (!user.passwordHash) {
+          return res.status(400).json({ message: "Invalid verification method" });
+        }
+        
+        if (!password) {
+          return res.status(400).json({ message: "Password is required" });
+        }
+
+        const isValid = await authService.verifyPassword(password, user.passwordHash);
+        if (!isValid) {
+          return res.status(401).json({ message: "Incorrect password" });
+        }
+      } else if (method === "text") {
+        // OIDC users verify with "DELETE" text
+        if (user.passwordHash) {
+          return res.status(400).json({ message: "Invalid verification method" });
+        }
+        
+        if (confirmation !== "DELETE") {
+          return res.status(400).json({ message: "Invalid confirmation text" });
+        }
+      } else {
+        return res.status(400).json({ message: "Invalid verification method" });
       }
 
       await storage.logAccountAudit({
