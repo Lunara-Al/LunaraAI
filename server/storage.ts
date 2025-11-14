@@ -277,7 +277,7 @@ export class DatabaseStorage implements IStorage {
     await db.transaction(async (tx) => {
       await tx.delete(videoGenerations).where(eq(videoGenerations.userId, userId));
       await tx.delete(userSettings).where(eq(userSettings.userId, userId));
-      await tx.delete(accountAuditLog).where(eq(accountAuditLog.userId, userId));
+      // Note: DO NOT delete accountAuditLog - it's a permanent record
       await tx.delete(users).where(eq(users.id, userId));
     });
   }
