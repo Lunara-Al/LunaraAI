@@ -27,10 +27,11 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
 
   const deleteAccountMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("POST", "/api/auth/delete-account");
+    mutationFn: async (payload: { method: string; password?: string; confirmation?: string }) => {
+      return await apiRequest("POST", "/api/auth/delete-account", payload);
     },
     onSuccess: () => {
       toast({
@@ -51,10 +52,20 @@ export default function Profile() {
   });
 
   const handleDeleteAccount = () => {
-    if (deleteConfirmation === "DELETE") {
-      deleteAccountMutation.mutate();
-      setIsDeleteDialogOpen(false);
-      setDeleteConfirmation("");
+    if (user?.hasPassword) {
+      // Local users verify with password
+      if (deletePassword) {
+        deleteAccountMutation.mutate({ method: "password", password: deletePassword });
+        setIsDeleteDialogOpen(false);
+        setDeletePassword("");
+      }
+    } else {
+      // OIDC users verify with "DELETE" text
+      if (deleteConfirmation === "DELETE") {
+        deleteAccountMutation.mutate({ method: "text", confirmation: deleteConfirmation });
+        setIsDeleteDialogOpen(false);
+        setDeleteConfirmation("");
+      }
     }
   };
 
@@ -179,23 +190,42 @@ export default function Profile() {
           </AlertDialogHeader>
           
           <div className="py-4">
-            <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
-              Type <span className="font-bold">DELETE</span> to confirm
-            </label>
-            <Input
-              id="delete-confirmation"
-              type="text"
-              value={deleteConfirmation}
-              onChange={(e) => setDeleteConfirmation(e.target.value)}
-              placeholder="DELETE"
-              data-testid="input-delete-confirmation"
-            />
+            {user?.hasPassword ? (
+              <>
+                <label htmlFor="delete-password" className="text-sm font-medium mb-2 block">
+                  Enter your password to confirm
+                </label>
+                <Input
+                  id="delete-password"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Password"
+                  data-testid="input-delete-password"
+                />
+              </>
+            ) : (
+              <>
+                <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
+                  Type <span className="font-bold">DELETE</span> to confirm
+                </label>
+                <Input
+                  id="delete-confirmation"
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="DELETE"
+                  data-testid="input-delete-confirmation"
+                />
+              </>
+            )}
           </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
               onClick={() => {
                 setDeleteConfirmation("");
+                setDeletePassword("");
               }}
               data-testid="button-cancel-delete"
             >
@@ -203,7 +233,10 @@ export default function Profile() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmation !== "DELETE" || deleteAccountMutation.isPending}
+              disabled={
+                (user?.hasPassword ? !deletePassword : deleteConfirmation !== "DELETE") ||
+                deleteAccountMutation.isPending
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-delete"
             >
