@@ -59,7 +59,7 @@ export const MEMBERSHIP_TIERS = {
     maxLength: 15,
     quality: "hd",
     get stripePriceId() {
-      return process.env.STRIPE_PRICE_ID_PRO || null;
+      return process.env.STRIPE_PRICE_ID_PRO?.trim() || null;
     },
   },
   premium: {
@@ -69,7 +69,7 @@ export const MEMBERSHIP_TIERS = {
     maxLength: 15,
     quality: "4k",
     get stripePriceId() {
-      return process.env.STRIPE_PRICE_ID_PREMIUM || null;
+      return process.env.STRIPE_PRICE_ID_PREMIUM?.trim() || null;
     },
   },
 } as const;

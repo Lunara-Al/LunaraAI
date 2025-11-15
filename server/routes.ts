@@ -15,8 +15,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize Stripe (optional - will work without Stripe keys for simulation)
   let stripe: Stripe | null = null;
-  if (process.env.STRIPE_SECRET_KEY) {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (stripeSecretKey) {
+    stripe = new Stripe(stripeSecretKey);
   } else {
     console.warn("STRIPE_SECRET_KEY not set - payment processing will be simulated");
   }
@@ -283,10 +284,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Paid tiers - require Stripe
       if (!stripe) {
-        return res.status(503).json({ 
-          error: "Payment processing unavailable", 
-          message: "Stripe is not configured. Simulating subscription upgrade.",
-          simulated: true 
+        return res.status(200).json({ 
+          simulated: true,
+          message: "Stripe is not configured. Please use simulation endpoint."
         });
       }
 
