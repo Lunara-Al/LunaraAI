@@ -30,24 +30,15 @@ function Router() {
 
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/register" component={Register} />
-          <Route path="/login" component={Login} />
-          <Route component={Landing} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/gallery" component={Gallery} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/membership" component={Membership} />
-          <Route path="/contact" component={Contact} />
-          <Route component={NotFound} />
-        </>
-      )}
+      <Route path="/register">{isAuthenticated ? <Home /> : <Register />}</Route>
+      <Route path="/login">{isAuthenticated ? <Home /> : <Login />}</Route>
+      <Route path="/gallery">{isAuthenticated ? <Gallery /> : <Landing />}</Route>
+      <Route path="/settings">{isAuthenticated ? <Settings /> : <Landing />}</Route>
+      <Route path="/profile">{isAuthenticated ? <Profile /> : <Landing />}</Route>
+      <Route path="/membership">{isAuthenticated ? <Membership /> : <Landing />}</Route>
+      <Route path="/contact">{isAuthenticated ? <Contact /> : <Landing />}</Route>
+      <Route path="/">{isAuthenticated ? <Home /> : <Landing />}</Route>
+      <Route>{isAuthenticated ? <NotFound /> : <Landing />}</Route>
     </Switch>
   );
 }
