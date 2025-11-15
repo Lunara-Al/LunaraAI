@@ -49,14 +49,14 @@ export const MEMBERSHIP_TIERS = {
     name: "Free",
     price: 0,
     monthlyVideos: 5,
-    maxLength: 5,
+    maxLength: 10,
     quality: "basic",
   },
   pro: {
     name: "Pro",
     price: 19,
-    monthlyVideos: 100,
-    maxLength: 10,
+    monthlyVideos: 50,
+    maxLength: 15,
     quality: "hd",
     stripePriceId: "price_pro", // Will be replaced with actual Stripe price ID
   },
@@ -120,7 +120,7 @@ export type UserSettings = typeof userSettings.$inferSelect;
 // Video generation request schema
 export const videoGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(500, "Prompt must be less than 500 characters"),
-  length: z.number().refine((val) => [5, 10].includes(val), "Length must be 5 or 10").default(10),
+  length: z.number().refine((val) => [5, 10, 15].includes(val), "Length must be 5, 10, or 15 seconds").default(10),
   aspectRatio: z.enum(["1:1", "16:9", "9:16"]).default("1:1"),
   style: z.string().optional(),
 });
