@@ -58,7 +58,9 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: 50,
     maxLength: 15,
     quality: "hd",
-    stripePriceId: "price_pro", // Will be replaced with actual Stripe price ID
+    get stripePriceId() {
+      return process.env.STRIPE_PRICE_ID_PRO || null;
+    },
   },
   premium: {
     name: "Premium",
@@ -66,7 +68,9 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: -1, // unlimited
     maxLength: 15,
     quality: "4k",
-    stripePriceId: "price_premium", // Will be replaced with actual Stripe price ID
+    get stripePriceId() {
+      return process.env.STRIPE_PRICE_ID_PREMIUM || null;
+    },
   },
 } as const;
 
