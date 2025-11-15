@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize Stripe (optional - will work without Stripe keys for simulation)
   let stripe: Stripe | null = null;
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/[\r\n\t]/g, '');
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/[\r\n\t\s]/g, '');
   
   if (stripeSecretKey) {
     // Validate Stripe key format (allows alphanumeric and underscores)
