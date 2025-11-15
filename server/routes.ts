@@ -18,8 +18,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/[\r\n\t]/g, '');
   
   if (stripeSecretKey) {
-    // Validate Stripe key format
-    const stripeKeyRegex = /^sk_(test|live)_[A-Za-z0-9]+$/;
+    // Validate Stripe key format (allows alphanumeric and underscores)
+    const stripeKeyRegex = /^sk_(test|live)_[A-Za-z0-9_]+$/;
     if (!stripeKeyRegex.test(stripeSecretKey)) {
       console.error("STRIPE_SECRET_KEY has invalid format - expected sk_test_* or sk_live_*");
       console.error(`Key length: ${stripeSecretKey.length}, starts with: ${stripeSecretKey.substring(0, 8)}`);
