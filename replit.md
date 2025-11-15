@@ -39,6 +39,12 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - OIDC: Type "DELETE" to confirm
   - Comprehensive audit logging for account creation and deletion
 - **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows, with a fallback to simulation mode if Stripe API keys are not configured.
+  - **Stripe Integration Status:** 
+    - Environment variables configured: STRIPE_SECRET_KEY, VITE_STRIPE_PUBLIC_KEY, STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_PREMIUM
+    - Added validation and sanitization (trim whitespace, strip control characters, regex validation)
+    - Automatic fallback to simulation mode if Stripe unavailable
+    - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
+    - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
 - **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input.
 
 ### Feature Specifications
