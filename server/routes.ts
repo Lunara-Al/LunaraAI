@@ -15,9 +15,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize Stripe (optional - will work without Stripe keys for simulation)
   let stripe: Stripe | null = null;
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/[\r\n\t]/g, '');
+  
   if (stripeSecretKey) {
-    stripe = new Stripe(stripeSecretKey);
+    // Validate Stripe key format
+    const stripeKeyRegex = /^sk_(test|live)_[A-Za-z0-9]+$/;
+    if (!stripeKeyRegex.test(stripeSecretKey)) {
+      console.error("STRIPE_SECRET_KEY has invalid format - expected sk_test_* or sk_live_*");
+      console.error(`Key length: ${stripeSecretKey.length}, starts with: ${stripeSecretKey.substring(0, 8)}`);
+      console.warn("Payment processing will be simulated until a valid Stripe key is provided");
+    } else {
+      try {
+        stripe = new Stripe(stripeSecretKey);
+        console.log("Stripe initialized successfully");
+      } catch (error: any) {
+        console.error("Failed to initialize Stripe:", error.message);
+        console.warn("Payment processing will be simulated");
+      }
+    }
   } else {
     console.warn("STRIPE_SECRET_KEY not set - payment processing will be simulated");
   }
