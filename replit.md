@@ -19,6 +19,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 - **Responsiveness:** Optimized for both mobile and desktop.
 - **Accessibility:** Includes ARIA labels and keyboard navigation.
 - **Theming:** Supports both dark and light modes with adaptive glass effects.
+- **Branding:** Custom moon & stars logo with purple-pink gradient used throughout (landing page header/footer, moon menu icon, favicon) replacing generic Moon icon for cohesive brand identity.
 
 ### Technical Implementations
 - **Frontend:** Built with React and TypeScript, styled using Tailwind CSS with a custom cosmic theme. State management is handled by TanStack Query for API mutations, and Wouter is used for client-side routing.
