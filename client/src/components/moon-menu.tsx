@@ -1,4 +1,4 @@
-import { Moon, Home, User, Crown, Settings, Mail, Film } from "lucide-react";
+import { Home, User, Crown, Settings, Mail, Film } from "lucide-react";
 import { SiTiktok, SiInstagram } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -11,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useState } from "react";
+import logoImage from "@assets/A41D8A07-F3C5-4743-A391-C57440931505_1763562778159.png";
 
 export default function MoonMenu() {
   const [location] = useLocation();
@@ -30,7 +31,11 @@ export default function MoonMenu() {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" data-testid="button-moon-menu">
-            <Moon className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+            <img 
+              src={logoImage} 
+              alt="Lunara AI Logo" 
+              className="w-5 h-5 rounded-lg object-cover"
+            />
           </Button>
         </SheetTrigger>
         <SheetContent side="right" className="w-[85vw] max-w-sm">

@@ -2,6 +2,7 @@ import { Sparkles, Video, Zap, Crown, Moon } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import logoImage from "@assets/A41D8A07-F3C5-4743-A391-C57440931505_1763562778159.png";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -12,8 +13,11 @@ export default function Landing() {
       <header className="glass sticky top-0 z-50 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Moon className="w-8 h-8 md:w-10 md:h-10 text-primary moon-glow" />
-            <Sparkles className="w-4 h-4 text-secondary absolute -top-1 -right-1 animate-pulse" />
+            <img 
+              src={logoImage} 
+              alt="Lunara AI Logo" 
+              className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover moon-glow"
+            />
           </div>
           <span className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
             Lunara AI
@@ -110,7 +114,11 @@ export default function Landing() {
 
       <footer className="glass px-4 py-8 text-center backdrop-blur-xl">
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Moon className="w-4 h-4 text-primary" />
+          <img 
+            src={logoImage} 
+            alt="Lunara AI" 
+            className="w-5 h-5 rounded-md object-cover"
+          />
           <span>Lunara AI - Cosmic Video Generation Platform</span>
         </div>
       </footer>
