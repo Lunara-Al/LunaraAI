@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useState } from "react";
-import logoImage from "@assets/A41D8A07-F3C5-4743-A391-C57440931505_1763562778159.png";
+import logoImage from "@assets/image_1763580355366.jpeg";
 
 export default function MoonMenu() {
   const [location] = useLocation();
