@@ -1,4 +1,5 @@
 import { Mail, MessageSquare, Send } from "lucide-react";
+import { SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,10 +89,19 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <MessageSquare className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <SiDiscord className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-medium">Our Discord</h3>
                     <p className="text-sm text-muted-foreground">Join our community for real-time support</p>
+                    <a 
+                      href="https://discord.gg/PerbbtKM6F" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline mt-1 inline-block"
+                      data-testid="link-discord"
+                    >
+                      https://discord.gg/PerbbtKM6F
+                    </a>
                   </div>
                 </div>
               </div>

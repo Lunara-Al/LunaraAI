@@ -32,11 +32,11 @@ function Router() {
     <Switch>
       <Route path="/register">{isAuthenticated ? <Home /> : <Register />}</Route>
       <Route path="/login">{isAuthenticated ? <Home /> : <Login />}</Route>
+      <Route path="/contact" component={Contact} />
       <Route path="/gallery">{isAuthenticated ? <Gallery /> : <Landing />}</Route>
       <Route path="/settings">{isAuthenticated ? <Settings /> : <Landing />}</Route>
       <Route path="/profile">{isAuthenticated ? <Profile /> : <Landing />}</Route>
       <Route path="/membership">{isAuthenticated ? <Membership /> : <Landing />}</Route>
-      <Route path="/contact">{isAuthenticated ? <Contact /> : <Landing />}</Route>
       <Route path="/">{isAuthenticated ? <Home /> : <Landing />}</Route>
       <Route>{isAuthenticated ? <NotFound /> : <Landing />}</Route>
     </Switch>
