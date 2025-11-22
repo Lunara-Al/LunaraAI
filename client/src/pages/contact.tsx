@@ -1,4 +1,4 @@
-import { Mail, MessageSquare, Send, ExternalLink } from "lucide-react";
+import { Mail, MessageSquare, Send, ExternalLink, CheckCircle } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,48 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import MoonMenu from "@/components/moon-menu";
 
 export default function Contact() {
   const [isDiscordOpen, setIsDiscordOpen] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { toast } = useToast();
+  
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data: { name: string; email: string; message: string }) => {
+      return apiRequest("/api/contact/send-message", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      setIsSubmitted(true);
+      toast({ title: "Message sent!", description: "Thank you for reaching out. We'll get back to you soon." });
+      setTimeout(() => setIsSubmitted(false), 3000);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const message = formData.get("message") as string;
+
+    if (!name || !email || !message) {
+      toast({ title: "Error", description: "Please fill in all fields.", variant: "destructive" });
+      return;
+    }
+
+    sendMessageMutation.mutate({ name, email, message });
+    (e.target as HTMLFormElement).reset();
+  };
   return (
     <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
       <MoonMenu />
@@ -24,7 +62,7 @@ export default function Contact() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Contact Form */}
-          <div className="bg-card border border-card-border rounded-lg p-6 space-y-6">
+          <div className="bg-card border border-border rounded-lg p-6 space-y-6">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <MessageSquare className="w-6 h-6 text-primary" />
@@ -35,12 +73,24 @@ export default function Contact() {
               </p>
             </div>
 
-            <form className="space-y-4">
+            {isSubmitted && (
+              <div className="bg-primary/10 border border-primary rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-primary">Message sent successfully!</h3>
+                  <p className="text-sm text-muted-foreground">Thank you for reaching out. We'll get back to you soon.</p>
+                </div>
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input 
-                  id="name" 
+                  id="name"
+                  name="name"
                   placeholder="Your name" 
+                  className="border border-border"
                   data-testid="input-contact-name"
                 />
               </div>
@@ -48,9 +98,11 @@ export default function Contact() {
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input 
-                  id="email" 
+                  id="email"
+                  name="email"
                   type="email" 
-                  placeholder="your@email.com" 
+                  placeholder="your@email.com"
+                  className="border border-border"
                   data-testid="input-contact-email"
                 />
               </div>
@@ -58,16 +110,22 @@ export default function Contact() {
               <div className="space-y-2">
                 <Label htmlFor="message">Message</Label>
                 <Textarea 
-                  id="message" 
+                  id="message"
+                  name="message"
                   placeholder="How can we help you?" 
                   rows={5}
+                  className="border border-border"
                   data-testid="input-contact-message"
                 />
               </div>
 
-              <Button className="w-full bg-gradient-to-r from-primary to-secondary" data-testid="button-send-message">
+              <Button 
+                className="w-full bg-gradient-to-r from-primary to-secondary" 
+                data-testid="button-send-message"
+                disabled={sendMessageMutation.isPending}
+              >
                 <Send className="w-4 h-4 mr-2" />
-                Send Message
+                {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
               </Button>
             </form>
           </div>

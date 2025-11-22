@@ -183,3 +183,18 @@ export const accountAuditLog = pgTable("account_audit_log", {
 
 export type AccountAuditLog = typeof accountAuditLog.$inferSelect;
 export type InsertAccountAuditLog = typeof accountAuditLog.$inferInsert;
+
+// Contact messages table
+export const contactMessages = pgTable("contact_messages", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar("name").notNull(),
+  email: varchar("email").notNull(),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).default("unread").notNull(), // "unread" or "read"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({ id: true, status: true, createdAt: true });
+
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
