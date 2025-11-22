@@ -102,7 +102,7 @@ export default function Contact() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Contact Form */}
-          <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+          <div className="glass-card rounded-3xl p-8 space-y-6 moon-glow">
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <MessageSquare className="w-6 h-6 text-primary" />
@@ -114,53 +114,95 @@ export default function Contact() {
             </div>
 
             {isSubmitted && (
-              <div className="bg-primary/10 border border-primary rounded-lg p-4 flex items-start gap-3">
+              <div className="glass rounded-2xl p-4 flex items-start gap-3 border border-primary/30 bg-primary/5 dark:bg-primary/10">
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-primary">Message sent successfully!</h3>
+                  <h3 className="font-semibold text-primary">Message sent successfully!</h3>
                   <p className="text-sm text-muted-foreground">Thank you for reaching out. We'll get back to you soon.</p>
                 </div>
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form ref={formRef} className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input 
-                  id="name"
-                  name="name"
-                  placeholder="Your name" 
-                  className="border border-border"
-                  data-testid="input-contact-name"
-                />
+                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                <div className="relative">
+                  <Input 
+                    id="name"
+                    name="name"
+                    placeholder="Your name" 
+                    className={`glass-button rounded-xl transition-all ${
+                      errors.name 
+                        ? "border-destructive/50 focus-visible:ring-destructive/50" 
+                        : "focus-visible:ring-primary/50"
+                    }`}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                    data-testid="input-contact-name"
+                  />
+                </div>
+                {errors.name && (
+                  <div className="flex items-center gap-1.5 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.name}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email"
-                  name="email"
-                  type="email" 
-                  placeholder="your@email.com"
-                  className="border border-border"
-                  data-testid="input-contact-email"
-                />
+                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                <div className="relative">
+                  <Input 
+                    id="email"
+                    name="email"
+                    type="email" 
+                    placeholder="your@email.com"
+                    className={`glass-button rounded-xl transition-all ${
+                      errors.email 
+                        ? "border-destructive/50 focus-visible:ring-destructive/50" 
+                        : "focus-visible:ring-primary/50"
+                    }`}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
+                    data-testid="input-contact-email"
+                  />
+                </div>
+                {errors.email && (
+                  <div className="flex items-center gap-1.5 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea 
-                  id="message"
-                  name="message"
-                  placeholder="How can we help you?" 
-                  rows={5}
-                  className="border border-border"
-                  data-testid="input-contact-message"
-                />
+                <Label htmlFor="message" className="text-sm font-medium">Message</Label>
+                <div className="relative">
+                  <Textarea 
+                    id="message"
+                    name="message"
+                    placeholder="How can we help you?" 
+                    rows={5}
+                    className={`glass-button rounded-xl transition-all resize-none ${
+                      errors.message 
+                        ? "border-destructive/50 focus-visible:ring-destructive/50" 
+                        : "focus-visible:ring-primary/50"
+                    }`}
+                    onFocus={() => setFocusedField("message")}
+                    onBlur={() => setFocusedField(null)}
+                    data-testid="input-contact-message"
+                  />
+                </div>
+                {errors.message && (
+                  <div className="flex items-center gap-1.5 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.message}
+                  </div>
+                )}
               </div>
 
               <Button 
-                className="w-full bg-gradient-to-r from-primary to-secondary" 
+                className="w-full bg-gradient-to-r from-primary to-secondary rounded-xl" 
                 data-testid="button-send-message"
                 disabled={sendMessageMutation.isPending}
               >
@@ -172,7 +214,7 @@ export default function Contact() {
 
           {/* Contact Info */}
           <div className="space-y-6">
-            <div className="bg-card border border-card-border rounded-lg p-6 space-y-4">
+            <div className="glass-card rounded-3xl p-8 space-y-6 moon-glow">
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold">Get in Touch</h2>
                 <p className="text-sm text-muted-foreground">
@@ -181,35 +223,37 @@ export default function Contact() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 p-4 glass rounded-xl">
                   <Mail className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-medium">Email</h3>
+                    <h3 className="font-semibold">Email</h3>
                     <p className="text-sm text-muted-foreground">support@lunara.ai</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <SiDiscord className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium">Our Discord</h3>
-                    <p className="text-sm text-muted-foreground">Join our community for real-time support</p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setIsDiscordOpen(true)}
-                      className="text-primary p-0 h-auto mt-1"
-                      data-testid="button-join-discord"
-                    >
-                      <span className="text-sm underline">Join our community</span>
-                    </Button>
+                <div className="flex items-start gap-3 p-4 glass rounded-xl flex-col">
+                  <div className="flex items-start gap-3 w-full">
+                    <SiDiscord className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold">Our Discord</h3>
+                      <p className="text-sm text-muted-foreground">Join our community for real-time support</p>
+                    </div>
                   </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsDiscordOpen(true)}
+                    className="text-primary p-0 h-auto mt-1 hover-elevate"
+                    data-testid="button-join-discord"
+                  >
+                    <span className="text-sm underline">Join our community →</span>
+                  </Button>
                 </div>
               </div>
             </div>
 
-            <div className="bg-card border border-card-border rounded-lg p-6 space-y-2">
-              <h3 className="font-semibold">Need Quick Help?</h3>
+            <div className="glass rounded-3xl p-8 space-y-3 moon-glow border border-primary/20">
+              <h3 className="font-semibold text-lg">Need Quick Help?</h3>
               <p className="text-sm text-muted-foreground">
                 Check out our documentation and FAQ section for instant answers to common questions.
               </p>
@@ -218,25 +262,25 @@ export default function Contact() {
         </div>
 
         <Dialog open={isDiscordOpen} onOpenChange={setIsDiscordOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md glass-card border-primary/30 rounded-3xl">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <SiDiscord className="w-5 h-5" />
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <SiDiscord className="w-5 h-5 text-primary" />
                 Join Our Discord Community
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-muted-foreground">
                 Connect with our community for real-time support, updates, and discussions
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-4">
-              <div className="flex items-center justify-center p-4 bg-card rounded-lg border border-card-border">
+              <div className="flex items-center justify-center p-4 glass rounded-xl border border-primary/20">
                 <span className="text-sm font-mono text-muted-foreground break-all">
                   https://discord.gg/PerbbtKM6F
                 </span>
               </div>
               <Button
                 onClick={() => window.open("https://discord.gg/PerbbtKM6F", "_blank")}
-                className="w-full bg-gradient-to-r from-primary to-secondary"
+                className="w-full bg-gradient-to-r from-primary to-secondary rounded-xl"
                 data-testid="button-open-discord"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -248,6 +292,7 @@ export default function Contact() {
                   navigator.clipboard.writeText("https://discord.gg/PerbbtKM6F");
                   setIsDiscordOpen(false);
                 }}
+                className="rounded-xl hover-elevate"
                 data-testid="button-copy-discord-link"
               >
                 Copy Invite Link
