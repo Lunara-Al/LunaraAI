@@ -236,13 +236,12 @@ export default function Contact() {
                     <SiDiscord className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h3 className="font-semibold">Our Discord</h3>
-                      <p className="text-sm text-muted-foreground mb-2">Join our community for real-time support</p>
                       <button
                         onClick={() => setIsDiscordOpen(true)}
                         className="text-sm text-primary hover:text-primary/80 underline cursor-pointer transition-colors hover-elevate"
                         data-testid="button-join-discord"
                       >
-                        https://discord.gg/PerbbtKM6F
+                        Join our community
                       </button>
                     </div>
                   </div>
