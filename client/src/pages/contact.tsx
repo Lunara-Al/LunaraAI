@@ -18,10 +18,7 @@ export default function Contact() {
   
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { name: string; email: string; message: string }) => {
-      return apiRequest("/api/contact/send-message", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/contact/send-message", data);
     },
     onSuccess: () => {
       setIsSubmitted(true);

@@ -1,7 +1,7 @@
 // Server routes with Auth and Stripe integration
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema } from "@shared/schema";
+import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema, insertContactMessageSchema } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 import { storage } from "./storage";
 import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from "./unified-auth";
@@ -94,6 +94,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ 
         message: error.message || "Failed to create account",
         errors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined
+      });
+    }
+  });
+
+  // Contact message endpoint
+  app.post('/api/contact/send-message', async (req, res) => {
+    try {
+      const validation = insertContactMessageSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Validation failed",
+          errors: validation.error.flatten().fieldErrors
+        });
+      }
+
+      const message = await storage.createContactMessage(validation.data);
+      
+      // In production, you would send an email here using the main.py Gmail service
+      // For now, just log it
+      console.log("Contact message received:", message);
+      
+      return res.status(201).json({ 
+        success: true,
+        id: message.id,
+        message: "Thank you for your message. We'll get back to you soon."
+      });
+    } catch (error: any) {
+      console.error("Error saving contact message:", error);
+      return res.status(500).json({ 
+        message: "Failed to send message",
+        error: error.message
       });
     }
   });

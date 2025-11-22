@@ -3,6 +3,7 @@ import {
   users,
   userSettings,
   accountAuditLog,
+  contactMessages,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
@@ -11,7 +12,9 @@ import {
   type UserSettings,
   type InsertUserSettings,
   type UpdateUserSettings,
-  type InsertAccountAuditLog
+  type InsertAccountAuditLog,
+  type InsertContactMessage,
+  type ContactMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -41,6 +44,9 @@ export interface IStorage {
   
   // Audit operations
   logAccountAudit(data: { userId: string, email: string, username?: string, action: "created" | "deleted", authProvider: "local" | "replit", metadata?: any }): Promise<void>;
+
+  // Contact messages operations
+  createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -280,6 +286,14 @@ export class DatabaseStorage implements IStorage {
       // Note: DO NOT delete accountAuditLog - it's a permanent record
       await tx.delete(users).where(eq(users.id, userId));
     });
+  }
+
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    const [newMessage] = await db
+      .insert(contactMessages)
+      .values(message)
+      .returning();
+    return newMessage;
   }
 }
 
