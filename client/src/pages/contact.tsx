@@ -1,11 +1,11 @@
-import { Mail, MessageSquare, Send, ExternalLink, CheckCircle } from "lucide-react";
+import { Mail, MessageSquare, Send, ExternalLink, CheckCircle, AlertCircle } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -14,7 +14,39 @@ import MoonMenu from "@/components/moon-menu";
 export default function Contact() {
   const [isDiscordOpen, setIsDiscordOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+  
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validateForm = (name: string, email: string, message: string) => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!name.trim()) {
+      newErrors.name = "Name is required";
+    } else if (name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+    
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    
+    if (!message.trim()) {
+      newErrors.message = "Message is required";
+    } else if (message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   
   const sendMessageMutation = useMutation({
     mutationFn: async (data: { name: string; email: string; message: string }) => {
@@ -22,11 +54,24 @@ export default function Contact() {
     },
     onSuccess: () => {
       setIsSubmitted(true);
-      toast({ title: "Message sent!", description: "Thank you for reaching out. We'll get back to you soon." });
-      setTimeout(() => setIsSubmitted(false), 3000);
+      setErrors({});
+      if (formRef.current) {
+        formRef.current.reset();
+      }
+      toast({ 
+        title: "Message sent!", 
+        description: "Thank you for reaching out. We'll get back to you soon.",
+        duration: 4000
+      });
+      setTimeout(() => setIsSubmitted(false), 4000);
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+      toast({ 
+        title: "Error", 
+        description: "Failed to send message. Please try again.", 
+        variant: "destructive",
+        duration: 4000
+      });
     },
   });
 
@@ -37,13 +82,11 @@ export default function Contact() {
     const email = formData.get("email") as string;
     const message = formData.get("message") as string;
 
-    if (!name || !email || !message) {
-      toast({ title: "Error", description: "Please fill in all fields.", variant: "destructive" });
+    if (!validateForm(name, email, message)) {
       return;
     }
 
     sendMessageMutation.mutate({ name, email, message });
-    (e.target as HTMLFormElement).reset();
   };
   return (
     <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
