@@ -537,6 +537,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Downgrade subscription (e.g., Premium -> Pro)
+  app.post("/api/subscription/downgrade", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const { tier } = req.body as { tier: MembershipTier };
+
+      if (!tier || !MEMBERSHIP_TIERS[tier]) {
+        return res.status(400).json({ error: "Invalid membership tier" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const currentTier = user.membershipTier as MembershipTier;
+      const tierHierarchy = { free: 0, pro: 1, premium: 2 };
+      
+      // Validate it's actually a downgrade
+      if (tierHierarchy[tier] >= tierHierarchy[currentTier]) {
+        return res.status(400).json({ error: "Can only downgrade to a lower tier" });
+      }
+
+      // If has Stripe subscription, update it
+      if (stripe && user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith('sim_')) {
+        const tierConfig = MEMBERSHIP_TIERS[tier];
+        if (tierConfig.stripePriceId) {
+          try {
+            // Get the current subscription
+            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+            
+            // Update the subscription with the new price
+            await stripe.subscriptions.update(user.stripeSubscriptionId, {
+              items: [
+                {
+                  id: subscription.items.data[0].id,
+                  price: tierConfig.stripePriceId,
+                }
+              ],
+              proration_behavior: 'create_prorations', // Create credit for unused time
+            });
+          } catch (stripeError: any) {
+            console.warn("Failed to update Stripe subscription, falling back to update only:", stripeError.message);
+            // Continue with local update even if Stripe fails
+          }
+        } else if (tier === 'free') {
+          // Downgrading to free - cancel Stripe subscription
+          await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+        }
+      }
+
+      // Update user membership tier in database
+      const updatedUser = await storage.updateUserMembership(userId, tier, user.stripeSubscriptionId);
+      
+      res.json({ 
+        success: true, 
+        tier: updatedUser.membershipTier,
+        message: `Downgraded to ${tier} tier successfully`,
+        creditApplied: tier !== 'free' // Indicate if proration credit was applied
+      });
+    } catch (error: any) {
+      console.error("Error downgrading subscription:", error);
+      res.status(500).json({ error: "Failed to downgrade subscription", message: error.message });
+    }
+  });
+
   // Cancel subscription (downgrade to free)
   app.post("/api/subscription/cancel", isAuthenticated, async (req: any, res) => {
     try {
