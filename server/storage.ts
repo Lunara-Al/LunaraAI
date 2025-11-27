@@ -219,6 +219,40 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async allocateMonthlyCredits(userId: string, tier: MembershipTier): Promise<User> {
+    const { MEMBERSHIP_TIERS } = await import("@shared/schema");
+    const tierConfig = MEMBERSHIP_TIERS[tier];
+    const monthlyCredits = tierConfig.monthlyCredits;
+
+    const [user] = await db
+      .update(users)
+      .set({
+        credits: monthlyCredits,
+        monthlyCreditsAllocated: monthlyCredits,
+        creditsLastResetDate: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async checkAndAllocateCredits(userId: string, tier: MembershipTier): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const now = new Date();
+    const lastReset = new Date(user.creditsLastResetDate || user.createdAt);
+    const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Allocate credits every 30 days
+    if (daysSinceReset >= 30) {
+      return await this.allocateMonthlyCredits(userId, tier);
+    }
+
+    return user;
+  }
+
   // User settings operations
   async getUserSettings(userId: string): Promise<UserSettings | undefined> {
     const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
