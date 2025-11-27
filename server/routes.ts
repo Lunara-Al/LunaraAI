@@ -567,7 +567,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If has Stripe subscription, update it
       if (stripe && user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith('sim_')) {
         const tierConfig = MEMBERSHIP_TIERS[tier];
-        if (tierConfig.stripePriceId) {
+        const stripePriceId = 'stripePriceId' in tierConfig ? tierConfig.stripePriceId : null;
+        
+        if (stripePriceId) {
           try {
             // Get the current subscription
             const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
@@ -577,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               items: [
                 {
                   id: subscription.items.data[0].id,
-                  price: tierConfig.stripePriceId,
+                  price: stripePriceId,
                 }
               ],
               proration_behavior: 'create_prorations', // Create credit for unused time
@@ -593,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update user membership tier in database
-      const updatedUser = await storage.updateUserMembership(userId, tier, user.stripeSubscriptionId);
+      const updatedUser = await storage.updateUserMembership(userId, tier, user.stripeSubscriptionId || undefined);
       
       res.json({ 
         success: true, 
