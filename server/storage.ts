@@ -29,6 +29,8 @@ export interface IStorage {
   incrementVideoCount(userId: string): Promise<User>;
   resetMonthlyVideoCount(userId: string): Promise<User>;
   checkAndResetVideoCount(userId: string): Promise<User>;
+  allocateMonthlyCredits(userId: string, tier: MembershipTier): Promise<User>;
+  checkAndAllocateCredits(userId: string, tier: MembershipTier): Promise<User>;
   deleteUserAccount(userId: string): Promise<void>;
   
   // User settings operations

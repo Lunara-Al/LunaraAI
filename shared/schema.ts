@@ -30,6 +30,9 @@ export const users = pgTable("users", {
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   membershipTier: varchar("membership_tier", { length: 20 }).default("free").notNull(),
   videosGeneratedThisMonth: integer("videos_generated_this_month").default(0).notNull(),
+  credits: integer("credits").default(25).notNull(), // User's current credit balance
+  monthlyCreditsAllocated: integer("monthly_credits_allocated").default(25).notNull(), // Credits given this month
+  creditsLastResetDate: timestamp("credits_last_reset_date").defaultNow().notNull(), // When monthly credits were last allocated
   lastResetDate: timestamp("last_reset_date").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -51,6 +54,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: 5,
     maxLength: 10,
     quality: "basic",
+    monthlyCredits: 25,
   },
   pro: {
     name: "Pro",
@@ -58,6 +62,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: 50,
     maxLength: 15,
     quality: "hd",
+    monthlyCredits: 300,
     get stripePriceId() {
       return process.env.STRIPE_PRICE_ID_PRO?.trim() || null;
     },
@@ -68,6 +73,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: -1, // unlimited
     maxLength: 15,
     quality: "4k",
+    monthlyCredits: 1000,
     get stripePriceId() {
       return process.env.STRIPE_PRICE_ID_PREMIUM?.trim() || null;
     },
