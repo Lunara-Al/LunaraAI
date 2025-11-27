@@ -9,7 +9,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
-import { useToast } from "@/hooks/use-toast";
+import { useConditionalToast } from "@/hooks/useConditionalToast";
 import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
 
 // Advertisement Images
@@ -30,7 +30,7 @@ const PRESET_PROMPTS = [
 ];
 
 export default function Home() {
-  const { toast } = useToast();
+  const { toast } = useConditionalToast();
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(10);

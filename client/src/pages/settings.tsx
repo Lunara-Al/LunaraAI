@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Save, Bell, Grid3x3, Sun, Moon as MoonIcon, Check, Loader2, Zap, Eye, Mail, ToggleRight } from "lucide-react";
+import { Settings as SettingsIcon, Save, Bell, Grid3x3, Sun, Moon as MoonIcon, Check, Loader2, Zap, Eye, Mail, ToggleRight, Volume2 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -14,7 +14,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -34,7 +34,7 @@ type UserSettings = {
 
 export default function Settings() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useConditionalToast();
   const { theme, setTheme } = useTheme();
 
   // Local state for form
@@ -48,6 +48,10 @@ export default function Settings() {
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [toastNotificationsEnabled, setToastNotificationsEnabled] = useState(() => {
+    const saved = localStorage.getItem("lunara-toast-notifications");
+    return saved ? JSON.parse(saved) : true;
+  });
 
   // Handle unauthorized errors
   useEffect(() => {
@@ -396,6 +400,39 @@ export default function Settings() {
                     checked={formData.emailNotifications === 1}
                     onCheckedChange={(checked) => updateField("emailNotifications", checked ? 1 : 0)}
                     data-testid="switch-notifications"
+                  />
+                </div>
+              </div>
+
+              {/* On-Screen Toast Notifications */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                <div className="flex-1">
+                  <Label className="text-sm md:text-base font-semibold block mb-1 flex items-center gap-2">
+                    <Volume2 className="w-4 h-4" />
+                    Toast Notifications
+                  </Label>
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Show notifications when you change settings
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
+                    {toastNotificationsEnabled ? "On" : "Off"}
+                  </span>
+                  <Switch
+                    id="toastNotifications"
+                    checked={toastNotificationsEnabled}
+                    onCheckedChange={(checked) => {
+                      setToastNotificationsEnabled(checked);
+                      localStorage.setItem("lunara-toast-notifications", JSON.stringify(checked));
+                      if (checked) {
+                        toast({
+                          title: "Notifications Enabled",
+                          description: "You'll now see notifications for your actions.",
+                        });
+                      }
+                    }}
+                    data-testid="switch-toast-notifications"
                   />
                 </div>
               </div>
