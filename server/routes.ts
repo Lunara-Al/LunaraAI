@@ -417,16 +417,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const tierConfig = MEMBERSHIP_TIERS[user.membershipTier as MembershipTier];
+      // Check and allocate monthly credits if needed
+      const updatedUser = await storage.checkAndAllocateCredits(userId, user.membershipTier as MembershipTier);
+
+      const tierConfig = MEMBERSHIP_TIERS[updatedUser.membershipTier as MembershipTier];
       const videoCount = await storage.getMonthlyVideoCount(userId);
       
       res.json({
-        tier: user.membershipTier,
+        tier: updatedUser.membershipTier,
         videosUsed: videoCount,
         videosLimit: tierConfig.monthlyVideos,
         maxLength: tierConfig.maxLength,
         quality: tierConfig.quality,
-        stripeSubscriptionId: user.stripeSubscriptionId,
+        credits: updatedUser.credits,
+        monthlyCreditsAllocated: updatedUser.monthlyCreditsAllocated,
+        stripeSubscriptionId: updatedUser.stripeSubscriptionId,
       });
     } catch (error) {
       console.error("Error fetching subscription status:", error);
@@ -453,9 +458,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Free tier - just update in database
+      // Free tier - just update in database and allocate credits
       if (tier === "free") {
         const updatedUser = await storage.updateUserMembership(userId, "free", undefined);
+        await storage.allocateMonthlyCredits(userId, "free");
         return res.json({ success: true, tier: updatedUser.membershipTier });
       }
 
@@ -525,6 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedUser = await storage.updateUserMembership(userId, tier, `sim_${Date.now()}`);
+      await storage.allocateMonthlyCredits(userId, tier);
       res.json({ 
         success: true, 
         tier: updatedUser.membershipTier,
@@ -596,6 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user membership tier in database
       const updatedUser = await storage.updateUserMembership(userId, tier, user.stripeSubscriptionId || undefined);
+      await storage.allocateMonthlyCredits(userId, tier);
       
       res.json({ 
         success: true, 
