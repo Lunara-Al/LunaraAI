@@ -53,6 +53,16 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 - **User Authentication & Authorization:** Secure login/logout, protected routes, and role-based access control tied to subscription tiers.
 - **Account Management:** 
   - User profile displaying account information
+  - Profile picture upload with Canvas API compression
+  - **Edit Profile feature** with advanced form dialog:
+    - Edit firstName, lastName, email, username
+    - Password change for local auth users (with current password verification)
+    - OIDC users cannot change password (section hidden)
+    - Email/username uniqueness validation
+    - Field-level Zod validation with inline error display
+    - Password visibility toggles (Eye/EyeOff icons)
+    - Form auto-resets when dialog opens with current user data
+    - Only submits changed fields for efficiency
   - Sign out functionality
   - Delete account with verification dialog:
     - Local auth users: Must enter their password
