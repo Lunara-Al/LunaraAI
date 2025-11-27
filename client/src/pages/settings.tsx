@@ -16,6 +16,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 type UserSettings = {
@@ -34,6 +35,7 @@ type UserSettings = {
 export default function Settings() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   // Local state for form
   const [formData, setFormData] = useState({
@@ -122,6 +124,11 @@ export default function Settings() {
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
+    
+    // Apply theme immediately
+    if (field === "theme") {
+      setTheme(value as "light" | "dark");
+    }
   };
 
   const isLoading = authLoading || settingsLoading;
@@ -298,39 +305,59 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Theme */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
-                <div className="flex-1">
-                  <Label className="text-sm md:text-base font-semibold block mb-1">
-                    Theme
-                  </Label>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Choose your preferred color theme
-                  </p>
+              {/* Theme with Live Preview */}
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                  <div className="flex-1">
+                    <Label className="text-sm md:text-base font-semibold block mb-1">
+                      Theme
+                    </Label>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Choose your preferred color theme
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant={formData.theme === "light" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateField("theme", "light")}
+                      className="flex-1 sm:flex-initial transition-all duration-300"
+                      data-testid="button-theme-light"
+                    >
+                      <Sun className="w-4 h-4 mr-2" />
+                      Light
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={formData.theme === "dark" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateField("theme", "dark")}
+                      className="flex-1 sm:flex-initial transition-all duration-300"
+                      data-testid="button-theme-dark"
+                    >
+                      <MoonIcon className="w-4 h-4 mr-2" />
+                      Dark
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button
-                    type="button"
-                    variant={formData.theme === "light" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => updateField("theme", "light")}
-                    className="flex-1 sm:flex-initial"
-                    data-testid="button-theme-light"
-                  >
-                    <Sun className="w-4 h-4 mr-2" />
-                    Light
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={formData.theme === "dark" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => updateField("theme", "dark")}
-                    className="flex-1 sm:flex-initial"
-                    data-testid="button-theme-dark"
-                  >
-                    <MoonIcon className="w-4 h-4 mr-2" />
-                    Dark
-                  </Button>
+                
+                {/* Live Theme Preview */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-800 transition-all duration-300">
+                    <div className="text-xs font-semibold text-gray-900 dark:text-white mb-2">Light Mode</div>
+                    <div className="space-y-2">
+                      <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-950 border border-slate-800 transition-all duration-300">
+                    <div className="text-xs font-semibold text-white mb-2">Dark Mode</div>
+                    <div className="space-y-2">
+                      <div className="h-2 bg-slate-800 rounded w-full"></div>
+                      <div className="h-2 bg-slate-800 rounded w-2/3"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
