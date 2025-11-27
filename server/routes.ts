@@ -215,6 +215,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload profile picture endpoint
+  app.post('/api/profile/upload-picture', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { imageData } = req.body as { imageData: string };
+
+      if (!imageData) {
+        return res.status(400).json({ error: "Image data is required" });
+      }
+
+      // Validate that imageData is a valid base64 data URL
+      if (!imageData.startsWith('data:image/')) {
+        return res.status(400).json({ error: "Invalid image format" });
+      }
+
+      // Check size (base64 is ~1.33x larger than binary, so 5MB binary = ~6.7MB base64)
+      if (imageData.length > 7 * 1024 * 1024) {
+        return res.status(400).json({ error: "Image is too large" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const updatedUser = await storage.updateProfilePicture(userId, imageData);
+
+      res.json({
+        success: true,
+        profileImageUrl: updatedUser.profileImageUrl,
+      });
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      res.status(500).json({ error: "Failed to upload profile picture" });
+    }
+  });
+
   // Delete account endpoint - supports both password and text confirmation
   app.post('/api/auth/delete-account', isAuthenticated, async (req: any, res) => {
     try {

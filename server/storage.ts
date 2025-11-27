@@ -24,6 +24,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserMembership(userId: string, tier: MembershipTier, stripeSubscriptionId?: string): Promise<User>;
+  updateProfilePicture(userId: string, imageUrl: string): Promise<User>;
   incrementVideoCount(userId: string): Promise<User>;
   resetMonthlyVideoCount(userId: string): Promise<User>;
   checkAndResetVideoCount(userId: string): Promise<User>;
@@ -142,6 +143,18 @@ export class DatabaseStorage implements IStorage {
       .set({
         membershipTier: tier,
         stripeSubscriptionId,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateProfilePicture(userId: string, imageUrl: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        profileImageUrl: imageUrl,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
