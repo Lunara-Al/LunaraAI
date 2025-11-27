@@ -638,6 +638,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Downgrade to free tier
       const updatedUser = await storage.updateUserMembership(userId, "free", undefined);
+      // Allocate free tier credits
+      await storage.allocateMonthlyCredits(userId, "free");
       
       res.json({ 
         success: true, 

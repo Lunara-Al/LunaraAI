@@ -118,13 +118,6 @@ export default function Membership() {
         title: "Downgrade Successful",
         description: data.message || "Your subscription has been downgraded.",
       });
-      if (data.creditApplied) {
-        toast({
-          title: "Credits Allocated",
-          description: "You've received credits for your new tier.",
-          variant: "default",
-        });
-      }
       refetch();
     },
     onError: (error: any) => {
@@ -175,6 +168,7 @@ export default function Membership() {
       toast({
         title: "Error",
         description: "Failed to cancel subscription.",
+        variant: "destructive",
       });
     },
   });
@@ -201,6 +195,11 @@ export default function Membership() {
     if (confirm("Are you sure you want to cancel your subscription and downgrade to Free?")) {
       cancelMutation.mutate();
     }
+  };
+
+  // Format video limit for display
+  const formatVideoLimit = (limit: number) => {
+    return limit === -1 ? "Unlimited" : limit.toString();
   };
 
   // Credit display component
@@ -231,18 +230,18 @@ export default function Membership() {
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-            Membership
+            Membership Plans
           </h1>
-          <p className="text-muted-foreground">Choose the perfect plan for your cosmic journey</p>
+          <p className="text-muted-foreground">Choose the perfect plan for your cosmic video journey</p>
           
           {!isLoading && subscription && (
             <Card className="inline-flex flex-col items-center gap-3 px-6 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap justify-center">
                 <Badge className="capitalize moon-glow">{currentTier}</Badge>
                 <span className="text-sm text-muted-foreground font-medium">
                   {subscription.videosLimit === -1 
-                    ? `${subscription.videosUsed} videos created this month`
-                    : `${subscription.videosUsed}/${subscription.videosLimit} videos used`}
+                    ? `${subscription.videosUsed} videos created`
+                    : `${subscription.videosUsed}/${subscription.videosLimit} videos this month`}
                 </span>
               </div>
               <CreditDisplay credits={subscription.credits} monthlyCredits={subscription.monthlyCreditsAllocated} />
@@ -254,15 +253,15 @@ export default function Membership() {
           <div className="flex justify-center items-center py-20">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-muted-foreground text-sm">Loading plans...</p>
+              <p className="text-muted-foreground text-sm">Loading your plan details...</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-500">
             {/* Free Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '0ms' }}>
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-free">
               {currentTier === "free" && (
-                <Badge className="moon-glow">
+                <Badge className="moon-glow" data-testid="badge-current-free">
                   <Sparkles className="w-3 h-3 mr-1" />
                   Current Plan
                 </Badge>
@@ -300,20 +299,31 @@ export default function Membership() {
                 </div>
               </div>
               
-              {currentTier === "free" && (
-                <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+              {currentTier === "free" ? (
+                <Button variant="outline" className="w-full" disabled data-testid="button-current-free">Current Plan</Button>
+              ) : (
+                <Button 
+                  variant="secondary" 
+                  className="w-full" 
+                  onClick={() => handleUpgrade("free")}
+                  disabled={subscribeMutation.isPending}
+                  data-testid="button-downgrade-to-free"
+                >
+                  {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TrendingDown className="w-4 h-4 mr-2" />}
+                  Downgrade to Free
+                </Button>
               )}
             </Card>
 
             {/* Pro Tier */}
-            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate scale-105 ${currentTier === "pro" ? "moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '100ms' }}>
+            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate md:scale-105 ${currentTier === "pro" ? "moon-glow" : ""}`} data-testid="card-plan-pro">
               {currentTier === "pro" ? (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow" data-testid="badge-current-pro">
                   <Sparkles className="w-3 h-3 mr-1" />
                   Current Plan
                 </Badge>
               ) : (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary moon-glow">
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary moon-glow" data-testid="badge-popular">
                   <Crown className="w-3 h-3 mr-1" />
                   Popular
                 </Badge>
@@ -357,7 +367,7 @@ export default function Membership() {
               
               {currentTier === "pro" ? (
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                  <Button variant="outline" className="w-full" disabled data-testid="button-current-pro">Current Plan</Button>
                   <Button 
                     variant="destructive" 
                     className="w-full" 
@@ -366,10 +376,10 @@ export default function Membership() {
                     data-testid="button-cancel-pro"
                   >
                     {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
-                    Cancel Subscription
+                    Cancel & Downgrade
                   </Button>
                 </div>
-              ) : (
+              ) : currentTier === "free" ? (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-secondary moon-glow" 
                   onClick={() => handleUpgrade("pro")}
@@ -379,13 +389,24 @@ export default function Membership() {
                   {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   Upgrade to Pro
                 </Button>
+              ) : (
+                <Button 
+                  variant="secondary" 
+                  className="w-full" 
+                  onClick={() => handleInitiateDowngrade("pro")}
+                  disabled={downgradeMutation.isPending}
+                  data-testid="button-downgrade-to-pro"
+                >
+                  {downgradeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TrendingDown className="w-4 h-4 mr-2" />}
+                  Downgrade to Pro
+                </Button>
               )}
             </Card>
 
             {/* Premium Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '200ms' }}>
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-premium">
               {currentTier === "premium" && (
-                <Badge className="moon-glow">
+                <Badge className="moon-glow" data-testid="badge-current-premium">
                   <Crown className="w-3 h-3 mr-1" />
                   Current Plan
                 </Badge>
@@ -436,7 +457,7 @@ export default function Membership() {
               
               {currentTier === "premium" ? (
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                  <Button variant="outline" className="w-full" disabled data-testid="button-current-premium">Current Plan</Button>
                   <Button 
                     variant="secondary" 
                     className="w-full" 
@@ -455,7 +476,7 @@ export default function Membership() {
                     data-testid="button-cancel-premium"
                   >
                     {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
-                    Cancel Subscription
+                    Cancel & Downgrade
                   </Button>
                 </div>
               ) : (
@@ -472,37 +493,94 @@ export default function Membership() {
             </Card>
           </div>
         )}
+
+        {/* Features comparison section */}
+        <Card className="p-8 mt-12">
+          <h3 className="text-2xl font-bold mb-6">Feature Comparison</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold">Feature</th>
+                  <th className="text-center py-3 px-4">Free</th>
+                  <th className="text-center py-3 px-4">Pro</th>
+                  <th className="text-center py-3 px-4">Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="py-3 px-4">Monthly Videos</td>
+                  <td className="text-center">5</td>
+                  <td className="text-center">100</td>
+                  <td className="text-center">Unlimited</td>
+                </tr>
+                <tr className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="py-3 px-4">Max Length</td>
+                  <td className="text-center">10s</td>
+                  <td className="text-center">15s</td>
+                  <td className="text-center">15s</td>
+                </tr>
+                <tr className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="py-3 px-4">Quality</td>
+                  <td className="text-center">Basic</td>
+                  <td className="text-center">HD</td>
+                  <td className="text-center">4K</td>
+                </tr>
+                <tr className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="py-3 px-4">Monthly Credits</td>
+                  <td className="text-center">25</td>
+                  <td className="text-center">300</td>
+                  <td className="text-center">1,000</td>
+                </tr>
+                <tr className="border-b border-border/50 hover:bg-muted/50">
+                  <td className="py-3 px-4">No Watermark</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
+                </tr>
+                <tr className="hover:bg-muted/50">
+                  <td className="py-3 px-4">Priority Support</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
 
       {/* Downgrade Confirmation Dialog */}
       <Dialog open={downgradeDialogOpen} onOpenChange={setDowngradeDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" data-testid="dialog-downgrade">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <TrendingDown className="w-5 h-5 text-primary" />
               Downgrade to Pro?
             </DialogTitle>
             <DialogDescription>
-              You're about to downgrade from Premium to Pro. You'll retain your Pro tier benefits, and any unused credits will be converted.
+              You're about to downgrade from Premium to Pro. You'll retain your Pro tier benefits, and your credits will be adjusted accordingly.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="rounded-lg bg-destructive/10 p-4 border border-destructive/20">
-              <p className="text-sm font-medium text-destructive mb-2">Changes:</p>
+              <p className="text-sm font-medium text-destructive mb-2">Tier Changes:</p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Video limit: Unlimited → 100/month</li>
                 <li>• Monthly credits: 1,000 → 300</li>
                 <li>• Quality: 4K → HD</li>
+                <li>• Priority support: Removed</li>
               </ul>
             </div>
 
             <div className="rounded-lg bg-primary/10 p-4 border border-primary/20">
-              <p className="text-sm font-medium text-primary mb-2">Benefits:</p>
+              <p className="text-sm font-medium text-primary mb-2">You'll Keep:</p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Still get 300 monthly credits</li>
-                <li>• HD quality generation</li>
-                <li>• 100 videos per month</li>
+                <li>• 300 monthly credits every 30 days</li>
+                <li>• HD quality video generation</li>
+                <li>• 100 videos per month limit</li>
+                <li>• No watermark on videos</li>
               </ul>
             </div>
           </div>
@@ -512,6 +590,7 @@ export default function Membership() {
               variant="outline" 
               onClick={() => setDowngradeDialogOpen(false)}
               disabled={downgradeMutation.isPending}
+              data-testid="button-cancel-downgrade"
             >
               Cancel
             </Button>
@@ -519,9 +598,10 @@ export default function Membership() {
               variant="destructive"
               onClick={handleConfirmDowngrade}
               disabled={downgradeMutation.isPending}
+              data-testid="button-confirm-downgrade"
             >
               {downgradeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Confirm Downgrade
+              Downgrade to Pro
             </Button>
           </DialogFooter>
         </DialogContent>

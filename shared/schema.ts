@@ -59,7 +59,7 @@ export const MEMBERSHIP_TIERS = {
   pro: {
     name: "Pro",
     price: 19,
-    monthlyVideos: 50,
+    monthlyVideos: 100,
     maxLength: 15,
     quality: "hd",
     monthlyCredits: 300,
