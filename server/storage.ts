@@ -25,6 +25,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserMembership(userId: string, tier: MembershipTier, stripeSubscriptionId?: string): Promise<User>;
   updateProfilePicture(userId: string, imageUrl: string): Promise<User>;
+  updateProfile(userId: string, updates: { firstName?: string; lastName?: string; email?: string; username?: string; passwordHash?: string }): Promise<User>;
   incrementVideoCount(userId: string): Promise<User>;
   resetMonthlyVideoCount(userId: string): Promise<User>;
   checkAndResetVideoCount(userId: string): Promise<User>;
@@ -157,6 +158,22 @@ export class DatabaseStorage implements IStorage {
         profileImageUrl: imageUrl,
         updatedAt: new Date(),
       })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateProfile(userId: string, updates: { firstName?: string; lastName?: string; email?: string; username?: string; passwordHash?: string }): Promise<User> {
+    const updateData: any = { updatedAt: new Date() };
+    if (updates.firstName !== undefined) updateData.firstName = updates.firstName;
+    if (updates.lastName !== undefined) updateData.lastName = updates.lastName;
+    if (updates.email !== undefined) updateData.email = updates.email;
+    if (updates.username !== undefined) updateData.username = updates.username;
+    if (updates.passwordHash !== undefined) updateData.passwordHash = updates.passwordHash;
+
+    const [user] = await db
+      .update(users)
+      .set(updateData)
       .where(eq(users.id, userId))
       .returning();
     return user;

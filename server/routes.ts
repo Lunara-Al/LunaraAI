@@ -1,7 +1,7 @@
 // Server routes with Auth and Stripe integration
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema, insertContactMessageSchema } from "@shared/schema";
+import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema, insertContactMessageSchema, updateProfileSchema } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 import { storage } from "./storage";
 import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from "./unified-auth";
@@ -253,6 +253,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading profile picture:", error);
       res.status(500).json({ error: "Failed to upload profile picture" });
+    }
+  });
+
+  // Update profile endpoint
+  app.patch('/api/profile/update', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const validation = updateProfileSchema.safeParse(req.body);
+      if (!validation.success) {
+        const fieldErrors: Record<string, string> = {};
+        validation.error.errors.forEach(err => {
+          const field = err.path[0];
+          if (field) {
+            fieldErrors[field.toString()] = err.message;
+          }
+        });
+        return res.status(400).json({ 
+          message: "Validation failed",
+          errors: fieldErrors
+        });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const { firstName, lastName, email, username, currentPassword, newPassword } = validation.data;
+      const updateData: any = {};
+
+      // If changing password, verify current password
+      if (newPassword) {
+        if (!user.passwordHash) {
+          return res.status(400).json({ error: "You cannot change password for OIDC accounts" });
+        }
+        if (!currentPassword) {
+          return res.status(400).json({ error: "Current password is required" });
+        }
+        const isValid = await authService.verifyPassword(currentPassword, user.passwordHash);
+        if (!isValid) {
+          return res.status(401).json({ error: "Current password is incorrect" });
+        }
+        updateData.passwordHash = await authService.hashPassword(newPassword);
+      }
+
+      // Check for email/username conflicts if changing them
+      if (email && email !== user.email) {
+        const existingByEmail = await storage.getUser(email.toLowerCase());
+        if (existingByEmail && existingByEmail.id !== userId) {
+          return res.status(400).json({ error: "Email is already in use" });
+        }
+        updateData.email = email;
+      }
+
+      if (username && username !== user.username) {
+        const [existingByUsername] = await db.select().from(users).where(eq(users.username, username));
+        if (existingByUsername && existingByUsername.id !== userId) {
+          return res.status(400).json({ error: "Username is already taken" });
+        }
+        updateData.username = username;
+      }
+
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+
+      const updatedUser = await storage.updateProfile(userId, updateData);
+
+      const userResponse = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        profileImageUrl: updatedUser.profileImageUrl,
+        membershipTier: updatedUser.membershipTier,
+        createdAt: updatedUser.createdAt,
+        hasPassword: !!updatedUser.passwordHash,
+      };
+
+      res.json({ success: true, user: userResponse });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 

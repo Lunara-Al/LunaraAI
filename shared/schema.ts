@@ -165,8 +165,34 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Profile update schema
+export const updateProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+  email: z.string().email("Invalid email address").optional(),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be less than 20 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+    .optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .optional(),
+}).refine(
+  (data) => !data.newPassword || data.currentPassword,
+  {
+    message: "Current password is required to change password",
+    path: ["currentPassword"],
+  }
+);
+
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
+export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
 
 // Account audit log table - tracks account creation and deletion
 // NOTE: userId is NOT a foreign key - it's an immutable record that persists after user deletion

@@ -1,4 +1,4 @@
-import { User, Mail, Calendar, LogOut, Crown, Trash2, Upload } from "lucide-react";
+import { User, Mail, Calendar, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,22 +14,55 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useRef, useState } from "react";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { updateProfileSchema } from "@shared/schema";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+
+  const form = useForm<z.infer<typeof updateProfileSchema>>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      username: user?.username || "",
+    },
+  });
 
   const uploadPictureMutation = useMutation({
     mutationFn: async (imageData: string) => {
@@ -51,6 +84,34 @@ export default function Profile() {
     },
     onSettled: () => {
       setIsUploadingPicture(false);
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof updateProfileSchema>) => {
+      return await apiRequest("PATCH", "/api/profile/update", data);
+    },
+    onSuccess: (response: any) => {
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setIsEditDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      const fieldErrors = error.errors;
+      if (fieldErrors) {
+        Object.entries(fieldErrors).forEach(([field, message]) => {
+          form.setError(field as any, { message: message as string });
+        });
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -280,7 +341,7 @@ export default function Profile() {
                 data-testid="input-profile-picture"
               />
             </div>
-            <div className="text-center space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
+            <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
               <h2 className="text-2xl md:text-3xl font-bold">{displayName}</h2>
               <p className="text-xs text-muted-foreground">Click avatar to change profile picture</p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -291,6 +352,16 @@ export default function Profile() {
                   <Crown className="w-5 h-5 text-primary animate-pulse" />
                 )}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditDialogOpen(true)}
+                className="mt-2"
+                data-testid="button-edit-profile"
+              >
+                <Edit2 className="w-4 h-4 mr-2" />
+                Edit Profile
+              </Button>
             </div>
           </div>
 
