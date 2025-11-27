@@ -178,12 +178,15 @@ export default function Membership() {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-muted-foreground text-sm">Loading plans...</p>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-500">
             {/* Free Tier */}
-            <Card className={`p-8 space-y-6 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`}>
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '0ms' }}>
               {currentTier === "free" && (
                 <Badge className="moon-glow">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -232,7 +235,7 @@ export default function Membership() {
             </Card>
 
             {/* Pro Tier */}
-            <Card className={`p-8 space-y-6 relative ring-2 ring-primary ${currentTier === "pro" ? "moon-glow" : ""}`}>
+            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate scale-105 ${currentTier === "pro" ? "moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '100ms' }}>
               {currentTier === "pro" ? (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -289,7 +292,7 @@ export default function Membership() {
             </Card>
 
             {/* Premium Tier */}
-            <Card className={`p-8 space-y-6 ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`}>
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""} animate-in fade-in slide-in-from-bottom-4`} style={{ animationDelay: '200ms' }}>
               {currentTier === "premium" && (
                 <Badge className="moon-glow">
                   <Crown className="w-3 h-3 mr-1" />

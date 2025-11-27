@@ -370,12 +370,13 @@ export default function Home() {
               </h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PRESET_PROMPTS.map((presetPrompt) => (
+              {PRESET_PROMPTS.map((presetPrompt, index) => (
                 <button
                   key={presetPrompt}
                   onClick={() => handlePresetClick(presetPrompt)}
                   disabled={generateVideoMutation.isPending}
-                  className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50"
+                  className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
                   data-testid="button-preset-prompt"
                 >
                   <p className="text-xs md:text-sm text-foreground line-clamp-2">

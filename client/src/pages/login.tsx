@@ -58,20 +58,20 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-card">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 moon-glow">
-              <Moon className="w-12 h-12 text-primary" />
+          <div className="flex justify-center animate-in fade-in zoom-in duration-500" style={{ animationDelay: '100ms' }}>
+            <div className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 moon-glow hover-elevate transition-all duration-300">
+              <Moon className="w-12 h-12 text-primary animate-pulse" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-in fade-in slide-in-from-top-2 duration-500" style={{ animationDelay: '200ms' }}>
             Welcome Back
           </h1>
-          <p className="text-muted-foreground">Sign in to continue your cosmic journey</p>
+          <p className="text-sm md:text-base text-muted-foreground animate-in fade-in duration-500" style={{ animationDelay: '300ms' }}>Sign in to continue your cosmic journey</p>
         </div>
 
-        <Card className="moon-glow">
+        <Card className="moon-glow hover-elevate transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '400ms' }}>
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Sign In</CardTitle>
             <CardDescription>Enter your credentials to access your account</CardDescription>
@@ -123,7 +123,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-primary to-secondary moon-glow"
+                className="w-full bg-gradient-to-r from-primary to-secondary moon-glow transition-all duration-200 hover:scale-105"
                 disabled={loginMutation.isPending}
                 data-testid="button-login"
               >
