@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 type Theme = "light" | "dark";
 
@@ -8,9 +8,9 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext(undefined as unknown as ThemeContextType);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
@@ -44,11 +44,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(newTheme);
   };
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  if (!mounted) return null;
+
+  const Provider = ThemeContext.Provider;
+  const value = { theme, setTheme, toggleTheme };
+  
+  return Provider({ value, children } as any);
 }
 
 export function useTheme() {
