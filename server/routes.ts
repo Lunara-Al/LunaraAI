@@ -1,9 +1,11 @@
 // Server routes with Auth and Stripe integration
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema, insertContactMessageSchema, updateProfileSchema } from "@shared/schema";
+import { videoGenerationSchema, MEMBERSHIP_TIERS, type MembershipTier, updateUserSettingsSchema, registerSchema, loginSchema, insertContactMessageSchema, updateProfileSchema, users } from "@shared/schema";
 import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
 import { storage } from "./storage";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from "./unified-auth";
 import { authService } from "./auth-service";
 import passport from "passport";

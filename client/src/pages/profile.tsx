@@ -415,6 +415,270 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (open && user) {
+          form.reset({
+            firstName: user.firstName || "",
+            lastName: user.lastName || "",
+            email: user.email || "",
+            username: user.username || "",
+            currentPassword: "",
+            newPassword: "",
+          });
+        }
+      }}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Edit Profile
+            </DialogTitle>
+            <DialogDescription>
+              Update your personal information. Changes will be saved immediately.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form 
+              onSubmit={form.handleSubmit((data) => {
+                const cleanData: any = {};
+                if (data.firstName && data.firstName !== user?.firstName) cleanData.firstName = data.firstName;
+                if (data.lastName && data.lastName !== user?.lastName) cleanData.lastName = data.lastName;
+                if (data.email && data.email !== user?.email) cleanData.email = data.email;
+                if (data.username && data.username !== user?.username) cleanData.username = data.username;
+                if (data.currentPassword) cleanData.currentPassword = data.currentPassword;
+                if (data.newPassword) cleanData.newPassword = data.newPassword;
+                
+                if (Object.keys(cleanData).length === 0) {
+                  toast({
+                    title: "No Changes",
+                    description: "No changes were made to your profile.",
+                  });
+                  return;
+                }
+                
+                updateProfileMutation.mutate(cleanData);
+              })} 
+              className="space-y-6"
+            >
+              {/* Personal Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <User className="w-4 h-4" />
+                  Personal Information
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="First name" 
+                            {...field} 
+                            data-testid="input-edit-firstName"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Last name" 
+                            {...field}
+                            data-testid="input-edit-lastName"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Account Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <Mail className="w-4 h-4" />
+                  Account Information
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="your@email.com" 
+                          {...field}
+                          data-testid="input-edit-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="username" 
+                          {...field}
+                          data-testid="input-edit-username"
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs">
+                        Letters, numbers, and underscores only
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Password Section - Only for local auth users */}
+              {user?.hasPassword && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                    <Lock className="w-4 h-4" />
+                    Change Password
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Leave blank to keep your current password
+                  </p>
+                  
+                  <FormField
+                    control={form.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showCurrentPassword ? "text" : "password"}
+                              placeholder="Enter current password" 
+                              {...field}
+                              data-testid="input-edit-currentPassword"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                              tabIndex={-1}
+                            >
+                              {showCurrentPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter new password" 
+                              {...field}
+                              data-testid="input-edit-newPassword"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                              tabIndex={-1}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          At least 8 characters with uppercase, lowercase, and number
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    form.reset();
+                  }}
+                  disabled={updateProfileMutation.isPending}
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  disabled={updateProfileMutation.isPending}
+                  data-testid="button-save-profile"
+                >
+                  {updateProfileMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving...
+                    </div>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
