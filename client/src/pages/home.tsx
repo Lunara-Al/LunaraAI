@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
-import type { VideoGenerationResponse, ErrorResponse } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
 
 // Advertisement Images
 import aiTech1 from "@assets/stock_images/futuristic_ai_techno_780c4237.jpg";
@@ -19,31 +20,85 @@ import meditation1 from "@assets/stock_images/peaceful_meditation__f0b4b6f6.jpg"
 import meditation2 from "@assets/stock_images/peaceful_meditation__b7f215c8.jpg";
 import meditation3 from "@assets/stock_images/peaceful_meditation__45257c38.jpg";
 
+const PRESET_PROMPTS = [
+  "A glowing crystal peach sliced in slow motion with cosmic dust",
+  "Ethereal purple nebula clouds flowing through space",
+  "Liquid mercury forming geometric patterns in 4K",
+  "Golden particles dancing in a spiral vortex",
+  "Bioluminescent jellyfish floating through deep space",
+  "Holographic aurora borealis over digital mountains",
+];
+
 export default function Home() {
+  const { toast } = useToast();
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(10);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
+  const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
+  
+  // Fetch user data to check tier
+  const { data: user } = useQuery<FrontendUser>({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me");
+      if (!response.ok) throw new Error("Not authenticated");
+      return response.json();
+    },
+  });
 
-  const generateVideoMutation = useMutation<VideoGenerationResponse, Error, { prompt: string; length: number; aspectRatio: string; style?: string }>({
+  const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string }>({
     mutationFn: async (data) => {
       const response = await apiRequest("POST", "/api/generate", data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to generate video");
+      }
       return await response.json();
     },
     onSuccess: (data) => {
       setVideoUrl(data.videoUrl);
+      toast({
+        title: "Success!",
+        description: "Your cosmic video has been created and saved to your gallery.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: error.message || "Unable to generate video. Please try again.",
+      });
     },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!prompt.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Empty Prompt",
+        description: "Please enter a cosmic vision to generate a video.",
+      });
+      return;
+    }
     setVideoUrl(null);
     generateVideoMutation.mutate({ 
       prompt, 
       length, 
       aspectRatio,
       ...(style && { style })
+    });
+  };
+  
+  const handlePresetClick = (presetPrompt: string) => {
+    setPrompt(presetPrompt);
+    setCopiedPreset(presetPrompt);
+    setTimeout(() => setCopiedPreset(null), 2000);
+    toast({
+      title: "Prompt loaded",
+      description: "Ready to generate with this preset prompt.",
     });
   };
 
@@ -141,18 +196,20 @@ export default function Home() {
                   Video Length
                 </Label>
                 <div className="flex gap-2">
-                  {[5, 10].map((len) => (
+                  {[5, 10, 15].map((len) => (
                     <Button
                       key={len}
                       type="button"
                       size="sm"
                       variant={length === len ? "default" : "outline"}
                       onClick={() => setLength(len)}
-                      disabled={generateVideoMutation.isPending}
+                      disabled={generateVideoMutation.isPending || (len === 15 && user?.membershipTier === 'free')}
                       className={`flex-1 ${length === len ? "moon-glow" : ""}`}
                       data-testid={`button-length-${len}`}
+                      title={len === 15 && user?.membershipTier === 'free' ? "Upgrade to Pro or Premium for 15s videos" : ""}
                     >
                       {len}s
+                      {len === 15 && <Zap className="w-3 h-3 ml-1" />}
                     </Button>
                   ))}
                 </div>
@@ -207,18 +264,18 @@ export default function Home() {
               type="submit"
               size="lg"
               disabled={generateVideoMutation.isPending || !prompt.trim()}
-              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow"
+              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow text-white"
               data-testid="button-generate"
             >
               {generateVideoMutation.isPending ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generating...
+                  Generating your masterpiece... (This may take a moment)
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Video
+                  <Wand2 className="w-5 h-5 mr-2" />
+                  Generate Cosmic Video
                 </>
               )}
             </Button>
@@ -235,11 +292,16 @@ export default function Home() {
 
         {/* Error State */}
         {generateVideoMutation.isError && (
-          <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3" data-testid="error-message">
+          <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3 animate-in" data-testid="error-message">
             <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-            <p className="text-sm md:text-base text-destructive font-medium">
-              {generateVideoMutation.error?.message || "Failed to generate video. Please try again."}
-            </p>
+            <div>
+              <p className="text-sm md:text-base text-destructive font-medium">
+                Failed to generate video
+              </p>
+              <p className="text-xs md:text-sm text-destructive/80 mt-1">
+                {generateVideoMutation.error?.message || "Please check your input and try again. Ensure you have Pika API key configured."}
+              </p>
+            </div>
           </div>
         )}
 
@@ -259,22 +321,83 @@ export default function Home() {
         {/* Video Display */}
         {videoUrl && !generateVideoMutation.isPending && (
           <div className="mt-12 flex justify-center" data-testid="video-container">
-            <div className="relative w-full max-w-2xl">
-              <video
-                src={videoUrl}
-                controls
-                autoPlay
-                loop
-                className="w-full rounded-xl border-2 border-primary/20 shadow-2xl"
-                style={{
-                  boxShadow: '0 25px 50px -12px rgba(255, 80, 225, 0.4)'
-                }}
-                data-testid="video-player"
-              />
+            <div className="relative w-full max-w-2xl space-y-4">
+              <div className="relative">
+                <video
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  className="w-full rounded-xl border-2 border-primary/20 shadow-2xl"
+                  style={{
+                    boxShadow: '0 25px 50px -12px rgba(255, 80, 225, 0.4)'
+                  }}
+                  data-testid="video-player"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="flex-1"
+                  data-testid="button-create-another"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Create Another
+                </Button>
+                <Link href="/gallery" className="flex-1">
+                  <Button size="lg" variant="secondary" className="w-full" data-testid="button-view-gallery-video">
+                    <History className="w-4 h-4 mr-2" />
+                    View Gallery
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Preset Prompts Section */}
+      {!videoUrl && (
+        <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16 px-4">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <h3 className="text-sm md:text-base font-semibold text-muted-foreground">
+                Quick Start - Try These Prompts
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PRESET_PROMPTS.map((presetPrompt) => (
+                <button
+                  key={presetPrompt}
+                  onClick={() => handlePresetClick(presetPrompt)}
+                  disabled={generateVideoMutation.isPending}
+                  className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50"
+                  data-testid="button-preset-prompt"
+                >
+                  <p className="text-xs md:text-sm text-foreground line-clamp-2">
+                    {presetPrompt}
+                  </p>
+                  {copiedPreset === presetPrompt ? (
+                    <div className="flex items-center gap-1 mt-2 text-primary">
+                      <Check className="w-3 h-3" />
+                      <span className="text-xs">Loaded</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 mt-2 text-muted-foreground">
+                      <Copy className="w-3 h-3" />
+                      <span className="text-xs">Click to use</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Advertisement Showcase Section */}
       <div className="w-full max-w-6xl mx-auto mt-16 md:mt-24 px-4 pb-16">
