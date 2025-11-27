@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Save, Bell, Grid3x3, Sun, Moon as MoonIcon, Check, Loader2 } from "lucide-react";
+import { Settings as SettingsIcon, Save, Bell, Grid3x3, Sun, Moon as MoonIcon, Check, Loader2, Zap, Eye, Mail, ToggleRight } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -89,8 +89,8 @@ export default function Settings() {
     },
     onSuccess: () => {
       toast({
-        title: "Settings Saved",
-        description: "Your preferences have been updated successfully.",
+        title: "Success!",
+        description: "Your preferences have been saved to the cosmos.",
       });
       setHasChanges(false);
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
@@ -128,202 +128,299 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading your settings...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:py-12 bg-gradient-to-br from-background via-background to-card">
       <MoonMenu />
       
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-3">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+      <div className="max-w-5xl mx-auto space-y-8 pt-6 md:pt-8">
+        {/* Header */}
+        <div className="text-center space-y-2 md:space-y-3">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
             Settings
           </h1>
-          <p className="text-muted-foreground">Customize your Lunara AI experience</p>
+          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+            Customize your Lunara AI experience and fine-tune your preferences
+          </p>
         </div>
 
-        <div className="bg-card border border-card-border rounded-lg p-6 md:p-8 space-y-8">
-          {/* Video Generation Defaults */}
-          <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Video Generation Settings */}
+          <Card className="p-6 md:p-8 space-y-6 hover-elevate transition-all">
             <div className="flex items-center gap-3">
-              <SettingsIcon className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Video Generation</h2>
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold">Video Generation</h2>
+                <p className="text-xs md:text-sm text-muted-foreground">Set your default generation preferences</p>
+              </div>
             </div>
-            <Separator />
-            
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            <div className="space-y-6 md:space-y-5">
+              {/* Default Length */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                 <div className="flex-1">
-                  <Label htmlFor="defaultLength" className="text-base font-medium">
+                  <Label className="text-sm md:text-base font-semibold block mb-1">
                     Default Video Length
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Your preferred video duration for new generations
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Your preferred duration for new generations
                   </p>
                 </div>
                 <Select
                   value={formData.defaultLength.toString()}
                   onValueChange={(value) => updateField("defaultLength", parseInt(value))}
                 >
-                  <SelectTrigger className="w-full md:w-[200px]" data-testid="select-length">
+                  <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-length">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">5 seconds</SelectItem>
+                    <SelectItem value="5">
+                      <span className="flex items-center gap-2">
+                        <span>5 seconds</span>
+                      </span>
+                    </SelectItem>
                     <SelectItem value="10">10 seconds</SelectItem>
-                    <SelectItem value="15">15 seconds</SelectItem>
+                    <SelectItem value="15">
+                      <span className="flex items-center gap-2">
+                        <Zap className="w-3 h-3" />
+                        <span>15 seconds</span>
+                      </span>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* Default Aspect Ratio */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                 <div className="flex-1">
-                  <Label htmlFor="defaultAspectRatio" className="text-base font-medium">
+                  <Label className="text-sm md:text-base font-semibold block mb-1">
                     Default Aspect Ratio
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Your preferred aspect ratio for new videos
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Your preferred format for new videos
                   </p>
                 </div>
                 <Select
                   value={formData.defaultAspectRatio}
                   onValueChange={(value) => updateField("defaultAspectRatio", value)}
                 >
-                  <SelectTrigger className="w-full md:w-[200px]" data-testid="select-aspect-ratio">
+                  <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-aspect-ratio">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1:1">1:1 (Instagram)</SelectItem>
-                    <SelectItem value="16:9">16:9 (YouTube)</SelectItem>
-                    <SelectItem value="9:16">9:16 (TikTok)</SelectItem>
+                    <SelectItem value="1:1">1:1 Instagram</SelectItem>
+                    <SelectItem value="16:9">16:9 YouTube</SelectItem>
+                    <SelectItem value="9:16">9:16 TikTok</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* Auto-save */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                 <div className="flex-1">
-                  <Label htmlFor="autoSave" className="text-base font-medium">
+                  <Label className="text-sm md:text-base font-semibold block mb-1">
                     Auto-save to Gallery
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Automatically save generated videos to your gallery
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Automatically save generated videos
                   </p>
                 </div>
-                <Switch
-                  id="autoSave"
-                  checked={formData.autoSave === 1}
-                  onCheckedChange={(checked) => updateField("autoSave", checked ? 1 : 0)}
-                  data-testid="switch-autosave"
-                />
+                <div className="flex items-center gap-3">
+                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
+                    {formData.autoSave === 1 ? "Enabled" : "Disabled"}
+                  </span>
+                  <Switch
+                    id="autoSave"
+                    checked={formData.autoSave === 1}
+                    onCheckedChange={(checked) => updateField("autoSave", checked ? 1 : 0)}
+                    data-testid="switch-autosave"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* Display Preferences */}
-          <div className="space-y-4">
+          {/* Display Settings */}
+          <Card className="p-6 md:p-8 space-y-6 hover-elevate transition-all">
             <div className="flex items-center gap-3">
-              <Grid3x3 className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Display</h2>
+              <div className="p-2 rounded-lg bg-secondary/10">
+                <Eye className="w-5 h-5 text-secondary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold">Display</h2>
+                <p className="text-xs md:text-sm text-muted-foreground">Customize how you view your content</p>
+              </div>
             </div>
-            <Separator />
-            
-            <div className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            <div className="space-y-5">
+              {/* Gallery View */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                 <div className="flex-1">
-                  <Label htmlFor="galleryView" className="text-base font-medium">
+                  <Label className="text-sm md:text-base font-semibold block mb-1">
                     Gallery View
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     How to display videos in your gallery
                   </p>
                 </div>
-                <Select
-                  value={formData.galleryView}
-                  onValueChange={(value) => updateField("galleryView", value)}
-                >
-                  <SelectTrigger className="w-full md:w-[200px]" data-testid="select-gallery-view">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="grid">Grid View</SelectItem>
-                    <SelectItem value="list">List View</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant={formData.galleryView === "grid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateField("galleryView", "grid")}
+                    className="flex-1 sm:flex-initial"
+                    data-testid="button-gallery-grid"
+                  >
+                    <Grid3x3 className="w-4 h-4 mr-2" />
+                    Grid
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.galleryView === "list" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateField("galleryView", "list")}
+                    className="flex-1 sm:flex-initial"
+                    data-testid="button-gallery-list"
+                  >
+                    List
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              {/* Theme */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
                 <div className="flex-1">
-                  <Label htmlFor="theme" className="text-base font-medium">
+                  <Label className="text-sm md:text-base font-semibold block mb-1">
                     Theme
                   </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Choose your preferred color theme
                   </p>
                 </div>
-                <Select
-                  value={formData.theme}
-                  onValueChange={(value) => updateField("theme", value)}
-                >
-                  <SelectTrigger className="w-full md:w-[200px]" data-testid="select-theme">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="light">Light</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant={formData.theme === "light" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateField("theme", "light")}
+                    className="flex-1 sm:flex-initial"
+                    data-testid="button-theme-light"
+                  >
+                    <Sun className="w-4 h-4 mr-2" />
+                    Light
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.theme === "dark" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => updateField("theme", "dark")}
+                    className="flex-1 sm:flex-initial"
+                    data-testid="button-theme-dark"
+                  >
+                    <MoonIcon className="w-4 h-4 mr-2" />
+                    Dark
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
 
-          {/* Notifications */}
-          <div className="space-y-4">
+          {/* Notification Settings */}
+          <Card className="p-6 md:p-8 space-y-6 hover-elevate transition-all">
             <div className="flex items-center gap-3">
-              <Bell className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Notifications</h2>
-            </div>
-            <Separator />
-            
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex-1">
-                <Label htmlFor="emailNotifications" className="text-base font-medium">
-                  Email Notifications
-                </Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Receive updates about your account and videos via email
-                </p>
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Bell className="w-5 h-5 text-primary" />
               </div>
-              <Switch
-                id="emailNotifications"
-                checked={formData.emailNotifications === 1}
-                onCheckedChange={(checked) => updateField("emailNotifications", checked ? 1 : 0)}
-                data-testid="switch-notifications"
-              />
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold">Notifications</h2>
+                <p className="text-xs md:text-sm text-muted-foreground">Manage how you stay updated</p>
+              </div>
             </div>
-          </div>
 
-          {/* Save Button */}
-          <div className="pt-4 flex justify-end">
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges || updateMutation.isPending}
-              className="min-w-[140px]"
-              data-testid="button-save-settings"
-            >
-              {updateMutation.isPending ? (
+            <div className="space-y-5">
+              {/* Email Notifications */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors">
+                <div className="flex-1">
+                  <Label className="text-sm md:text-base font-semibold block mb-1 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Notifications
+                  </Label>
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    Receive updates about your account and videos
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs md:text-sm font-medium text-muted-foreground">
+                    {formData.emailNotifications === 1 ? "On" : "Off"}
+                  </span>
+                  <Switch
+                    id="emailNotifications"
+                    checked={formData.emailNotifications === 1}
+                    onCheckedChange={(checked) => updateField("emailNotifications", checked ? 1 : 0)}
+                    data-testid="switch-notifications"
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 justify-end pt-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (settings) {
+                setFormData({
+                  defaultLength: settings.defaultLength,
+                  defaultAspectRatio: settings.defaultAspectRatio,
+                  emailNotifications: settings.emailNotifications,
+                  galleryView: settings.galleryView,
+                  theme: settings.theme,
+                  autoSave: settings.autoSave,
+                });
+                setHasChanges(false);
+              }
+            }}
+            disabled={!hasChanges || updateMutation.isPending}
+            data-testid="button-reset-settings"
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || updateMutation.isPending}
+            className="min-w-[140px] bg-gradient-to-r from-primary to-secondary moon-glow"
+            data-testid="button-save-settings"
+          >
+            {updateMutation.isPending ? (
+              <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : hasChanges ? (
+                Saving...
+              </>
+            ) : hasChanges ? (
+              <>
                 <Save className="w-4 h-4 mr-2" />
-              ) : (
+                Save Changes
+              </>
+            ) : (
+              <>
                 <Check className="w-4 h-4 mr-2" />
-              )}
-              {updateMutation.isPending ? "Saving..." : hasChanges ? "Save Changes" : "Saved"}
-            </Button>
-          </div>
+                Saved
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </div>
