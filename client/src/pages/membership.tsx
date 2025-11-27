@@ -1,4 +1,4 @@
-import { Crown, Check, LogOut, Loader2, Sparkles } from "lucide-react";
+import { Crown, Check, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -218,19 +218,8 @@ export default function Membership() {
                 </li>
               </ul>
               
-              {currentTier === "free" ? (
+              {currentTier === "free" && (
                 <Button variant="outline" className="w-full" disabled>Current Plan</Button>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleCancel}
-                  disabled={cancelMutation.isPending}
-                  data-testid="button-downgrade-free"
-                >
-                  {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogOut className="w-4 h-4 mr-2" />}
-                  Downgrade to Free
-                </Button>
               )}
             </Card>
 
@@ -277,7 +266,19 @@ export default function Membership() {
               </ul>
               
               {currentTier === "pro" ? (
-                <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full" 
+                    onClick={handleCancel}
+                    disabled={cancelMutation.isPending}
+                    data-testid="button-cancel-pro"
+                  >
+                    {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
+                    Cancel Subscription
+                  </Button>
+                </div>
               ) : (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-secondary moon-glow" 
@@ -286,7 +287,7 @@ export default function Membership() {
                   data-testid="button-upgrade-pro"
                 >
                   {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  {currentTier === "premium" ? "Downgrade to Pro" : "Upgrade to Pro"}
+                  Upgrade to Pro
                 </Button>
               )}
             </Card>
@@ -336,7 +337,19 @@ export default function Membership() {
               </ul>
               
               {currentTier === "premium" ? (
-                <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full" disabled>Current Plan</Button>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full" 
+                    onClick={handleCancel}
+                    disabled={cancelMutation.isPending}
+                    data-testid="button-cancel-premium"
+                  >
+                    {cancelMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <X className="w-4 h-4 mr-2" />}
+                    Cancel Subscription
+                  </Button>
+                </div>
               ) : (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary via-secondary to-primary moon-glow" 
