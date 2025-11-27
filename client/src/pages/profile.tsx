@@ -1,4 +1,4 @@
-import { User, Mail, Calendar, LogOut, Crown, Trash2 } from "lucide-react";
+import { User, Mail, Calendar, LogOut, Crown, Trash2, Upload } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,19 +15,44 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef, useState } from "react";
+import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { toast } = useToast();
+  const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+
+  const uploadPictureMutation = useMutation({
+    mutationFn: async (imageData: string) => {
+      return await apiRequest("POST", "/api/profile/upload-picture", { imageData });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile Picture Updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload profile picture. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setIsUploadingPicture(false);
+    },
+  });
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (payload: { method: string; password?: string; confirmation?: string }) => {
@@ -50,6 +75,54 @@ export default function Profile() {
       });
     },
   });
+
+  const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select a valid image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Image must be less than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingPicture(true);
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      uploadPictureMutation.mutate(base64);
+    };
+    reader.onerror = () => {
+      toast({
+        title: "Error",
+        description: "Failed to read file.",
+        variant: "destructive",
+      });
+      setIsUploadingPicture(false);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleDeleteAccount = () => {
     if (user?.hasPassword) {
@@ -114,16 +187,40 @@ export default function Profile() {
 
         <div className="bg-card border border-card-border rounded-lg p-6 md:p-8 space-y-8 hover-elevate transition-all duration-300">
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative animate-in fade-in zoom-in duration-500" style={{ animationDelay: '100ms' }}>
-              <Avatar className="w-24 h-24 md:w-32 md:h-32 ring-2 ring-primary/20">
-                <AvatarImage src={user.profileImageUrl || ""} alt={displayName} />
-                <AvatarFallback className="text-2xl md:text-3xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
+            <div className="relative animate-in fade-in zoom-in duration-500 group" style={{ animationDelay: '100ms' }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingPicture}
+                className="relative cursor-pointer transition-all duration-200 hover-elevate rounded-full"
+                data-testid="button-upload-profile-picture"
+              >
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 ring-2 ring-primary/20">
+                  <AvatarImage src={user.profileImageUrl || ""} alt={displayName} />
+                  <AvatarFallback className="text-2xl md:text-3xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                  {isUploadingPicture ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-white" />
+                  )}
+                </div>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureChange}
+                className="hidden"
+                disabled={isUploadingPicture}
+                data-testid="input-profile-picture"
+              />
             </div>
             <div className="text-center space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
               <h2 className="text-2xl md:text-3xl font-bold">{displayName}</h2>
+              <p className="text-xs text-muted-foreground">Click avatar to change profile picture</p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <Badge variant="outline" className="capitalize bg-primary/10 text-primary border-primary/30">
                   {user.membershipTier} Plan
