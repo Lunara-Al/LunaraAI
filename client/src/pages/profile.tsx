@@ -442,13 +442,32 @@ export default function Profile() {
           <Form {...form}>
             <form 
               onSubmit={form.handleSubmit((data) => {
-                const cleanData: any = {};
-                if (data.firstName && data.firstName !== user?.firstName) cleanData.firstName = data.firstName;
-                if (data.lastName && data.lastName !== user?.lastName) cleanData.lastName = data.lastName;
-                if (data.email && data.email !== user?.email) cleanData.email = data.email;
-                if (data.username && data.username !== user?.username) cleanData.username = data.username;
-                if (data.currentPassword) cleanData.currentPassword = data.currentPassword;
-                if (data.newPassword) cleanData.newPassword = data.newPassword;
+                const cleanData: Record<string, string> = {};
+                
+                // Only include fields that have changed from current values
+                const trimmedFirstName = data.firstName?.trim();
+                const trimmedLastName = data.lastName?.trim();
+                const trimmedEmail = data.email?.trim();
+                const trimmedUsername = data.username?.trim();
+                
+                if (trimmedFirstName && trimmedFirstName !== (user?.firstName || '')) {
+                  cleanData.firstName = trimmedFirstName;
+                }
+                if (trimmedLastName && trimmedLastName !== (user?.lastName || '')) {
+                  cleanData.lastName = trimmedLastName;
+                }
+                if (trimmedEmail && trimmedEmail !== (user?.email || '')) {
+                  cleanData.email = trimmedEmail;
+                }
+                if (trimmedUsername && trimmedUsername !== (user?.username || '')) {
+                  cleanData.username = trimmedUsername;
+                }
+                
+                // Only include password fields if both are provided
+                if (data.currentPassword && data.newPassword) {
+                  cleanData.currentPassword = data.currentPassword;
+                  cleanData.newPassword = data.newPassword;
+                }
                 
                 if (Object.keys(cleanData).length === 0) {
                   toast({

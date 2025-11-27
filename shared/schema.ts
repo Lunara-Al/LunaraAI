@@ -165,23 +165,23 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-// Profile update schema
+// Profile update schema - allows empty strings or undefined for optional fields
 export const updateProfileSchema = z.object({
-  firstName: z.string().min(1, "First name is required").optional(),
-  lastName: z.string().min(1, "Last name is required").optional(),
-  email: z.string().email("Invalid email address").optional(),
-  username: z.string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be less than 20 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
-    .optional(),
-  currentPassword: z.string().optional(),
-  newPassword: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .optional(),
+  firstName: z.string().optional().transform(val => val?.trim() || undefined),
+  lastName: z.string().optional().transform(val => val?.trim() || undefined),
+  email: z.string().optional().transform(val => val?.trim() || undefined).refine(
+    (val) => !val || z.string().email().safeParse(val).success,
+    "Invalid email address"
+  ),
+  username: z.string().optional().transform(val => val?.trim() || undefined).refine(
+    (val) => !val || (val.length >= 3 && val.length <= 20 && /^[a-zA-Z0-9_]+$/.test(val)),
+    "Username must be 3-20 characters with only letters, numbers, and underscores"
+  ),
+  currentPassword: z.string().optional().transform(val => val || undefined),
+  newPassword: z.string().optional().transform(val => val || undefined).refine(
+    (val) => !val || (val.length >= 8 && /[A-Z]/.test(val) && /[a-z]/.test(val) && /[0-9]/.test(val)),
+    "Password must be 8+ characters with uppercase, lowercase, and number"
+  ),
 }).refine(
   (data) => !data.newPassword || data.currentPassword,
   {
