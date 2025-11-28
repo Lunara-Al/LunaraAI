@@ -11,12 +11,12 @@ declare module 'http' {
   }
 }
 app.use(express.json({
-  limit: '20mb',
+  limit: '500mb',
   verify: (req, _res, buf) => {
     req.rawBody = buf;
   }
 }));
-app.use(express.urlencoded({ extended: false, limit: '20mb' }));
+app.use(express.urlencoded({ extended: false, limit: '500mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();

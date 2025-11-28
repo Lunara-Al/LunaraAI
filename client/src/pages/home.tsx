@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
-import { imageToBase64, compressImage, validateImageFile } from "@/lib/imageUtils";
+import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
 
 // Advertisement Images
 import aiTech1 from "@assets/stock_images/futuristic_ai_techno_780c4237.jpg";
@@ -245,7 +245,7 @@ export default function Home() {
                     <Upload className="w-6 h-6 text-primary/60 group-hover:text-primary transition-colors" />
                     <div className="text-center">
                       <p className="text-sm font-medium text-foreground">Click to upload or drag and drop</p>
-                      <p className="text-xs text-muted-foreground">PNG, JPG, WebP or GIF (max 10MB)</p>
+                      <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, GIF, BMP, SVG or TIFF (up to 500MB)</p>
                     </div>
                   </div>
                   <input
