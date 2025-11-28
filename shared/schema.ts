@@ -133,6 +133,7 @@ export const videoGenerationSchema = z.object({
   length: z.number().refine((val) => [5, 10, 15].includes(val), "Length must be 5, 10, or 15 seconds").default(10),
   aspectRatio: z.enum(["1:1", "16:9", "9:16"]).default("1:1"),
   style: z.string().optional(),
+  imageBase64: z.string().optional(), // Base64 encoded image data
 });
 
 export type VideoGenerationRequest = z.infer<typeof videoGenerationSchema>;

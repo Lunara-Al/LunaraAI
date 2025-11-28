@@ -820,7 +820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt, length = 10, aspectRatio = "1:1", style } = validation.data;
+      const { prompt, length = 10, aspectRatio = "1:1", style, imageBase64 } = validation.data;
 
       // Check length limit based on membership
       if (length > tierConfig.maxLength) {
@@ -840,6 +840,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json(errorResponse);
       }
 
+      // Build request body
+      const pikaRequestBody: any = {
+        prompt,
+        length,
+        aspect_ratio: aspectRatio,
+        ...(style && { style }),
+        ...(imageBase64 && { image_base64: imageBase64 })
+      };
+
       // Call Pika Labs API
       const response = await fetch(PIKA_URL, {
         method: "POST",
@@ -847,12 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "Authorization": `Bearer ${PIKA_API_KEY}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          prompt,
-          length,
-          aspect_ratio: aspectRatio,
-          ...(style && { style })
-        })
+        body: JSON.stringify(pikaRequestBody)
       });
 
       if (!response.ok) {

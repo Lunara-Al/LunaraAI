@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
+import { imageToBase64, compressImage, validateImageFile } from "@/lib/imageUtils";
 
 // Advertisement Images
 import aiTech1 from "@assets/stock_images/futuristic_ai_techno_780c4237.jpg";
@@ -36,7 +37,11 @@ export default function Home() {
   const [length, setLength] = useState(10);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   
   // Fetch user data to check tier
   const { data: user } = useQuery<FrontendUser>({
@@ -48,7 +53,7 @@ export default function Home() {
     },
   });
 
-  const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string }>({
+  const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
     mutationFn: async (data) => {
       const response = await apiRequest("POST", "/api/generate", data);
       if (!response.ok) {
@@ -73,6 +78,63 @@ export default function Home() {
     },
   });
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate image
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Image",
+        description: validation.error,
+      });
+      return;
+    }
+
+    setIsProcessingImage(true);
+    try {
+      // Compress image
+      const compressed = await compressImage(file);
+      const compressedFile = new File([compressed], file.name, { type: 'image/jpeg' });
+
+      // Convert to base64
+      const base64 = await imageToBase64(compressedFile);
+      setImageBase64(base64);
+      
+      // Create preview
+      const preview = URL.createObjectURL(compressedFile);
+      setImagePreview(preview);
+      setSelectedImage(compressedFile);
+
+      toast({
+        title: "Image Added",
+        description: "Your reference image is ready to guide video generation.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to process image. Please try again.",
+      });
+    } finally {
+      setIsProcessingImage(false);
+    }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setSelectedImage(null);
+    setImagePreview(null);
+    setImageBase64(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) {
@@ -88,7 +150,8 @@ export default function Home() {
       prompt, 
       length, 
       aspectRatio,
-      ...(style && { style })
+      ...(style && { style }),
+      ...(imageBase64 && { imageBase64 })
     });
   };
   
@@ -160,7 +223,7 @@ export default function Home() {
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4" data-testid="text-subtitle">
             <span className="inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Type a prompt to generate cosmic ASMR videos</span>
+              <span>Type a prompt and optionally add an image to generate cosmic ASMR videos</span>
               <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </span>
           </p>
@@ -169,6 +232,58 @@ export default function Home() {
         {/* Generation Form with Glass Card */}
         <Card className="p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
+            {/* Image Upload Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-secondary" />
+                Reference Image (Optional)
+              </Label>
+              
+              {!imagePreview ? (
+                <label className="flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-pointer group">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Upload className="w-6 h-6 text-primary/60 group-hover:text-primary transition-colors" />
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground">Click to upload or drag and drop</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG, WebP or GIF (max 10MB)</p>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    disabled={generateVideoMutation.isPending || isProcessingImage}
+                    className="hidden"
+                    data-testid="input-image"
+                  />
+                </label>
+              ) : (
+                <div className="relative rounded-lg overflow-hidden border-2 border-primary/30 bg-primary/5 p-3">
+                  <img 
+                    src={imagePreview} 
+                    alt="Reference" 
+                    className="w-full h-48 object-cover rounded-md"
+                    data-testid="image-preview"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="destructive"
+                    onClick={handleRemoveImage}
+                    disabled={generateVideoMutation.isPending}
+                    className="absolute top-2 right-2 h-8 w-8"
+                    data-testid="button-remove-image"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 px-2 py-1 rounded text-xs text-white">
+                    <Check className="w-3 h-3 text-green-400" />
+                    Image ready
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Prompt Input */}
             <div className="space-y-3">
               <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-2">
@@ -263,7 +378,7 @@ export default function Home() {
             <Button
               type="submit"
               size="lg"
-              disabled={generateVideoMutation.isPending || !prompt.trim()}
+              disabled={generateVideoMutation.isPending || !prompt.trim() || isProcessingImage}
               className="w-full bg-gradient-to-r from-primary to-secondary moon-glow text-white"
               data-testid="button-generate"
             >
@@ -271,6 +386,11 @@ export default function Home() {
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Generating your masterpiece... (This may take a moment)
+                </>
+              ) : isProcessingImage ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Processing image...
                 </>
               ) : (
                 <>
