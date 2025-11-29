@@ -42,6 +42,7 @@ export default function Home() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
   
   // Fetch user data to check tier
   const { data: user } = useQuery<FrontendUser>({
@@ -479,43 +480,62 @@ export default function Home() {
         )}
       </div>
 
-      {/* Preset Prompts Section */}
+      {/* Preset Prompts Section - Collapsible */}
       {!videoUrl && (
         <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16 px-4">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <h3 className="text-sm md:text-base font-semibold text-muted-foreground">
-                Quick Start - Try These Prompts
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PRESET_PROMPTS.map((presetPrompt, index) => (
-                <button
-                  key={presetPrompt}
-                  onClick={() => handlePresetClick(presetPrompt)}
-                  disabled={generateVideoMutation.isPending}
-                  className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50 animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  data-testid="button-preset-prompt"
-                >
-                  <p className="text-xs md:text-sm text-foreground line-clamp-2">
-                    {presetPrompt}
-                  </p>
-                  {copiedPreset === presetPrompt ? (
-                    <div className="flex items-center gap-1 mt-2 text-primary">
-                      <Check className="w-3 h-3" />
-                      <span className="text-xs">Loaded</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 mt-2 text-muted-foreground">
-                      <Copy className="w-3 h-3" />
-                      <span className="text-xs">Click to use</span>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+            <button
+              onClick={() => setShowPresets(!showPresets)}
+              className="flex items-center justify-between w-full group"
+              data-testid="button-toggle-presets"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <h3 className="text-sm md:text-base font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
+                  Quick Start - Try These Prompts
+                </h3>
+              </div>
+              <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+                {showPresets ? (
+                  <svg className="w-4 h-4 md:w-5 md:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 md:w-5 md:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </div>
+            </button>
+            {showPresets && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                {PRESET_PROMPTS.map((presetPrompt, index) => (
+                  <button
+                    key={presetPrompt}
+                    onClick={() => handlePresetClick(presetPrompt)}
+                    disabled={generateVideoMutation.isPending}
+                    className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                    data-testid="button-preset-prompt"
+                  >
+                    <p className="text-xs md:text-sm text-foreground line-clamp-2">
+                      {presetPrompt}
+                    </p>
+                    {copiedPreset === presetPrompt ? (
+                      <div className="flex items-center gap-1 mt-2 text-primary">
+                        <Check className="w-3 h-3" />
+                        <span className="text-xs">Loaded</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 mt-2 text-muted-foreground">
+                        <Copy className="w-3 h-3" />
+                        <span className="text-xs">Click to use</span>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
