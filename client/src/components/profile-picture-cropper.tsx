@@ -67,6 +67,41 @@ const easeOutCubic = (t: number): number => {
   return 1 - Math.pow(1 - t, 3);
 };
 
+// Advanced input validation utilities
+interface ZoomInputValidation {
+  isValid: boolean;
+  error: string | null;
+  value: number | null;
+}
+
+const parseZoomInput = (input: string): ZoomInputValidation => {
+  const trimmed = input.trim();
+  
+  if (!trimmed) {
+    return { isValid: false, error: "Please enter a value", value: null };
+  }
+
+  const parsed = parseFloat(trimmed);
+
+  if (isNaN(parsed)) {
+    return { isValid: false, error: "Must be a number", value: null };
+  }
+
+  if (parsed < 50) {
+    return { isValid: false, error: "Minimum is 50%", value: null };
+  }
+
+  if (parsed > 400) {
+    return { isValid: false, error: "Maximum is 400%", value: null };
+  }
+
+  return { isValid: true, error: null, value: parsed / 100 };
+};
+
+const normalizeZoomDisplay = (zoom: number): string => {
+  return Math.round(zoom * 100).toString();
+};
+
 export function ProfilePictureCropper({
   imagePreview,
   isOpen,
@@ -74,11 +109,15 @@ export function ProfilePictureCropper({
   onCancel,
 }: ProfilePictureCropperProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const zoomInputRef = useRef<HTMLInputElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isZoomInputMode, setIsZoomInputMode] = useState(false);
+  const [zoomInputValue, setZoomInputValue] = useState(normalizeZoomDisplay(1));
+  const [zoomInputError, setZoomInputError] = useState<string | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const stateRef = useRef<CropState>({ zoom: 1, pan: { x: 0, y: 0 } });
   const gestureRef = useRef<GestureState>({
@@ -411,7 +450,68 @@ export function ProfilePictureCropper({
     stateRef.current = { zoom: 1, pan: { x: 0, y: 0 } };
     setZoom(1);
     setPan({ x: 0, y: 0 });
+    setZoomInputValue(normalizeZoomDisplay(1));
     scheduleRedraw(imageRef.current, 1, { x: 0, y: 0 });
+  };
+
+  // ============ ZOOM INPUT HANDLERS ============
+  const handleZoomDisplayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setIsZoomInputMode(true);
+    setZoomInputValue(normalizeZoomDisplay(stateRef.current.zoom));
+    setZoomInputError(null);
+    
+    // Focus input after state update
+    setTimeout(() => {
+      zoomInputRef.current?.focus();
+      zoomInputRef.current?.select();
+    }, 0);
+  };
+
+  const applyZoomInput = useCallback((inputValue: string) => {
+    if (!imageRef.current) return;
+
+    const validation = parseZoomInput(inputValue);
+
+    if (!validation.isValid) {
+      setZoomInputError(validation.error);
+      return;
+    }
+
+    if (validation.value === null) return;
+
+    const newZoom = clampZoom(validation.value);
+    stateRef.current.zoom = newZoom;
+    setZoom(newZoom);
+    setZoomInputValue(normalizeZoomDisplay(newZoom));
+    setZoomInputError(null);
+    setIsZoomInputMode(false);
+    scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
+  }, [imageRef, scheduleRedraw]);
+
+  const handleZoomInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setZoomInputValue(value);
+    setZoomInputError(null);
+  };
+
+  const handleZoomInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyZoomInput(zoomInputValue);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsZoomInputMode(false);
+      setZoomInputError(null);
+      setZoomInputValue(normalizeZoomDisplay(stateRef.current.zoom));
+    }
+  };
+
+  const handleZoomInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Only apply if not already closed via escape
+    if (isZoomInputMode) {
+      applyZoomInput(zoomInputValue);
+    }
   };
 
   const handleCrop = () => {
@@ -515,12 +615,53 @@ export function ProfilePictureCropper({
             >
               <ZoomOut className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg border border-primary/10">
-              <span className="text-sm font-semibold text-muted-foreground">Zoom</span>
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent min-w-[50px]">
-                {Math.round(zoom * 100)}%
-              </span>
+            
+            {/* Zoom display with clickable input */}
+            <div className="flex flex-col items-center gap-1">
+              {!isZoomInputMode ? (
+                <div
+                  onClick={handleZoomDisplayClick}
+                  className="flex items-center gap-2 px-4 py-2 bg-card rounded-lg border border-primary/10 cursor-pointer hover:border-primary/30 transition-colors hover-elevate"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleZoomDisplayClick(e as any);
+                    }
+                  }}
+                  data-testid="zoom-display-clickable"
+                >
+                  <span className="text-sm font-semibold text-muted-foreground">Zoom</span>
+                  <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent min-w-[50px]">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <input
+                    ref={zoomInputRef}
+                    type="number"
+                    min="50"
+                    max="400"
+                    value={zoomInputValue}
+                    onChange={handleZoomInputChange}
+                    onKeyDown={handleZoomInputKeyDown}
+                    onBlur={handleZoomInputBlur}
+                    className="w-16 px-2 py-1 bg-background border border-primary rounded text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    data-testid="zoom-input"
+                    aria-label="Enter zoom percentage"
+                  />
+                  <span className="text-sm font-semibold text-muted-foreground">%</span>
+                </div>
+              )}
+              {zoomInputError && isZoomInputMode && (
+                <span className="text-xs text-destructive font-medium" data-testid="zoom-input-error">
+                  {zoomInputError}
+                </span>
+              )}
             </div>
+
             <Button
               type="button"
               size="icon"
