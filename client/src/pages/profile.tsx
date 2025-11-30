@@ -40,6 +40,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { compressProfileImage, validateImageFile } from "@/lib/imageUtils";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -137,84 +138,15 @@ export default function Profile() {
     },
   });
 
-  const compressAndConvertImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Resize if larger than 1024x1024
-          if (width > 1024 || height > 1024) {
-            const scale = Math.min(1024 / width, 1024 / height);
-            width = Math.round(width * scale);
-            height = Math.round(height * scale);
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Failed to get canvas context'));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Convert to base64 with 0.85 quality
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Failed to create blob'));
-                return;
-              }
-              const compressedReader = new FileReader();
-              compressedReader.onload = () => {
-                resolve(compressedReader.result as string);
-              };
-              compressedReader.onerror = () => {
-                reject(new Error('Failed to read compressed image'));
-              };
-              compressedReader.readAsDataURL(blob);
-            },
-            'image/jpeg',
-            0.85
-          );
-        };
-        img.onerror = () => {
-          reject(new Error('Failed to load image'));
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.onerror = () => {
-        reject(new Error('Failed to read file'));
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
       toast({
         title: "Invalid File",
-        description: "Please select a valid image file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate original file size (max 10MB before compression)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File Too Large",
-        description: "Image must be less than 10MB.",
+        description: validation.error,
         variant: "destructive",
       });
       return;
@@ -223,14 +155,7 @@ export default function Profile() {
     setIsUploadingPicture(true);
 
     try {
-      // Compress and optimize image before upload
-      const compressedBase64 = await compressAndConvertImage(file);
-
-      // Verify compressed size
-      if (compressedBase64.length > 15 * 1024 * 1024) {
-        throw new Error('Compressed image is still too large');
-      }
-
+      const compressedBase64 = await compressProfileImage(file);
       uploadPictureMutation.mutate(compressedBase64);
     } catch (error) {
       toast({
@@ -241,7 +166,6 @@ export default function Profile() {
       setIsUploadingPicture(false);
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
