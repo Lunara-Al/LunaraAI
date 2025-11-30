@@ -15,6 +15,21 @@ interface CropState {
   pan: { x: number; y: number };
 }
 
+interface TouchPoint {
+  id: number;
+  x: number;
+  y: number;
+  clientX: number;
+  clientY: number;
+}
+
+interface GestureState {
+  touchPoints: Map<number, TouchPoint>;
+  initialDistance: number | null;
+  initialZoom: number | null;
+  previousPan: { x: number; y: number };
+}
+
 // Type-safe canvas context utilities
 const getCanvasContext = (
   canvas: HTMLCanvasElement | null
@@ -25,6 +40,31 @@ const getCanvasContext = (
     willReadFrequently: false,
   }) as CanvasRenderingContext2D | null;
   return ctx;
+};
+
+// Advanced gesture detection utilities
+const calculateDistance = (p1: TouchPoint, p2: TouchPoint): number => {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+const calculateMidpoint = (
+  p1: TouchPoint,
+  p2: TouchPoint
+): { x: number; y: number } => {
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2,
+  };
+};
+
+const clampZoom = (zoom: number, min: number = 0.5, max: number = 4): number => {
+  return Math.max(min, Math.min(max, zoom));
+};
+
+const easeOutCubic = (t: number): number => {
+  return 1 - Math.pow(1 - t, 3);
 };
 
 export function ProfilePictureCropper({
@@ -41,6 +81,12 @@ export function ProfilePictureCropper({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const stateRef = useRef<CropState>({ zoom: 1, pan: { x: 0, y: 0 } });
+  const gestureRef = useRef<GestureState>({
+    touchPoints: new Map(),
+    initialDistance: null,
+    initialZoom: null,
+    previousPan: { x: 0, y: 0 },
+  });
 
   // High-DPI support for crisp rendering
   const CROP_RADIUS = 128;
@@ -75,27 +121,22 @@ export function ProfilePictureCropper({
     (img: HTMLImageElement, zoomLevel: number, panOffset: { x: number; y: number }) => {
       const canvas = canvasRef.current;
       const ctx = getCanvasContext(canvas);
-      
+
       if (!ctx) return;
 
-      // Clear with DPI scaling
       ctx.clearRect(0, 0, SCALED_CANVAS_SIZE, SCALED_CANVAS_SIZE);
 
-      // Draw dimmed background (outside circle)
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
       ctx.fillRect(0, 0, SCALED_CANVAS_SIZE, SCALED_CANVAS_SIZE);
 
-      // Calculate circle center
       const centerX = SCALED_CANVAS_SIZE / 2;
       const centerY = SCALED_CANVAS_SIZE / 2;
 
-      // Create circular clipping region for image
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, SCALED_CROP_RADIUS, 0, Math.PI * 2);
       ctx.clip();
 
-      // Render image with high-quality settings
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
 
@@ -124,14 +165,12 @@ export function ProfilePictureCropper({
       ctx.arc(centerX, centerY, SCALED_CROP_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Add outer ring for depth
       ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
       ctx.lineWidth = 1 * DPI;
       ctx.beginPath();
       ctx.arc(centerX, centerY, SCALED_CROP_RADIUS + 4 * DPI, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Draw subtle radial grid lines
       ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
       ctx.lineWidth = 0.5 * DPI;
       for (let i = 0; i < 8; i++) {
@@ -147,7 +186,6 @@ export function ProfilePictureCropper({
         ctx.stroke();
       }
 
-      // Draw center dot for reference
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       ctx.beginPath();
       ctx.arc(centerX, centerY, 3 * DPI, 0, Math.PI * 2);
@@ -177,7 +215,6 @@ export function ProfilePictureCropper({
 
     const img = new Image();
     img.onload = () => {
-      // Downsample for performance if needed
       const processedImg = downscaleImage(img);
       processedImg.onload = () => {
         imageRef.current = processedImg;
@@ -195,6 +232,7 @@ export function ProfilePictureCropper({
     img.src = imagePreview;
   }, [isOpen, imagePreview, downscaleImage, redraw]);
 
+  // ============ MOUSE HANDLERS ============
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
@@ -225,15 +263,136 @@ export function ProfilePictureCropper({
     e.preventDefault();
     if (!imageRef.current) return;
 
-    const newZoom = Math.max(0.5, Math.min(4, stateRef.current.zoom + (e.deltaY > 0 ? -0.1 : 0.1)));
+    const newZoom = clampZoom(stateRef.current.zoom + (e.deltaY > 0 ? -0.1 : 0.1));
     stateRef.current.zoom = newZoom;
     setZoom(newZoom);
     scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
   };
 
+  // ============ TOUCH HANDLERS ============
+  const getTouchPoint = (touch: React.Touch, index: number): TouchPoint => {
+    return {
+      id: touch.identifier,
+      x: touch.clientX,
+      y: touch.clientY,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!imageRef.current) return;
+
+    const gesture = gestureRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Clear old touches and add new ones
+    gesture.touchPoints.clear();
+    Array.from(e.touches).forEach((touch, index) => {
+      const rect = canvas.getBoundingClientRect();
+      const point: TouchPoint = {
+        id: touch.identifier,
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      };
+      gesture.touchPoints.set(touch.identifier, point);
+    });
+
+    // Handle multi-touch pinch-zoom setup
+    if (gesture.touchPoints.size === 2) {
+      const points = Array.from(gesture.touchPoints.values());
+      gesture.initialDistance = calculateDistance(points[0], points[1]);
+      gesture.initialZoom = stateRef.current.zoom;
+      gesture.previousPan = { ...stateRef.current.pan };
+    } else if (gesture.touchPoints.size === 1) {
+      gesture.previousPan = { ...stateRef.current.pan };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!imageRef.current || gestureRef.current.touchPoints.size === 0) return;
+
+    const gesture = gestureRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    // Update touch points with new positions
+    Array.from(e.touches).forEach((touch) => {
+      if (gesture.touchPoints.has(touch.identifier)) {
+        const point = gesture.touchPoints.get(touch.identifier)!;
+        point.clientX = touch.clientX;
+        point.clientY = touch.clientY;
+        point.x = touch.clientX - rect.left;
+        point.y = touch.clientY - rect.top;
+      }
+    });
+
+    if (gesture.touchPoints.size === 2) {
+      // Two-finger pinch-to-zoom gesture
+      const points = Array.from(gesture.touchPoints.values());
+      const currentDistance = calculateDistance(points[0], points[1]);
+      const midpoint = calculateMidpoint(points[0], points[1]);
+
+      if (gesture.initialDistance && gesture.initialZoom) {
+        const pinchRatio = currentDistance / gesture.initialDistance;
+        const newZoom = clampZoom(gesture.initialZoom * pinchRatio);
+
+        stateRef.current.zoom = newZoom;
+        setZoom(newZoom);
+        scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
+      }
+    } else if (gesture.touchPoints.size === 1) {
+      // Single-finger drag to pan
+      const point = Array.from(gesture.touchPoints.values())[0];
+      const prevPoints = Array.from(e.touches);
+
+      if (prevPoints.length > 0) {
+        const prevTouch = prevPoints[0];
+        const rect = canvas.getBoundingClientRect();
+
+        const deltaX = prevTouch.clientX - (point.clientX - (point.x - (prevTouch.clientX - rect.left)));
+        const deltaY = prevTouch.clientY - (point.clientY - (point.y - (prevTouch.clientY - rect.top)));
+
+        const lastPoint = Array.from(gesture.touchPoints.values())[0];
+        const newPan = {
+          x: gesture.previousPan.x + (lastPoint.x - (lastPoint.clientX - rect.left)),
+          y: gesture.previousPan.y + (lastPoint.y - (lastPoint.clientY - rect.top)),
+        };
+
+        stateRef.current.pan = newPan;
+        setPan(newPan);
+        scheduleRedraw(imageRef.current, stateRef.current.zoom, newPan);
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const gesture = gestureRef.current;
+
+    // Remove ended touches from tracking
+    Array.from(e.changedTouches).forEach((touch) => {
+      gesture.touchPoints.delete(touch.identifier);
+    });
+
+    // Reset gesture state if no more touches
+    if (gesture.touchPoints.size === 0) {
+      gesture.initialDistance = null;
+      gesture.initialZoom = null;
+    }
+  };
+
+  // ============ BUTTON HANDLERS ============
   const handleZoomIn = () => {
     if (!imageRef.current) return;
-    const newZoom = Math.min(4, stateRef.current.zoom + 0.2);
+    const newZoom = clampZoom(stateRef.current.zoom + 0.2);
     stateRef.current.zoom = newZoom;
     setZoom(newZoom);
     scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
@@ -241,7 +400,7 @@ export function ProfilePictureCropper({
 
   const handleZoomOut = () => {
     if (!imageRef.current) return;
-    const newZoom = Math.max(0.5, stateRef.current.zoom - 0.2);
+    const newZoom = clampZoom(stateRef.current.zoom - 0.2);
     stateRef.current.zoom = newZoom;
     setZoom(newZoom);
     scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
@@ -258,7 +417,6 @@ export function ProfilePictureCropper({
   const handleCrop = () => {
     if (!imageRef.current) return;
 
-    // Create high-resolution circular crop
     const cropSize = 256;
     const cropCanvas = document.createElement("canvas");
     cropCanvas.width = cropSize;
@@ -267,12 +425,10 @@ export function ProfilePictureCropper({
     const ctx = cropCanvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
-    // Create circular clipping path
     ctx.beginPath();
     ctx.arc(cropSize / 2, cropSize / 2, cropSize / 2, 0, Math.PI * 2);
     ctx.clip();
 
-    // Calculate source coordinates
     const centerX = SCALED_CANVAS_SIZE / 2;
     const centerY = SCALED_CANVAS_SIZE / 2;
     const scaledWidth = imageRef.current.width * stateRef.current.zoom;
@@ -280,7 +436,6 @@ export function ProfilePictureCropper({
     const imgX = (SCALED_CANVAS_SIZE - scaledWidth) / 2 + stateRef.current.pan.x * DPI;
     const imgY = (SCALED_CANVAS_SIZE - scaledHeight) / 2 + stateRef.current.pan.y * DPI;
 
-    // Calculate crop region (from centered circle)
     const cropX = centerX - SCALED_CROP_RADIUS;
     const cropY = centerY - SCALED_CROP_RADIUS;
 
@@ -296,7 +451,6 @@ export function ProfilePictureCropper({
       cropSize
     );
 
-    // Convert to blob and trigger completion
     cropCanvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -316,12 +470,14 @@ export function ProfilePictureCropper({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Perfect Your Profile</DialogTitle>
-          <DialogDescription>Drag to position, scroll to zoom. Crop to a beautiful circle.</DialogDescription>
+          <DialogDescription>
+            Desktop: Drag to move • Scroll to zoom | Mobile: Drag with 1 finger • Pinch with 2 fingers
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Canvas with circle crop frame */}
-          <div className="flex justify-center items-center">
+          {/* Canvas with circle crop frame - Touch enabled */}
+          <div className="flex justify-center items-center touch-none select-none">
             <canvas
               ref={canvasRef}
               width={SCALED_CANVAS_SIZE}
@@ -331,12 +487,17 @@ export function ProfilePictureCropper({
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               onWheel={handleWheel}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
               className="cursor-move bg-gradient-to-br from-black/40 to-black/60 rounded-lg shadow-xl"
               style={{
                 width: `${CANVAS_SIZE}px`,
                 height: `${CANVAS_SIZE}px`,
                 maxWidth: "100%",
                 border: "2px solid rgba(138, 43, 226, 0.2)",
+                touchAction: "none",
               }}
             />
           </div>
