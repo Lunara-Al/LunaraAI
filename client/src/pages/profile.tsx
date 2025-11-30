@@ -41,6 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { compressProfileImage, validateImageFile } from "@/lib/imageUtils";
+import { ProfilePictureCropper } from "@/components/profile-picture-cropper";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -54,6 +55,8 @@ export default function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [imagePreviewForCropper, setImagePreviewForCropper] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof updateProfileSchema>>({
     resolver: zodResolver(updateProfileSchema),
@@ -67,7 +70,8 @@ export default function Profile() {
 
   const uploadPictureMutation = useMutation({
     mutationFn: async (imageData: string) => {
-      return await apiRequest("POST", "/api/profile/upload-picture", { imageData });
+      const response = await apiRequest("POST", "/api/profile/upload-picture", { imageData });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -75,6 +79,8 @@ export default function Profile() {
         description: "Your profile picture has been updated successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setIsCropperOpen(false);
+      setImagePreviewForCropper(null);
     },
     onError: (error: any) => {
       toast({
@@ -152,22 +158,38 @@ export default function Profile() {
       return;
     }
 
-    setIsUploadingPicture(true);
-
     try {
-      const compressedBase64 = await compressProfileImage(file);
-      uploadPictureMutation.mutate(compressedBase64);
+      const preview = URL.createObjectURL(file);
+      setImagePreviewForCropper(preview);
+      setIsCropperOpen(true);
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to process image.",
+        description: "Failed to load image preview.",
         variant: "destructive",
       });
-      setIsUploadingPicture(false);
     }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCropComplete = async (croppedBase64: string) => {
+    setIsUploadingPicture(true);
+    try {
+      const compressedBase64 = await compressProfileImage(
+        new File([croppedBase64], "cropped.jpg", { type: "image/jpeg" })
+      );
+      uploadPictureMutation.mutate(compressedBase64);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process cropped image.",
+        variant: "destructive",
+      });
+      setIsUploadingPicture(false);
+      setIsCropperOpen(false);
     }
   };
 
@@ -223,6 +245,22 @@ export default function Profile() {
   return (
     <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
       <MoonMenu />
+
+      {/* Image Cropper Modal */}
+      {imagePreviewForCropper && (
+        <ProfilePictureCropper
+          imagePreview={imagePreviewForCropper}
+          isOpen={isCropperOpen}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setIsCropperOpen(false);
+            if (imagePreviewForCropper) {
+              URL.revokeObjectURL(imagePreviewForCropper);
+            }
+            setImagePreviewForCropper(null);
+          }}
+        />
+      )}
       
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
         <div className="text-center space-y-2 md:space-y-3">
