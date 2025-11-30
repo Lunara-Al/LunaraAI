@@ -10,6 +10,23 @@ interface ProfilePictureCropperProps {
   onCancel: () => void;
 }
 
+interface CropState {
+  zoom: number;
+  pan: { x: number; y: number };
+}
+
+// Type-safe canvas context utilities
+const getCanvasContext = (
+  canvas: HTMLCanvasElement | null
+): CanvasRenderingContext2D | null => {
+  if (!canvas) return null;
+  const ctx = canvas.getContext("2d", {
+    alpha: true,
+    willReadFrequently: false,
+  }) as CanvasRenderingContext2D | null;
+  return ctx;
+};
+
 export function ProfilePictureCropper({
   imagePreview,
   isOpen,
@@ -23,7 +40,7 @@ export function ProfilePictureCropper({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const stateRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
+  const stateRef = useRef<CropState>({ zoom: 1, pan: { x: 0, y: 0 } });
 
   // High-DPI support for crisp rendering
   const CROP_RADIUS = 128;
@@ -42,7 +59,7 @@ export function ProfilePictureCropper({
     canvas.width = img.width * scale;
     canvas.height = img.height * scale;
 
-    const ctx = canvas.getContext("2d", { alpha: false });
+    const ctx = canvas.getContext("2d", { alpha: false }) as CanvasRenderingContext2D;
     if (!ctx) return img;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
@@ -57,13 +74,8 @@ export function ProfilePictureCropper({
   const redraw = useCallback(
     (img: HTMLImageElement, zoomLevel: number, panOffset: { x: number; y: number }) => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext("2d", { 
-        alpha: true, 
-        willReadFrequently: false,
-        antialias: true 
-      });
+      const ctx = getCanvasContext(canvas);
+      
       if (!ctx) return;
 
       // Clear with DPI scaling
@@ -175,7 +187,6 @@ export function ProfilePictureCropper({
         redraw(processedImg, 1, { x: 0, y: 0 });
       };
       if (img !== processedImg) {
-        // Only trigger onload if we actually downsampled
         processedImg.src = img.src;
       } else {
         redraw(img, 1, { x: 0, y: 0 });
@@ -253,7 +264,7 @@ export function ProfilePictureCropper({
     cropCanvas.width = cropSize;
     cropCanvas.height = cropSize;
 
-    const ctx = cropCanvas.getContext("2d");
+    const ctx = cropCanvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
     // Create circular clipping path
@@ -325,7 +336,6 @@ export function ProfilePictureCropper({
                 width: `${CANVAS_SIZE}px`,
                 height: `${CANVAS_SIZE}px`,
                 maxWidth: "100%",
-                height: "auto",
                 border: "2px solid rgba(138, 43, 226, 0.2)",
               }}
             />
