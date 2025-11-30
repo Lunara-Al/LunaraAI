@@ -224,7 +224,7 @@ export default function Home() {
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4" data-testid="text-subtitle">
             <span className="inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Type a prompt and optionally add an image to generate cosmic ASMR videos</span>
+              <span>Write your prompt and add a reference image to guide your cosmic video</span>
               <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
             </span>
           </p>
@@ -237,8 +237,9 @@ export default function Home() {
             <div className="space-y-3">
               <Label className="text-sm font-semibold flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-secondary" />
-                Reference Image (Optional)
+                Reference Image (Recommended)
               </Label>
+              <p className="text-xs text-muted-foreground">Upload an image to blend with your prompt for more consistent visual style</p>
               
               {!imagePreview ? (
                 <label className="flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-pointer group">
@@ -279,7 +280,7 @@ export default function Home() {
                   </Button>
                   <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 px-2 py-1 rounded text-xs text-white">
                     <Check className="w-3 h-3 text-green-400" />
-                    Image ready
+                    Will be used in generation
                   </div>
                 </div>
               )}
