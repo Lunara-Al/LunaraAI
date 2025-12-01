@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2 } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
@@ -39,6 +39,29 @@ export default function Gallery() {
         variant: "destructive",
         title: "Error",
         description: "Failed to delete video. Please try again.",
+      });
+    },
+  });
+
+  const toggleCreationMutation = useMutation({
+    mutationFn: async ({ id, display }: { id: number; display: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/history/${id}/creation-toggle`, { display });
+      return await response.json();
+    },
+    onSuccess: (_, { display }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/history", limit] });
+      toast({
+        title: display ? "Added to creations" : "Removed from creations",
+        description: display
+          ? "This video now appears on your profile"
+          : "This video has been removed from your profile",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update creation status. Please try again.",
       });
     },
   });
@@ -151,6 +174,22 @@ export default function Gallery() {
                     >
                       <Download className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                       Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={video.displayOnProfile ? "default" : "outline"}
+                      onClick={() => toggleCreationMutation.mutate({ id: video.id, display: !video.displayOnProfile })}
+                      disabled={toggleCreationMutation.isPending}
+                      data-testid={`button-toggle-creation-${video.id}`}
+                      title={video.displayOnProfile ? "Remove from profile" : "Add to profile"}
+                    >
+                      {toggleCreationMutation.isPending ? (
+                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
+                      ) : video.displayOnProfile ? (
+                        <Eye className="w-3 h-3 md:w-4 md:h-4" />
+                      ) : (
+                        <EyeOff className="w-3 h-3 md:w-4 md:h-4" />
+                      )}
                     </Button>
                     <Button
                       size="sm"

@@ -45,6 +45,8 @@ export interface IStorage {
   getMonthlyVideoCount(userId: string): Promise<number>;
   getAllVideoGenerations(): Promise<VideoGeneration[]>;
   deleteVideoGeneration(id: number, userId?: string): Promise<boolean>;
+  toggleCreationDisplay(id: number, userId: string, display: boolean): Promise<VideoGeneration | null>;
+  getUserCreations(userId: string): Promise<VideoGeneration[]>;
   
   // Audit operations
   logAccountAudit(data: { userId: string, email: string, username?: string, action: "created" | "deleted", authProvider: "local" | "replit", metadata?: any }): Promise<void>;
@@ -331,6 +333,25 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: videoGenerations.id });
     
     return result.length > 0;
+  }
+
+  async toggleCreationDisplay(id: number, userId: string, display: boolean): Promise<VideoGeneration | null> {
+    const [updated] = await db
+      .update(videoGenerations)
+      .set({ displayOnProfile: display ? 1 : 0 })
+      .where(and(eq(videoGenerations.id, id), eq(videoGenerations.userId, userId)))
+      .returning();
+    
+    return updated || null;
+  }
+
+  async getUserCreations(userId: string): Promise<VideoGeneration[]> {
+    return await db
+      .select()
+      .from(videoGenerations)
+      .where(and(eq(videoGenerations.userId, userId), eq(videoGenerations.displayOnProfile, 1)))
+      .orderBy(desc(videoGenerations.createdAt))
+      .limit(12);
   }
 
   // Audit operations

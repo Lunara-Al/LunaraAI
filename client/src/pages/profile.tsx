@@ -18,6 +18,7 @@ import {
   Shield,
   Zap,
   Info,
+  Star,
 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,8 +45,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { VideoGeneration } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

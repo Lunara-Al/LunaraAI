@@ -74,5 +74,52 @@ export function createGalleryRouter(): Router {
     }
   });
 
+  router.patch("/:id/creation-toggle", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid video ID" });
+      }
+
+      const { display } = req.body;
+      if (typeof display !== "boolean") {
+        return res.status(400).json({ error: "Display must be a boolean" });
+      }
+
+      const updated = await storage.toggleCreationDisplay(id, userId, display);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Video not found or unauthorized" });
+      }
+
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'video-creation-toggled',
+          userId,
+          videoId: id,
+          display
+        });
+      }
+
+      return res.json(updated);
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to toggle creation display" });
+    }
+  });
+
+  router.get("/creations/:userId", async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const creations = await storage.getUserCreations(userId);
+      return res.json(creations);
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to fetch creations" });
+    }
+  });
+
   return router;
 }
