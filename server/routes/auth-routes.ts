@@ -103,11 +103,10 @@ export function createAuthRouter(): Router {
     }
   });
 
-  router.post("/request-deletion-code", isAuthenticated, async (req: any, res) => {
+  router.post("/delete-account", isAuthenticated, async (req: any, res) => {
     try {
       const user = await getAuthenticatedUser(req);
       if (!user) return res.status(404).json({ message: "User not found" });
-      if (!user.email) return res.status(400).json({ message: "Email not found for user" });
 
       const { password } = req.body;
 
@@ -116,51 +115,6 @@ export function createAuthRouter(): Router {
       if (!password) return res.status(400).json({ message: "Password is required" });
       const isValid = await authService.verifyPassword(password, user.passwordHash);
       if (!isValid) return res.status(401).json({ message: "Incorrect password" });
-
-      // Generate 6-digit deletion code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const codeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-      
-      // Store code directly in database using Drizzle
-      await db.update(users).set({ 
-        resetToken: code,
-        resetTokenExpiry: codeExpiry
-      }).where(eq(users.id, user.id));
-
-      // In production, send email here
-      console.log(`[DEV] Deletion code for ${user.email}: ${code}`);
-      
-      res.json({ 
-        success: true, 
-        message: "Verification code sent to your email. Check spam folder if not found.",
-        // In dev, return code for testing
-        ...(process.env.NODE_ENV !== 'production' && { code })
-      });
-    } catch (error) {
-      console.error("Error in request-deletion-code:", error);
-      res.status(500).json({ message: "Failed to request deletion code" });
-    }
-  });
-
-  router.post("/delete-account", isAuthenticated, async (req: any, res) => {
-    try {
-      const user = await getAuthenticatedUser(req);
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      const { verificationCode } = req.body;
-
-      if (!verificationCode) {
-        return res.status(400).json({ message: "Verification code is required" });
-      }
-
-      // Check if code matches and is not expired
-      if (user.resetToken !== verificationCode) {
-        return res.status(401).json({ message: "Invalid verification code" });
-      }
-
-      if (!user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
-        return res.status(401).json({ message: "Verification code has expired. Request a new one." });
-      }
 
       await storage.logAccountAudit({
         userId: user.id,
