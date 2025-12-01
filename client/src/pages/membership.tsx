@@ -1,4 +1,4 @@
-import { Crown, Check, X, Loader2, Sparkles, TrendingDown, Zap, Calendar, TrendingUp, Infinity } from "lucide-react";
+import { Crown, Check, X, Loader2, Sparkles, TrendingDown, Zap, Calendar, TrendingUp, Infinity, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -27,6 +27,7 @@ export default function Membership() {
   const { toast } = useToast();
   const [downgradeDialogOpen, setDowngradeDialogOpen] = useState(false);
   const [targetDowngradeTier, setTargetDowngradeTier] = useState<string | null>(null);
+  const [showContentCalendarDetails, setShowContentCalendarDetails] = useState(false);
 
   // Fetch subscription status
   const { data: subscription, isLoading: subLoading, refetch } = useQuery<SubscriptionStatus>({
@@ -555,31 +556,43 @@ export default function Membership() {
           </div>
         </Card>
 
-        {/* Premium Feature Showcase - Content Calendar */}
-        <Card className="p-8 mt-12 bg-gradient-to-br from-purple-900/20 via-pink-900/10 to-indigo-900/20 border border-primary/30 relative overflow-hidden">
+        {/* Premium Feature Showcase - Content Calendar (Collapsible) */}
+        <Card className="p-8 mt-12 bg-gradient-to-br from-purple-900/20 via-pink-900/10 to-indigo-900/20 border border-primary/30 relative overflow-hidden transition-all duration-300">
           {/* Decorative glow elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-5 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full opacity-5 blur-3xl" />
           
-          <div className="relative z-10 space-y-6">
-            {/* Header */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[2px]">
-                  <div className="rounded-full bg-background p-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                  </div>
+          {/* Collapsible Header */}
+          <button
+            onClick={() => setShowContentCalendarDetails(!showContentCalendarDetails)}
+            className="relative z-10 w-full flex items-center justify-between group hover:opacity-80 transition-opacity"
+            data-testid="button-toggle-calendar-details"
+          >
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[2px]">
+                <div className="rounded-full bg-background p-2">
+                  <Calendar className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-3xl font-bold">Content Calendar</h3>
-                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
-                  <Crown className="w-3 h-3 mr-1" />
-                  PREMIUM ONLY
-                </Badge>
               </div>
+              <h3 className="text-3xl font-bold">Content Calendar</h3>
+              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                <Crown className="w-3 h-3 mr-1" />
+                PREMIUM ONLY
+              </Badge>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 text-primary transition-transform duration-300 ${showContentCalendarDetails ? 'rotate-180' : ''}`}
+              data-testid="icon-chevron-calendar"
+            />
+          </button>
+
+          {/* Expanded Content */}
+          {showContentCalendarDetails && (
+            <div className="relative z-10 space-y-6 mt-6 pt-6 border-t border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+              {/* Description */}
               <p className="text-muted-foreground text-lg">
                 Available exclusively with Premium membership - Your complete content planning hub
               </p>
-            </div>
 
             {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
@@ -678,16 +691,17 @@ export default function Membership() {
               </div>
             </div>
 
-            {/* Call to Action */}
-            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 rounded-xl border border-primary/40 text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Start organizing your cosmic content strategy with Premium membership
-              </p>
-              <p className="text-lg font-semibold">
-                Access Content Calendar now for <span className="text-primary">$49/month</span>
-              </p>
+              {/* Call to Action */}
+              <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 rounded-xl border border-primary/40 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Start organizing your cosmic content strategy with Premium membership
+                </p>
+                <p className="text-lg font-semibold">
+                  Access Content Calendar now for <span className="text-primary">$49/month</span>
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </Card>
       </div>
 
