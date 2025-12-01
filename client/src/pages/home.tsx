@@ -20,6 +20,7 @@ import aiTech3 from "@assets/stock_images/futuristic_ai_techno_50511b21.jpg";
 import meditation1 from "@assets/stock_images/peaceful_meditation__f0b4b6f6.jpg";
 import meditation2 from "@assets/stock_images/peaceful_meditation__b7f215c8.jpg";
 import meditation3 from "@assets/stock_images/peaceful_meditation__45257c38.jpg";
+import appScreenshot from "@assets/app-screenshot-mobile.png";
 
 const PRESET_PROMPTS = [
   "A glowing crystal peach sliced in slow motion with cosmic dust",
@@ -167,6 +168,12 @@ export default function Home() {
   };
 
   const showcaseVideos = [
+    { 
+      image: appScreenshot, 
+      title: "Lunara AI App", 
+      description: "Experience the cosmic ASMR creation platform on mobile",
+      videoUrl: "https://example.com/video_app.mp4"
+    },
     { 
       image: aiTech1, 
       title: "Futuristic AI Dreams", 
