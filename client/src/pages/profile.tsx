@@ -123,10 +123,62 @@ export default function Profile() {
     },
   });
 
-  const [deletePasswordError, setDeletePasswordError] = useState<string>("");
+  const [deletePasswordVerification, setDeletePasswordVerification] = useState<"verifying" | "correct" | "incorrect" | null>(null);
   const [deletePasswordFocused, setDeletePasswordFocused] = useState(false);
 
-  const isPasswordValid = deletePassword.length > 0 && !deletePasswordError;
+  // Debounce timer for password verification
+  const verifyPasswordTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Verify password as user types
+  const verifyPasswordMutation = useMutation({
+    mutationFn: async (password: string) => {
+      return await apiRequest("POST", "/api/auth/verify-delete-password", { password });
+    },
+    onSuccess: (data: any) => {
+      if (data.isCorrect) {
+        setDeletePasswordVerification("correct");
+      } else {
+        setDeletePasswordVerification("incorrect");
+      }
+    },
+    onError: () => {
+      setDeletePasswordVerification("incorrect");
+    },
+  });
+
+  // Handle password input with debouncing
+  const handleDeletePasswordChange = (value: string) => {
+    setDeletePassword(value);
+
+    // Clear previous timeout
+    if (verifyPasswordTimeoutRef.current) {
+      clearTimeout(verifyPasswordTimeoutRef.current);
+    }
+
+    if (!value.trim()) {
+      setDeletePasswordVerification(null);
+      return;
+    }
+
+    // Set verifying state immediately
+    setDeletePasswordVerification("verifying");
+
+    // Debounce the verification request (500ms)
+    verifyPasswordTimeoutRef.current = setTimeout(() => {
+      verifyPasswordMutation.mutate(value);
+    }, 500);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (verifyPasswordTimeoutRef.current) {
+        clearTimeout(verifyPasswordTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const isPasswordCorrect = deletePasswordVerification === "correct";
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -143,7 +195,6 @@ export default function Profile() {
     },
     onError: (error: any) => {
       const errorMessage = error.message || "Failed to delete account. Please try again.";
-      setDeletePasswordError(errorMessage);
       toast({
         title: "Error",
         description: errorMessage,
@@ -207,24 +258,34 @@ export default function Profile() {
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!deletePassword.trim()) {
-      setDeletePasswordError("Password is required");
+
+    // Only allow deletion if password is verified as correct
+    if (!isPasswordCorrect) {
+      toast({
+        title: "Error",
+        description: "Please enter the correct password to delete your account.",
+        variant: "destructive",
+      });
       return;
     }
 
     deleteAccountMutation.mutate(deletePassword);
     setIsDeleteDialogOpen(false);
     setDeletePassword("");
-    setDeletePasswordError("");
+    setDeletePasswordVerification(null);
   };
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
     setDeletePassword("");
-    setDeletePasswordError("");
+    setDeletePasswordVerification(null);
     setDeletePasswordFocused(false);
     setDeleteConfirmation("");
+
+    // Clear any pending verification timeout
+    if (verifyPasswordTimeoutRef.current) {
+      clearTimeout(verifyPasswordTimeoutRef.current);
+    }
   };
 
   // Handle unauthorized access
@@ -715,52 +776,60 @@ export default function Profile() {
               <label htmlFor="delete-password" className="text-sm font-semibold block">
                 Enter your password
               </label>
-              
+
               <div className="relative">
                 <Input
                   id="delete-password"
                   type="password"
                   value={deletePassword}
-                  onChange={(e) => {
-                    setDeletePassword(e.target.value);
-                    if (deletePasswordError) setDeletePasswordError("");
-                  }}
+                  onChange={(e) => handleDeletePasswordChange(e.target.value)}
                   onFocus={() => setDeletePasswordFocused(true)}
                   onBlur={() => setDeletePasswordFocused(false)}
                   placeholder="••••••••"
                   disabled={deleteAccountMutation.isPending}
                   aria-label="Password for account deletion"
-                  aria-invalid={!!deletePasswordError}
+                  aria-invalid={deletePasswordVerification === "incorrect"}
                   data-testid="input-delete-password"
                   autoFocus
                   className={`pr-10 transition-colors ${
-                    deletePasswordError 
-                      ? "border-destructive focus:border-destructive" 
-                      : isPasswordValid 
-                      ? "border-green-500 focus:border-green-500" 
+                    deletePasswordVerification === "incorrect"
+                      ? "border-destructive focus:border-destructive"
+                      : deletePasswordVerification === "correct"
+                      ? "border-green-500 focus:border-green-500"
                       : ""
                   }`}
                 />
 
                 {/* Status Icon */}
-                {deletePasswordError && (
+                {deletePasswordVerification === "verifying" && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0" />
+                )}
+                {deletePasswordVerification === "incorrect" && (
                   <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0" />
                 )}
-                {isPasswordValid && (
+                {deletePasswordVerification === "correct" && (
                   <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0" />
                 )}
               </div>
 
-              {/* Error Message */}
-              {deletePasswordError && (
-                <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  {deletePasswordError}
+              {/* Verifying State */}
+              {deletePasswordVerification === "verifying" && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                  Verifying password...
                 </p>
               )}
 
-              {/* Success Message */}
-              {isPasswordValid && (
+              {/* Incorrect Password State */}
+              {deletePasswordVerification === "incorrect" && (
+                <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  Incorrect password. Try again.
+                </p>
+              )}
+
+              {/* Correct Password State */}
+              {deletePasswordVerification === "correct" && (
                 <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   Password verified. Ready to delete.
@@ -779,14 +848,19 @@ export default function Profile() {
               </AlertDialogCancel>
               <Button
                 type="submit"
-                disabled={!isPasswordValid || deleteAccountMutation.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={!isPasswordCorrect || deleteAccountMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-confirm-delete"
               >
                 {deleteAccountMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Deleting Account...
+                  </>
+                ) : !isPasswordCorrect ? (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Enter Correct Password
                   </>
                 ) : (
                   <>

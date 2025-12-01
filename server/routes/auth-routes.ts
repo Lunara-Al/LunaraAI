@@ -103,6 +103,43 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // Verify password for account deletion (non-destructive check)
+  router.post("/verify-delete-password", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { password } = req.body;
+
+      // Validate password input
+      if (!password || typeof password !== "string") {
+        return res.status(400).json({ isCorrect: false, message: "Password is required" });
+      }
+
+      // Verify user has password-based authentication
+      if (!user.passwordHash) {
+        return res.status(400).json({ 
+          isCorrect: false,
+          message: "This account uses a different authentication method. Password deletion is not available." 
+        });
+      }
+
+      // Verify password against THIS user's personal password hash
+      const isPasswordCorrect = await authService.verifyPassword(password, user.passwordHash);
+      
+      if (isPasswordCorrect) {
+        return res.json({ isCorrect: true, message: "Password verified" });
+      } else {
+        return res.json({ isCorrect: false, message: "Incorrect password" });
+      }
+    } catch (error) {
+      console.error("Error in verify-delete-password route:", error);
+      res.status(500).json({ isCorrect: false, message: "Failed to verify password" });
+    }
+  });
+
   // Delete user account with password verification
   router.post("/delete-account", isAuthenticated, async (req: any, res) => {
     try {
