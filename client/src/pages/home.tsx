@@ -206,7 +206,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
       <MoonMenu />
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
@@ -242,11 +242,11 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">Upload an image to blend with your prompt for more consistent visual style</p>
               
               {!imagePreview ? (
-                <label className="flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-all cursor-pointer group">
+                <label className="flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 dark:border-primary/40 rounded-lg bg-primary/5 dark:bg-primary/15 hover:border-primary/50 dark:hover:border-primary/60 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer group">
                   <div className="flex flex-col items-center justify-center space-y-2">
-                    <Upload className="w-6 h-6 text-primary/60 group-hover:text-primary transition-colors" />
+                    <Upload className="w-6 h-6 text-primary/60 dark:text-primary/50 group-hover:text-primary dark:group-hover:text-primary/80 transition-colors" />
                     <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">Click to upload or drag and drop</p>
+                      <p className="text-sm font-medium text-foreground dark:text-white">Click to upload or drag and drop</p>
                       <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, GIF, BMP, SVG or TIFF (up to 500MB)</p>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function Home() {
                   />
                 </label>
               ) : (
-                <div className="relative rounded-lg overflow-hidden border-2 border-primary/30 bg-primary/5 p-3">
+                <div className="relative rounded-lg overflow-hidden border-2 border-primary/30 dark:border-primary/40 bg-primary/5 dark:bg-primary/15 p-3">
                   <img 
                     src={imagePreview} 
                     alt="Reference" 
@@ -278,8 +278,8 @@ export default function Home() {
                   >
                     <X className="w-4 h-4" />
                   </Button>
-                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 px-2 py-1 rounded text-xs text-white">
-                    <Check className="w-3 h-3 text-green-400" />
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 dark:bg-black/70 px-2 py-1 rounded text-xs text-white dark:text-white/90">
+                    <Check className="w-3 h-3 text-green-400 dark:text-green-300" />
                     Will be used in generation
                   </div>
                 </div>
