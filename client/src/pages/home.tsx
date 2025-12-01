@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,7 @@ export default function Home() {
   const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Fetch user data to check tier
   const { data: user } = useQuery<FrontendUser>({
@@ -217,6 +218,36 @@ export default function Home() {
       <MoonMenu />
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
+        {/* Slim Glass Bubble Search Bar */}
+        <div className="relative group">
+          {/* Subtle glow effect */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 rounded-full blur-lg opacity-0 group-hover:opacity-60 transition-all duration-500" />
+          
+          {/* Search bar with glassmorphism */}
+          <div className="relative flex items-center gap-3 px-4 py-2.5 md:py-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-full shadow-lg hover:shadow-xl hover:shadow-primary/20 dark:hover:shadow-primary/20 transition-all duration-300 group-hover:border-primary/60 dark:group-hover:border-primary/50">
+            <Search className="w-4 h-4 md:w-5 md:h-5 text-primary/60 dark:text-secondary/60 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder="Search prompts, styles, or presets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:placeholder-opacity-100 transition-all"
+              data-testid="input-search-bar"
+              aria-label="Search prompts and presets"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-full transition-colors hover-elevate"
+                data-testid="button-clear-search"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+              </button>
+            )}
+          </div>
+        </div>
         {/* Header Section */}
         <div className="text-center space-y-3 md:space-y-4">
           <h1 
