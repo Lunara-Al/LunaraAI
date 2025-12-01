@@ -50,6 +50,8 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deletePassword, setDeletePassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -435,12 +437,22 @@ export default function Profile() {
           <div className="pt-4 space-y-3">
             <Button 
               variant="outline" 
-              className="w-full transition-all duration-200 hover:scale-105"
-              onClick={() => window.location.href = '/api/logout'}
+              className="w-full transition-all duration-200"
+              onClick={() => setIsSignOutDialogOpen(true)}
+              disabled={isSigningOut}
               data-testid="button-logout"
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+              {isSigningOut ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing Out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </>
+              )}
             </Button>
             
             <Button 
@@ -460,6 +472,72 @@ export default function Profile() {
       <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
         <ContentCalendar user={user} />
       </div>
+
+      {/* Sign Out Confirmation Dialog */}
+      <AlertDialog open={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <LogOut className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+              Sign Out
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out? You'll need to log back in to access your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg p-4 space-y-2">
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-300 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              You will be logged out from this device
+            </p>
+            <ul className="text-xs text-amber-800 dark:text-amber-300/90 space-y-1.5 ml-6">
+              <li>• Your videos and data will remain safe</li>
+              <li>• You can sign back in anytime</li>
+            </ul>
+          </div>
+
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogCancel
+              disabled={isSigningOut}
+              data-testid="button-cancel-signout"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              onClick={async () => {
+                setIsSigningOut(true);
+                try {
+                  window.location.href = '/api/logout';
+                } catch {
+                  setIsSigningOut(false);
+                  toast({
+                    title: "Error",
+                    description: "Failed to sign out. Please try again.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              disabled={isSigningOut}
+              variant="outline"
+              className="border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+              data-testid="button-confirm-signout"
+            >
+              {isSigningOut ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Signing Out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </>
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit Profile Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
