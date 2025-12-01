@@ -109,30 +109,23 @@ export function createAuthRouter(): Router {
       if (!user) return res.status(404).json({ message: "User not found" });
       if (!user.email) return res.status(400).json({ message: "Email not found for user" });
 
-      const { method, password, confirmation } = req.body;
+      const { password } = req.body;
 
-      // Verify first step (password or DELETE confirmation)
-      if (method === "password") {
-        if (!user.passwordHash) return res.status(400).json({ message: "Invalid verification method" });
-        if (!password) return res.status(400).json({ message: "Password is required" });
-        const isValid = await authService.verifyPassword(password, user.passwordHash);
-        if (!isValid) return res.status(401).json({ message: "Incorrect password" });
-      } else if (method === "text") {
-        if (user.passwordHash) return res.status(400).json({ message: "Invalid verification method" });
-        if (confirmation !== "DELETE") return res.status(400).json({ message: "Invalid confirmation text" });
-      } else {
-        return res.status(400).json({ message: "Invalid verification method" });
-      }
+      // Verify password for account deletion
+      if (!user.passwordHash) return res.status(400).json({ message: "Password authentication required" });
+      if (!password) return res.status(400).json({ message: "Password is required" });
+      const isValid = await authService.verifyPassword(password, user.passwordHash);
+      if (!isValid) return res.status(401).json({ message: "Incorrect password" });
 
       // Generate 6-digit deletion code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       const codeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
       
-      // Store code in user's reset token field temporarily
-      await storage.updateProfile(user.id, { 
+      // Store code directly in database using Drizzle
+      await db.update(users).set({ 
         resetToken: code,
         resetTokenExpiry: codeExpiry
-      });
+      }).where(eq(users.id, user.id));
 
       // In production, send email here
       console.log(`[DEV] Deletion code for ${user.email}: ${code}`);
@@ -144,6 +137,7 @@ export function createAuthRouter(): Router {
         ...(process.env.NODE_ENV !== 'production' && { code })
       });
     } catch (error) {
+      console.error("Error in request-deletion-code:", error);
       res.status(500).json({ message: "Failed to request deletion code" });
     }
   });

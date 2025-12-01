@@ -128,21 +128,21 @@ export default function Profile() {
   const [codeDevDisplay, setCodeDevDisplay] = useState("");
 
   const requestDeletionCodeMutation = useMutation({
-    mutationFn: async (payload: { method: string; password?: string; confirmation?: string }) => {
-      return await apiRequest("POST", "/api/auth/request-deletion-code", payload);
+    mutationFn: async (password: string) => {
+      return await apiRequest("POST", "/api/auth/request-deletion-code", { password });
     },
     onSuccess: (data: any) => {
       if (data.code) setCodeDevDisplay(data.code);
       setDeleteStep(2);
       toast({
-        title: "Code Sent",
-        description: "A verification code has been sent to your email.",
+        title: "Verification Code Sent",
+        description: "Check your email for the 6-digit code. It expires in 15 minutes.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to send verification code.",
+        description: error.message || "Failed to send verification code. Please check your password.",
         variant: "destructive",
       });
     },
@@ -225,15 +225,9 @@ export default function Profile() {
 
   const handleDeleteAccount = () => {
     if (deleteStep === 1) {
-      // Step 1: Verify password/confirmation and request code
-      if (user?.hasPassword) {
-        if (deletePassword) {
-          requestDeletionCodeMutation.mutate({ method: "password", password: deletePassword });
-        }
-      } else {
-        if (deleteConfirmation === "DELETE") {
-          requestDeletionCodeMutation.mutate({ method: "text", confirmation: deleteConfirmation });
-        }
+      // Step 1: Verify password and request code
+      if (deletePassword) {
+        requestDeletionCodeMutation.mutate(deletePassword);
       }
     } else {
       // Step 2: Verify code and delete account
@@ -701,7 +695,7 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Account Dialog - 2-Step Verification */}
+      {/* Delete Account Dialog - Secure 2-Step Verification */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
         setIsDeleteDialogOpen(open);
         if (!open) {
@@ -712,98 +706,140 @@ export default function Profile() {
           setCodeDevDisplay("");
         }
       }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account - Step {deleteStep} of 2</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteStep === 1 
-                ? "This action cannot be undone. We'll send a verification code to your email for confirmation."
-                : "Enter the verification code sent to your email to permanently delete your account."}
-            </AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <span className="text-lg">Delete Account</span>
+              <span className="text-xs font-normal text-muted-foreground">Step {deleteStep} of 2</span>
+            </AlertDialogTitle>
           </AlertDialogHeader>
           
-          <div className="py-4 space-y-3">
-            {deleteStep === 1 ? (
-              <>
-                {user?.hasPassword ? (
-                  <>
-                    <label htmlFor="delete-password" className="text-sm font-medium mb-2 block">
-                      Enter your password to continue
-                    </label>
-                    <Input
-                      id="delete-password"
-                      type="password"
-                      value={deletePassword}
-                      onChange={(e) => setDeletePassword(e.target.value)}
-                      placeholder="Password"
-                      data-testid="input-delete-password"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
-                      Type <span className="font-bold">DELETE</span> to continue
-                    </label>
-                    <Input
-                      id="delete-confirmation"
-                      type="text"
-                      value={deleteConfirmation}
-                      onChange={(e) => setDeleteConfirmation(e.target.value)}
-                      placeholder="DELETE"
-                      data-testid="input-delete-confirmation"
-                    />
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <label htmlFor="deletion-code" className="text-sm font-medium mb-2 block">
-                  Enter the 6-digit code from your email
-                </label>
-                <Input
-                  id="deletion-code"
-                  type="text"
-                  maxLength={6}
-                  value={deletionCode}
-                  onChange={(e) => setDeletionCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="000000"
-                  data-testid="input-deletion-code"
-                  className="text-center text-2xl tracking-widest"
-                />
-                {codeDevDisplay && (
-                  <p className="text-xs text-muted-foreground text-center bg-muted p-2 rounded">
-                    Dev: Code is {codeDevDisplay}
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+          {deleteStep === 1 ? (
+            <>
+              {/* Warning Section */}
+              <div className="space-y-4">
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <div className="text-destructive text-xl mt-0.5">⚠️</div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-destructive text-sm">This action is permanent</h4>
+                      <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>All your videos will be deleted forever</li>
+                        <li>Your profile and account data will be erased</li>
+                        <li>You cannot undo this action</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              data-testid="button-cancel-delete"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAccount}
-              disabled={
-                deleteStep === 1
-                  ? ((user?.hasPassword ? !deletePassword : deleteConfirmation !== "DELETE") || requestDeletionCodeMutation.isPending)
-                  : (!deletionCode || deleteAccountMutation.isPending)
-              }
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="button-confirm-delete"
-            >
-              {requestDeletionCodeMutation.isPending 
-                ? "Sending Code..." 
-                : deleteAccountMutation.isPending 
-                ? "Deleting..." 
-                : deleteStep === 1 
-                ? "Send Code" 
-                : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+                {/* Password Input */}
+                <div className="space-y-2">
+                  <label htmlFor="delete-password" className="text-sm font-semibold block">
+                    Enter your password to continue
+                  </label>
+                  <Input
+                    id="delete-password"
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="••••••••"
+                    data-testid="input-delete-password"
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    You'll receive a confirmation code at your email address
+                  </p>
+                </div>
+              </div>
+
+              <AlertDialogFooter>
+                <AlertDialogCancel data-testid="button-cancel-delete">
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={!deletePassword || requestDeletionCodeMutation.isPending}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  data-testid="button-send-code"
+                >
+                  {requestDeletionCodeMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending Code...
+                    </>
+                  ) : (
+                    "Send Verification Code"
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            <>
+              {/* Verification Code Section */}
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <p className="text-xs text-blue-900 dark:text-blue-300">
+                    ✓ Password verified. Check your email for the 6-digit code.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="deletion-code" className="text-sm font-semibold block">
+                    Enter verification code
+                  </label>
+                  <Input
+                    id="deletion-code"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={deletionCode}
+                    onChange={(e) => setDeletionCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="000000"
+                    data-testid="input-deletion-code"
+                    className="text-center text-3xl tracking-widest font-mono"
+                    autoFocus
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    Code expires in 15 minutes
+                  </p>
+                  {codeDevDisplay && (
+                    <div className="text-xs text-muted-foreground text-center bg-muted p-2 rounded mt-2">
+                      Dev: Code is <span className="font-mono font-bold">{codeDevDisplay}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <AlertDialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setDeleteStep(1);
+                    setDeletionCode("");
+                  }}
+                  disabled={deleteAccountMutation.isPending}
+                  data-testid="button-back-delete"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={!deletionCode || deleteAccountMutation.isPending}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  data-testid="button-confirm-delete"
+                >
+                  {deleteAccountMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Permanently Delete"
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>
