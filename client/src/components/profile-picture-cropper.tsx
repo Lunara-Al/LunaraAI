@@ -336,8 +336,12 @@ export function ProfilePictureCropper({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Crop Your Profile Picture</DialogTitle>
-          <DialogDescription>Drag to adjust • Scroll/pinch to zoom • Full image always visible</DialogDescription>
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Perfect Your Profile
+          </DialogTitle>
+          <DialogDescription className="text-sm">
+            Drag to position • Scroll/pinch to zoom • Your entire picture is always preserved
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

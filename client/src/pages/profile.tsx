@@ -178,9 +178,13 @@ export default function Profile() {
   const handleCropComplete = async (croppedBase64: string) => {
     setIsUploadingPicture(true);
     try {
-      const compressedBase64 = await compressProfileImage(
-        new File([croppedBase64], "cropped.jpg", { type: "image/jpeg" })
-      );
+      // Convert data URL to blob
+      const response = await fetch(croppedBase64);
+      const blob = await response.blob();
+      const file = new File([blob], "cropped.jpg", { type: "image/jpeg" });
+      
+      // Compress the cropped image
+      const compressedBase64 = await compressProfileImage(file);
       uploadPictureMutation.mutate(compressedBase64);
     } catch (error) {
       toast({
