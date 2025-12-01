@@ -58,20 +58,20 @@ export function ProfilePictureCropper({
        * Calculate max pan distance per dimension based on:
        * 1. Whether image fits entirely in circle
        * 2. Aspect ratio and size differences
-       * 3. Minimal crop margin (allow only ~3% crop max)
+       * 3. Minimal crop margin (allow only ~1% crop max)
        */
       const calculateMaxPan = (imageSize: number, circleDiam: number): number => {
         // Case 1: Image is smaller than or equal to circle
-        // Allow only ~1% fine-tuning movement for centering
+        // Allow only ~0.5% fine-tuning movement for centering
         if (imageSize <= circleDiam) {
           const excess = circleDiam - imageSize;
-          return excess * 0.01; // Very limited adjustment
+          return excess * 0.005; // Ultra-limited adjustment
         }
 
         // Case 2: Image is larger than circle (zoomed in)
-        // Allow only minimal cropping (~3-5% max on each side)
-        // This keeps the entire image visible with minimal cutoff
-        const maxCropMargin = circleDiam * 0.03; // 3% crop margin
+        // Allow only minimal cropping (~1% max on each side)
+        // This keeps the entire image visible with tight constraints
+        const maxCropMargin = circleDiam * 0.01; // 1% crop margin
         const maxPan = (imageSize / 2 - circleDiam / 2 + maxCropMargin) / zoom;
 
         return Math.max(0, maxPan);
@@ -201,7 +201,7 @@ export function ProfilePictureCropper({
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const zoomSpeed = 0.1;
-    const newZoom = Math.max(0.5, Math.min(4, zoom + (e.deltaY > 0 ? -zoomSpeed : zoomSpeed)));
+    const newZoom = Math.max(0.5, Math.min(2.5, zoom + (e.deltaY > 0 ? -zoomSpeed : zoomSpeed)));
     setZoom(newZoom);
     scheduleRedraw(newZoom, panX, panY);
   };
@@ -247,7 +247,7 @@ export function ProfilePictureCropper({
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const newDistance = Math.sqrt(dx * dx + dy * dy);
       const ratio = newDistance / touchDistance;
-      const newZoom = Math.max(0.5, Math.min(4, touchZoomStart * ratio));
+      const newZoom = Math.max(0.5, Math.min(2.5, touchZoomStart * ratio));
       setZoom(newZoom);
       scheduleRedraw(newZoom, panX, panY);
     }
@@ -263,7 +263,7 @@ export function ProfilePictureCropper({
 
   // Zoom controls
   const handleZoomIn = () => {
-    const newZoom = Math.min(4, zoom + 0.2);
+    const newZoom = Math.min(2.5, zoom + 0.2);
     setZoom(newZoom);
     scheduleRedraw(newZoom, panX, panY);
   };
@@ -386,7 +386,7 @@ export function ProfilePictureCropper({
               size="icon"
               variant="outline"
               onClick={handleZoomIn}
-              disabled={zoom >= 4}
+              disabled={zoom >= 2.5}
               data-testid="button-zoom-in"
             >
               <ZoomIn className="w-4 h-4" />
