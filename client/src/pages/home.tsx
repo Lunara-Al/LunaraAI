@@ -542,16 +542,16 @@ export default function Home() {
       )}
 
       {/* Advertisement Showcase Section */}
-      <div className="w-full max-w-6xl mx-auto mt-16 md:mt-24 px-4 pb-16">
-        <div className="text-center space-y-3 mb-8 md:mb-12">
-          <Badge variant="secondary" className="mb-2">
-            Showcase
+      <div className="w-full max-w-6xl mx-auto mt-20 md:mt-32 px-4 pb-20">
+        <div className="text-center space-y-4 mb-12 md:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Badge variant="secondary" className="mb-3 backdrop-blur-sm">
+            ✨ Showcase
           </Badge>
-          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-            AI ASMR Examples
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent leading-tight">
+            Cosmic ASMR Gallery
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-            Experience the mesmerizing fusion of artificial intelligence and ASMR visuals
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Experience the mesmerizing fusion of artificial intelligence and ethereal ASMR visuals. Each video is a journey through cosmic realms.
           </p>
         </div>
 
@@ -560,44 +560,54 @@ export default function Home() {
           {showcaseVideos.map((video, index) => (
             <div
               key={index}
-              className="group relative bg-card rounded-lg overflow-hidden border border-card-border hover-elevate transition-all"
+              className="group relative bg-card rounded-2xl overflow-hidden border border-card-border hover-elevate transition-all duration-300 shadow-sm hover:shadow-lg"
               data-testid={`showcase-${index}`}
             >
-              <div className="aspect-video relative overflow-hidden">
-                <video
-                  poster={video.image}
-                  controls
-                  loop
-                  preload="metadata"
-                  className="w-full h-full object-cover"
-                  data-testid={`showcase-video-${index}`}
-                >
-                  <source src={video.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+              <div className="aspect-video relative overflow-hidden bg-black/40">
+                <img
+                  src={video.image}
+                  alt={video.title}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 backdrop-blur-sm">
+                  <div className="rounded-full bg-gradient-to-r from-primary to-secondary p-3 shadow-lg">
+                    <svg className="w-6 h-6 text-white fill-white" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-3 md:p-4">
-                <h3 className="text-sm md:text-base font-semibold mb-1">{video.title}</h3>
-                <p className="text-xs md:text-sm text-muted-foreground">{video.description}</p>
+              <div className="p-4 md:p-5 space-y-2">
+                <h3 className="text-sm md:text-base font-bold text-foreground line-clamp-1">{video.title}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{video.description}</p>
+                <div className="pt-2 flex items-center gap-1">
+                  <div className="w-1 h-1 rounded-full bg-primary" />
+                  <span className="text-xs text-muted-foreground font-medium">AI-Generated</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-8 md:mt-12">
-          <p className="text-sm md:text-base text-muted-foreground mb-4">
-            Ready to create your own cosmic ASMR masterpiece?
-          </p>
+        <div className="text-center mt-12 md:mt-16 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <div className="space-y-2">
+            <p className="text-base md:text-lg text-muted-foreground font-medium">
+              Ready to create your own cosmic ASMR masterpiece?
+            </p>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Join thousands of creators bringing their imagination to life
+            </p>
+          </div>
           <Button
             size="lg"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="bg-gradient-to-r from-primary to-secondary text-primary-foreground"
+            className="bg-gradient-to-r from-primary via-secondary to-primary text-white shadow-lg hover:shadow-xl moon-glow"
           >
-            <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-            Start Creating
+            <Sparkles className="w-5 h-5 mr-2" />
+            Start Creating Now
           </Button>
         </div>
       </div>

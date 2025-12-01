@@ -76,7 +76,8 @@ export default function Landing() {
 
           {/* Feature Cards with Glass Effect */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <Card className="p-8 space-y-4 hover-elevate group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
                 <Video className="w-14 h-14 text-primary mx-auto relative" />
@@ -87,7 +88,8 @@ export default function Landing() {
               </p>
             </Card>
             
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <Card className="p-8 space-y-4 hover-elevate group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-secondary/20 rounded-full group-hover:bg-secondary/30 transition-all" />
                 <Zap className="w-14 h-14 text-secondary mx-auto relative" />
@@ -98,7 +100,8 @@ export default function Landing() {
               </p>
             </Card>
             
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <Card className="p-8 space-y-4 hover-elevate group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
                 <Crown className="w-14 h-14 text-primary mx-auto relative" />
