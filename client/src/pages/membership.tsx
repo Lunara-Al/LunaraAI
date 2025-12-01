@@ -1,4 +1,4 @@
-import { Crown, Check, X, Loader2, Sparkles, TrendingDown, Zap } from "lucide-react";
+import { Crown, Check, X, Loader2, Sparkles, TrendingDown, Zap, Calendar, TrendingUp, Infinity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -544,8 +544,149 @@ export default function Membership() {
                   <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
+                <tr className="border-b border-border/50 hover:bg-muted/50 bg-primary/5">
+                  <td className="py-3 px-4 font-semibold text-primary">Content Calendar</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
+                </tr>
               </tbody>
             </table>
+          </div>
+        </Card>
+
+        {/* Premium Feature Showcase - Content Calendar */}
+        <Card className="p-8 mt-12 bg-gradient-to-br from-purple-900/20 via-pink-900/10 to-indigo-900/20 border border-primary/30 relative overflow-hidden">
+          {/* Decorative glow elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-5 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full opacity-5 blur-3xl" />
+          
+          <div className="relative z-10 space-y-6">
+            {/* Header */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[2px]">
+                  <div className="rounded-full bg-background p-2">
+                    <Calendar className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
+                <h3 className="text-3xl font-bold">Content Calendar</h3>
+                <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+                  <Crown className="w-3 h-3 mr-1" />
+                  PREMIUM ONLY
+                </Badge>
+              </div>
+              <p className="text-muted-foreground text-lg">
+                Available exclusively with Premium membership - Your complete content planning hub
+              </p>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              {/* Feature 1 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-purple-500/20 hover:border-purple-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-6 h-6 text-purple-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">30-Day Planning View</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Visual calendar interface with 30-day preview to plan and organize your cosmic ASMR content
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-pink-500/20 hover:border-pink-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <TrendingUp className="w-6 h-6 text-pink-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Platform Tracking</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Track content across TikTok, YouTube Shorts, Instagram, Facebook, and X with platform-specific badges
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-indigo-500/20 hover:border-indigo-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-6 h-6 text-indigo-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Content Details</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Store comprehensive content information including ideas, descriptions, and platform targets
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 4 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <Infinity className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Unlimited Entries</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Plan as much content as you want with no limits on calendar entries or platform assignments
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 5 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <Zap className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Smart Navigation</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Navigate weeks easily with intuitive controls, jump to today, and view comprehensive month ranges
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 6 */}
+              <div className="p-4 rounded-xl bg-white/5 border border-rose-500/20 hover:border-rose-500/40 hover:bg-white/10 transition-all">
+                <div className="flex items-start gap-3">
+                  <Crown className="w-6 h-6 text-rose-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Priority Feature</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Exclusive to Premium members - Gives you a competitive edge in content planning and scheduling
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Benefits Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border/50">
+              <div className="text-center p-4 space-y-2">
+                <div className="text-3xl font-bold text-primary">30+</div>
+                <p className="text-sm text-muted-foreground">Days of planning ahead</p>
+              </div>
+              <div className="text-center p-4 space-y-2">
+                <div className="text-3xl font-bold text-primary">5</div>
+                <p className="text-sm text-muted-foreground">Supported social platforms</p>
+              </div>
+              <div className="text-center p-4 space-y-2">
+                <div className="text-3xl font-bold text-primary">∞</div>
+                <p className="text-sm text-muted-foreground">Content entries (unlimited)</p>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 rounded-xl border border-primary/40 text-center space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Start organizing your cosmic content strategy with Premium membership
+              </p>
+              <p className="text-lg font-semibold">
+                Access Content Calendar now for <span className="text-primary">$49/month</span>
+              </p>
+            </div>
           </div>
         </Card>
       </div>
