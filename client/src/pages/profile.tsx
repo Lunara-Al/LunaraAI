@@ -396,14 +396,12 @@ export default function Profile() {
                 )}
               </div>
               <Button
-                variant="outline"
-                size="sm"
                 onClick={() => setIsEditDialogOpen(true)}
-                className="mt-2"
+                className="mt-3 px-4 py-1.5 h-auto text-xs font-semibold bg-gradient-to-r from-primary via-purple-500 to-secondary text-primary-foreground hover:shadow-lg hover:shadow-primary/30 dark:hover:shadow-primary/20 transition-all duration-300 hover-elevate rounded-lg"
                 data-testid="button-edit-profile"
               >
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit Profile
+                <Edit2 className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                Edit
               </Button>
             </div>
           </div>
