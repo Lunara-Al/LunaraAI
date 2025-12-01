@@ -123,6 +123,8 @@ export default function Profile() {
     },
   });
 
+  const [deletePasswordError, setDeletePasswordError] = useState<string>("");
+
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
       return await apiRequest("POST", "/api/auth/delete-account", { password });
@@ -137,9 +139,11 @@ export default function Profile() {
       }, 1000);
     },
     onError: (error: any) => {
+      const errorMessage = error.message || "Failed to delete account. Please try again.";
+      setDeletePasswordError(errorMessage);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete account. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -693,15 +697,45 @@ export default function Profile() {
               <label htmlFor="delete-password" className="text-sm font-semibold block">
                 Enter your password to delete your account
               </label>
-              <Input
-                id="delete-password"
-                type="password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="••••••••"
-                data-testid="input-delete-password"
-                autoFocus
-              />
+              <div className="relative">
+                <Input
+                  id="delete-password"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => {
+                    setDeletePassword(e.target.value);
+                    setDeletePasswordError("");
+                  }}
+                  onFocus={() => setDeletePasswordError("")}
+                  placeholder="••••••••"
+                  data-testid="input-delete-password"
+                  autoFocus
+                  className={deletePasswordError ? "border-destructive pr-10" : ""}
+                />
+                {deletePasswordError && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-destructive">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18.101 12.93a1 1 0 00-1.414-1.414L10 14.586l-6.687-6.687a1 1 0 00-1.414 1.414l8.101 8.101a1 1 0 001.414 0l8.101-8.101z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
+              {deletePasswordError && (
+                <p className="text-xs text-destructive flex items-center gap-1.5">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  {deletePasswordError}
+                </p>
+              )}
+              {deletePassword && !deletePasswordError && (
+                <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Password entered
+                </p>
+              )}
             </div>
           </div>
 

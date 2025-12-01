@@ -110,27 +110,39 @@ export function createAuthRouter(): Router {
 
       const { password } = req.body;
 
-      // Verify password for account deletion
-      if (!user.passwordHash) return res.status(400).json({ message: "Password authentication required" });
+      // Validate password is provided
       if (!password) return res.status(400).json({ message: "Password is required" });
-      const isValid = await authService.verifyPassword(password, user.passwordHash);
-      if (!isValid) return res.status(401).json({ message: "Incorrect password" });
 
+      // Verify password authentication method exists for this user
+      if (!user.passwordHash) {
+        return res.status(400).json({ message: "This account uses a different authentication method. Password deletion is not available." });
+      }
+
+      // Verify the password against THIS user's password hash (personal verification)
+      const isValid = await authService.verifyPassword(password, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Incorrect password" });
+      }
+
+      // Log account deletion for audit trail
       await storage.logAccountAudit({
         userId: user.id,
         email: user.email || "",
         username: user.username || undefined,
         action: "deleted",
-        authProvider: user.passwordHash ? "local" : "replit",
+        authProvider: "local",
       });
 
+      // Permanently delete all user data
       await storage.deleteUserAccount(user.id);
 
+      // End user session
       req.logout(() => {
         res.json({ success: true, message: "Account deleted successfully" });
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete account" });
+      console.error("Error in delete-account:", error);
+      res.status(500).json({ message: "Failed to delete account. Please try again." });
     }
   });
 
