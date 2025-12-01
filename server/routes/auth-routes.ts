@@ -5,6 +5,7 @@ import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from "../unified-auth";
 import { authService } from "../auth-service";
+import { getWebSocketManager } from "../websocket";
 import passport from "passport";
 
 export function createAuthRouter(): Router {
@@ -159,6 +160,19 @@ export function createProfileRouter(): Router {
       if (!user) return res.status(404).json({ error: "User not found" });
 
       const updatedUser = await storage.updateProfilePicture(userId, imageData);
+      
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'profile-updated',
+          userId,
+          data: {
+            profileImageUrl: updatedUser.profileImageUrl
+          }
+        });
+      }
+      
       res.json({ success: true, profileImageUrl: updatedUser.profileImageUrl });
     } catch (error) {
       res.status(500).json({ error: "Failed to upload profile picture" });
@@ -214,6 +228,22 @@ export function createProfileRouter(): Router {
       if (lastName !== undefined) updateData.lastName = lastName;
 
       const updatedUser = await storage.updateProfile(userId, updateData);
+
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'profile-updated',
+          userId,
+          data: {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            username: updatedUser.username,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+          }
+        });
+      }
 
       res.json({
         success: true,
