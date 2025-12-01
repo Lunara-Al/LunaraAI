@@ -1,5 +1,9 @@
 # LUNARA AI - COMPLETE LIGHT MODE STYLING CODE
 
+> **Original Styling Backup:** The original light mode styling has been backed up to `client/src/index.css.backup`
+>
+> **Current Styling:** The new enhanced light mode styling is now active in `client/src/index.css`
+
 ## 1. TAILWIND CONFIG (tailwind.config.ts)
 
 ```typescript

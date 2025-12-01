@@ -2,36 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========================================
-   GLOBAL DOCUMENT BEHAVIOR
-   ======================================== */
-html {
-  scroll-behavior: smooth;
-}
-
-/* ========================================
-   LIGHT MODE - Glass Bubble Moon Theme
-   ======================================== */
+/* LIGHT MODE - Glass Bubble Moon Theme */
 :root {
-  color-scheme: light;
-
   --button-outline: rgba(107, 91, 255, 0.2);
   --badge-outline: rgba(107, 91, 255, 0.15);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(255, 255, 255, 0.1);
   --elevate-2: rgba(255, 255, 255, 0.2);
-  
-  /* Background Colors */
   --background: 245 50% 96%;
   --foreground: 258 70% 20%;
   --border: 270 60% 85%;
-  
-  /* Card Colors */
   --card: 250 30% 98%;
   --card-foreground: 258 70% 20%;
   --card-border: 270 50% 85%;
-  
-  /* Sidebar Colors */
   --sidebar: 250 20% 96%;
   --sidebar-foreground: 258 60% 25%;
   --sidebar-border: 270 40% 88%;
@@ -40,46 +23,30 @@ html {
   --sidebar-accent: 270 30% 92%;
   --sidebar-accent-foreground: 258 60% 25%;
   --sidebar-ring: 270 80% 65%;
-  
-  /* Popover Colors */
   --popover: 250 25% 97%;
   --popover-foreground: 258 70% 20%;
   --popover-border: 270 40% 88%;
-  
-  /* Primary & Secondary */
   --primary: 270 80% 65%;
   --primary-foreground: 270 80% 98%;
   --secondary: 320 75% 68%;
   --secondary-foreground: 320 75% 98%;
-  
-  /* Text Colors */
   --muted: 258 20% 94%;
   --muted-foreground: 258 25% 50%;
   --accent: 270 35% 95%;
   --accent-foreground: 258 60% 25%;
-  
-  /* Status Colors */
   --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 98%;
-  
-  /* Input & Ring */
   --input: 270 30% 92%;
   --ring: 270 80% 65%;
-  
-  /* Chart Colors */
   --chart-1: 270 80% 65%;
   --chart-2: 320 75% 68%;
   --chart-3: 258 70% 60%;
   --chart-4: 200 60% 60%;
   --chart-5: 290 70% 65%;
-  
-  /* Typography */
-  --font-sans: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
-  --font-mono: "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Poppins', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Courier New', monospace;
   --radius: 1.25rem;
-  
-  /* Light Mode Shadows - Cosmic Purple + Pink */
   --shadow-2xs: 0px 2px 8px rgba(107, 91, 255, 0.08), 0px 1px 4px rgba(255, 79, 225, 0.06);
   --shadow-xs: 0px 4px 12px rgba(107, 91, 255, 0.1), 0px 2px 6px rgba(255, 79, 225, 0.08);
   --shadow-sm: 0px 6px 16px rgba(107, 91, 255, 0.12), 0px 3px 8px rgba(255, 79, 225, 0.1);
@@ -91,42 +58,47 @@ html {
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-  /* Fallback + Modern borders */
+/* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --sidebar-accent-border: hsl(var(--sidebar-accent));
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --primary-border: hsl(var(--primary));
   --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --secondary-border: hsl(var(--secondary));
   --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --muted-border: hsl(var(--muted));
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --accent-border: hsl(var(--accent));
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-/* ========================================
-   DARK MODE - Enhanced Cosmic Theme
-   ======================================== */
 .dark {
-  color-scheme: dark;
-
   --button-outline: rgba(255, 255, 255, 0.15);
   --badge-outline: rgba(255, 255, 255, 0.1);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255, 255, 255, 0.06);
   --elevate-2: rgba(255, 255, 255, 0.12);
-  
   --background: 258 70% 4%;
   --foreground: 250 20% 90%;
   --border: 270 40% 18%;
   --card: 258 50% 8%;
   --card-foreground: 250 20% 90%;
   --card-border: 270 35% 20%;
-  
   --sidebar: 258 40% 10%;
   --sidebar-foreground: 250 15% 85%;
   --sidebar-border: 270 30% 18%;
@@ -135,34 +107,26 @@ html {
   --sidebar-accent: 270 35% 18%;
   --sidebar-accent-foreground: 250 15% 85%;
   --sidebar-ring: 270 85% 70%;
-  
   --popover: 258 45% 12%;
   --popover-foreground: 250 15% 88%;
   --popover-border: 270 30% 20%;
-  
   --primary: 270 85% 70%;
   --primary-foreground: 270 85% 98%;
   --secondary: 320 78% 72%;
   --secondary-foreground: 320 78% 98%;
-  
   --muted: 258 25% 22%;
   --muted-foreground: 258 18% 65%;
   --accent: 270 30% 20%;
   --accent-foreground: 258 15% 85%;
-  
   --destructive: 0 75% 58%;
   --destructive-foreground: 0 0% 98%;
-  
   --input: 270 28% 24%;
   --ring: 270 85% 70%;
-  
   --chart-1: 270 85% 75%;
   --chart-2: 320 78% 75%;
   --chart-3: 258 75% 70%;
   --chart-4: 200 68% 68%;
   --chart-5: 290 75% 72%;
-  
-  /* Dark Mode Shadows - Stronger Cosmic Glow */
   --shadow-2xs: 0px 2px 8px rgba(107, 91, 255, 0.15), 0px 1px 4px rgba(255, 79, 225, 0.12);
   --shadow-xs: 0px 4px 12px rgba(107, 91, 255, 0.2), 0px 2px 6px rgba(255, 79, 225, 0.16);
   --shadow-sm: 0px 6px 16px rgba(107, 91, 255, 0.25), 0px 3px 8px rgba(255, 79, 225, 0.2);
@@ -172,34 +136,38 @@ html {
   --shadow-xl: 0px 24px 48px rgba(107, 91, 255, 0.45), 0px 12px 24px rgba(255, 79, 225, 0.4);
   --shadow-2xl: 0px 32px 64px rgba(107, 91, 255, 0.5), 0px 16px 32px rgba(255, 79, 225, 0.45);
 
+/* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --sidebar-accent-border: hsl(var(--sidebar-accent));
   --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --primary-border: hsl(var(--primary));
   --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --secondary-border: hsl(var(--secondary));
   --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --muted-border: hsl(var(--muted));
   --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --accent-border: hsl(var(--accent));
   --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+
+  /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-/* ========================================
-   BASE STYLES
-   ======================================== */
 @layer base {
   * {
     @apply border-border;
-  }
-
-  html,
-  body,
-  #root {
-    @apply h-full;
   }
 
   body {
@@ -208,15 +176,18 @@ html {
     overflow-x: hidden;
   }
 
-  /* Space Background with Stars - Light/Dark */
+  /* Space Background with Stars - Light Mode */
   body::before {
     content: "";
     position: fixed;
-    inset: 0;
-    z-index: -2;
-    background:
-      radial-gradient(ellipse at 20% 30%, rgba(107, 91, 255, 0.08) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 70%, rgba(255, 79, 225, 0.08) 0%, transparent 55%),
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(107, 91, 255, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(255, 79, 225, 0.08) 0%, transparent 50%),
       radial-gradient(2px 2px at 20% 30%, rgba(107, 91, 255, 0.4), transparent),
       radial-gradient(2px 2px at 60% 70%, rgba(255, 79, 225, 0.3), transparent),
       radial-gradient(1px 1px at 50% 50%, rgba(107, 91, 255, 0.3), transparent),
@@ -224,7 +195,7 @@ html {
       radial-gradient(2px 2px at 90% 60%, rgba(107, 91, 255, 0.25), transparent),
       radial-gradient(1px 1px at 33% 50%, rgba(255, 79, 225, 0.2), transparent),
       radial-gradient(1px 1px at 66% 33%, rgba(107, 91, 255, 0.25), transparent);
-    background-size:
+    background-size: 
       200% 200%,
       200% 200%,
       200px 200px,
@@ -234,99 +205,131 @@ html {
       200px 200px,
       300px 300px,
       250px 250px;
+    background-position: 
+      0% 0%,
+      100% 100%,
+      0% 0%,
+      40% 60%,
+      50% 50%,
+      80% 10%,
+      90% 60%,
+      33% 50%,
+      66% 33%;
     animation: twinkle 8s ease-in-out infinite alternate;
-  }
-
-  /* Light mode overlay for gradient effect */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 0%,
-      rgba(240, 235, 250, 0.3) 100%
-    );
-    pointer-events: none;
   }
 
   /* Twinkling stars animation */
   @keyframes twinkle {
-    0%,
-    100% {
+    0%, 100% {
       opacity: 0.6;
     }
     50% {
       opacity: 0.9;
     }
   }
+
+  /* Light mode overlay for gradient effect */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(240, 235, 250, 0.3) 100%);
+    pointer-events: none;
+  }
+
+  html, body, #root {
+    @apply h-full;
+  }
 }
 
-/* ========================================
-   UTILITIES - GLASS EFFECTS & ELEVATION
-   ======================================== */
+/**
+ * Using the elevate system.
+ * Automatic contrast adjustment.
+ *
+ * <element className="hover-elevate" />
+ * <element className="active-elevate-2" />
+ *
+ * // Using the tailwind utility when a data attribute is "on"
+ * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
+ * // Or manually controlling the toggle state
+ * <element className="toggle-elevate toggle-elevated" />
+ *
+ * Elevation systems have to handle many states.
+ * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
+ * - toggled or not
+ * - focused or not (this is not handled with these utilities)
+ *
+ * Even without handling focused or not, this is six possible combinations that
+ * need to be distinguished from eachother visually.
+ */
 @layer utilities {
+
   /* Glass Bubble Moon Effects */
   .glass {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(107, 91, 255, 0.15);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 8px 32px rgba(107, 91, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
   }
 
   .dark .glass {
-    background: rgba(8, 5, 25, 0.7);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(107, 91, 255, 0.35);
-    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(107, 91, 255, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
     border: 1px solid rgba(107, 91, 255, 0.2);
-    box-shadow:
-      var(--shadow),
-      0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+    box-shadow: 
+      0 8px 32px rgba(107, 91, 255, 0.12),
+      0 0 0 1px rgba(255, 255, 255, 0.9) inset,
+      0 0 40px rgba(107, 91, 255, 0.08);
   }
 
   .dark .glass-card {
-    background: rgba(25, 18, 60, 0.7);
+    background: rgba(40, 30, 80, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(107, 91, 255, 0.3);
-    box-shadow:
-      var(--shadow-lg),
-      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    box-shadow: 
+      0 8px 32px rgba(107, 91, 255, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 0 40px rgba(107, 91, 255, 0.15);
   }
 
   .glass-button {
-    background: rgba(107, 91, 255, 0.16);
+    background: rgba(107, 91, 255, 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(107, 91, 255, 0.32);
-    box-shadow: var(--shadow-xs);
+    border: 1px solid rgba(107, 91, 255, 0.3);
   }
 
   .dark .glass-button {
-    background: rgba(107, 91, 255, 0.24);
-    border: 1px solid rgba(107, 91, 255, 0.45);
-    box-shadow: var(--shadow-sm);
+    background: rgba(107, 91, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(107, 91, 255, 0.4);
   }
 
   .moon-glow {
-    box-shadow:
+    box-shadow: 
       0 0 20px rgba(107, 91, 255, 0.25),
       0 0 40px rgba(255, 79, 225, 0.15),
       0 0 60px rgba(107, 91, 255, 0.08);
   }
 
   .dark .moon-glow {
-    box-shadow:
+    box-shadow: 
       0 0 30px rgba(107, 91, 255, 0.5),
       0 0 60px rgba(255, 79, 225, 0.3),
       0 0 90px rgba(107, 91, 255, 0.2);
@@ -334,22 +337,16 @@ html {
 
   /* Enhanced light mode shadows */
   .shadow-moon-light {
-    box-shadow:
-      0 10px 40px rgba(107, 91, 255, 0.15),
-      0 4px 12px rgba(255, 79, 225, 0.08);
+    box-shadow: 0 10px 40px rgba(107, 91, 255, 0.15), 0 4px 12px rgba(255, 79, 225, 0.08);
   }
 
   .shadow-moon-glow-lg {
-    box-shadow:
-      0 20px 60px rgba(107, 91, 255, 0.2),
-      0 0 40px rgba(255, 79, 225, 0.12);
+    box-shadow: 0 20px 60px rgba(107, 91, 255, 0.2), 0 0 40px rgba(255, 79, 225, 0.12);
   }
 
-  /* Hide search cancel button in Chrome */
+  /* Hide ugly search cancel button in Chrome until we can style it properly */
   input[type="search"]::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
-    display: none;
+    @apply hidden;
   }
 
   /* Placeholder styling for contentEditable div */
@@ -359,33 +356,42 @@ html {
     pointer-events: none;
   }
 
+  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
+   * buttons/badges can remove the automatic brightness adjustment on interactions
+   * and program their own. */
   .no-default-hover-elevate {}
-  .no-default-active-elevate {}
-  .no-hover-interaction-elevate {}
-  .no-active-interaction-elevate {}
 
-  /* Toggle Elevation System */
+  .no-default-active-elevate {}
+
+
+  /**
+   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
+   * This way they can stack/compound. Both will overlap the parent's borders!
+   * So borders will be automatically adjusted both on toggle, and hover/active,
+   * and they will be compounded.
+   */
   .toggle-elevate::before,
   .toggle-elevate-2::before {
     content: "";
     pointer-events: none;
     position: absolute;
-    inset: 0;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: -1;
+    /* sits behind content but above backdrop */
   }
 
-  .toggle-elevate.toggle-elevated::before,
-  .toggle-elevate-2.toggle-elevated::before {
+  .toggle-elevate.toggle-elevated::before {
     background-color: var(--elevate-2);
   }
 
-  .border.toggle-elevate::before,
-  .border.toggle-elevate-2::before {
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
+  .border.toggle-elevate::before {
     inset: -1px;
   }
 
-  /* Hover & Active Elevation System */
+  /* Does not work on elements with overflow:hidden! */
   .hover-elevate:not(.no-default-hover-elevate),
   .active-elevate:not(.no-default-active-elevate),
   .hover-elevate-2:not(.no-default-hover-elevate),
@@ -401,9 +407,11 @@ html {
     content: "";
     pointer-events: none;
     position: absolute;
-    inset: 0;
+    inset: 0px;
+    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: 999;
+    /* sits in front of content */
   }
 
   .hover-elevate:hover:not(.no-default-hover-elevate)::after,
@@ -416,28 +424,12 @@ html {
     background-color: var(--elevate-2);
   }
 
+  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate-2:not(.no-active-interaction-elevate)::after {
+  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
+  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
-  }
-
-  /* Animated gradient for logo / hero text */
-  @keyframes gradient-x {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-x 8s ease-in-out infinite;
   }
 }
