@@ -3,6 +3,7 @@ import { MEMBERSHIP_TIERS, type MembershipTier } from "@shared/schema";
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
 import { membershipService } from "../services";
+import { getWebSocketManager } from "../websocket";
 import Stripe from "stripe";
 
 export function createMembershipRouter(stripe: Stripe | null): Router {
@@ -35,6 +36,17 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
 
       if (tier === "free") {
         const updatedUser = await membershipService.upgradeTier(userId, "free");
+        
+        // Broadcast sync event to all devices
+        const wsManager = getWebSocketManager();
+        if (wsManager) {
+          wsManager.broadcastToUser(userId, {
+            type: 'membership-updated',
+            userId,
+            tier: updatedUser.membershipTier
+          });
+        }
+        
         return res.json({ success: true, tier: updatedUser.membershipTier });
       }
 
@@ -87,6 +99,17 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
       }
 
       const updatedUser = await membershipService.upgradeTier(userId, tier, `sim_${Date.now()}`);
+      
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'membership-updated',
+          userId,
+          tier: updatedUser.membershipTier
+        });
+      }
+      
       res.json({
         success: true,
         tier: updatedUser.membershipTier,

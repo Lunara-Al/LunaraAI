@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { ErrorResponse } from "@shared/schema";
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
+import { getWebSocketManager } from "../websocket";
 
 export function createGalleryRouter(): Router {
   const router = Router();
@@ -51,6 +52,16 @@ export function createGalleryRouter(): Router {
           message: "Video not found or you don't have permission to delete it",
         };
         return res.status(404).json(errorResponse);
+      }
+
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'video-deleted',
+          userId,
+          videoId: id
+        });
       }
 
       return res.json({ success: true });

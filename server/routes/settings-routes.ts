@@ -2,6 +2,7 @@ import { Router } from "express";
 import { updateUserSettingsSchema, DEFAULT_VIDEO_LENGTH } from "@shared/schema";
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
+import { getWebSocketManager } from "../websocket";
 
 const DEFAULT_SETTINGS = {
   defaultLength: DEFAULT_VIDEO_LENGTH,
@@ -51,6 +52,17 @@ export function createSettingsRouter(): Router {
       }
       
       const updated = await storage.updateUserSettings(userId, validation.data);
+      
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'settings-updated',
+          userId,
+          settings: updated
+        });
+      }
+      
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to update settings" });

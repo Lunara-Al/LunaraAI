@@ -8,6 +8,7 @@ import {
 } from "@shared/schema";
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
+import { getWebSocketManager } from "../websocket";
 
 const PIKA_URL = "https://api.pika.art/v1/videos";
 
@@ -106,6 +107,16 @@ export function createGeneratorRouter(): Router {
       });
 
       await storage.incrementVideoCount(userId);
+
+      // Broadcast sync event to all devices
+      const wsManager = getWebSocketManager();
+      if (wsManager) {
+        wsManager.broadcastToUser(userId, {
+          type: 'video-generated',
+          userId,
+          videoId: savedVideo.id
+        });
+      }
 
       const successResponse: VideoGenerationResponse = {
         videoUrl,
