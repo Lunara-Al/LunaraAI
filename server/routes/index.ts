@@ -4,3 +4,4 @@ export { createGeneratorRouter } from "./generator-routes";
 export { createGalleryRouter } from "./gallery-routes";
 export { createSettingsRouter } from "./settings-routes";
 export { createContactRouter } from "./contact-routes";
+export { createUsersRouter } from "./users-routes";

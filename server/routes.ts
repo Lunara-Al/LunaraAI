@@ -9,6 +9,7 @@ import {
   createGalleryRouter,
   createSettingsRouter,
   createContactRouter,
+  createUsersRouter,
 } from "./routes/index";
 
 function initializeStripe(): Stripe | null {
@@ -52,6 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/history", createGalleryRouter());
   app.use("/api/settings", createSettingsRouter());
   app.use("/api/contact", createContactRouter());
+  app.use("/api/users", createUsersRouter());
 
   const httpServer = createServer(app);
   return httpServer;

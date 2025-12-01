@@ -16,6 +16,7 @@ import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Membership from "@/pages/membership";
 import Contact from "@/pages/contact";
+import UserProfile from "@/pages/user-profile";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/settings">{isAuthenticated ? <Settings /> : <Landing />}</Route>
       <Route path="/profile">{isAuthenticated ? <Profile /> : <Landing />}</Route>
       <Route path="/membership">{isAuthenticated ? <Membership /> : <Landing />}</Route>
+      <Route path="/user/:username" component={UserProfile} />
       <Route path="/">{isAuthenticated ? <Home /> : <Landing />}</Route>
       <Route>{isAuthenticated ? <NotFound /> : <Landing />}</Route>
     </Switch>

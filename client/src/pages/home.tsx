@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
@@ -31,8 +32,19 @@ const PRESET_PROMPTS = [
   "Holographic aurora borealis over digital mountains",
 ];
 
+type SearchResult = {
+  id: string;
+  username: string;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  membershipTier: string;
+  createdAt: string | null;
+};
+
 export default function Home() {
   const { toast } = useConditionalToast();
+  const [, setLocation] = useLocation();
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(10);
@@ -45,6 +57,10 @@ export default function Home() {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   
   // Fetch user data to check tier
   const { data: user } = useQuery<FrontendUser>({
@@ -55,6 +71,48 @@ export default function Home() {
       return response.json();
     },
   });
+
+  // Handle search with debounce
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const results = await response.json();
+          setSearchResults(results);
+          setShowSearchDropdown(true);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchQuery]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
     mutationFn: async (data) => {
@@ -219,7 +277,7 @@ export default function Home() {
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
         {/* Slim Glass Bubble Search Bar */}
-        <div className="relative group">
+        <div className="relative group" ref={searchContainerRef}>
           {/* Subtle glow effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 rounded-full blur-lg opacity-0 group-hover:opacity-60 transition-all duration-500" />
           
@@ -228,17 +286,23 @@ export default function Home() {
             <Search className="w-4 h-4 md:w-5 md:h-5 text-primary/60 dark:text-secondary/60 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Search prompts, styles, or presets..."
+              placeholder="Search users by username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchQuery && searchResults.length > 0 && setShowSearchDropdown(true)}
               className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:placeholder-opacity-100 transition-all"
               data-testid="input-search-bar"
-              aria-label="Search prompts and presets"
+              aria-label="Search users by username"
+              autoComplete="off"
             />
             {searchQuery && (
               <button
                 type="button"
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("");
+                  setSearchResults([]);
+                  setShowSearchDropdown(false);
+                }}
                 className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-full transition-colors hover-elevate"
                 data-testid="button-clear-search"
                 aria-label="Clear search"
@@ -247,6 +311,65 @@ export default function Home() {
               </button>
             )}
           </div>
+
+          {/* Search Results Dropdown */}
+          {showSearchDropdown && searchResults.length > 0 && (
+            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="max-h-96 overflow-y-auto">
+                {searchResults.map((result, idx) => {
+                  const initials = `${result.firstName?.[0] || ""}${result.lastName?.[0] || ""}`.toUpperCase() || "LU";
+                  return (
+                    <button
+                      key={result.id}
+                      onClick={() => {
+                        setLocation(`/user/${result.username}`);
+                        setSearchQuery("");
+                        setSearchResults([]);
+                        setShowSearchDropdown(false);
+                      }}
+                      className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors text-left ${
+                        idx !== 0 ? "border-t border-slate-200/50 dark:border-slate-700/30" : ""
+                      }`}
+                      data-testid={`button-search-result-${result.username}`}
+                    >
+                      <Avatar className="w-10 h-10 ring-2 ring-primary/30 flex-shrink-0">
+                        <AvatarImage src={result.profileImageUrl || ""} alt={result.username} />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-xs font-bold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-bold text-foreground dark:text-white truncate">
+                            {`${result.firstName || ""} ${result.lastName || ""}`.trim() || "User"}
+                          </p>
+                          {result.membershipTier !== "free" && (
+                            <Badge className="px-2 py-0.5 h-auto bg-gradient-to-r from-primary/20 to-secondary/20 text-primary dark:text-secondary text-xs font-bold border-primary/40">
+                              <Crown className="w-3 h-3 mr-1" />
+                              {result.membershipTier}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                          @{result.username}
+                        </p>
+                      </div>
+
+                      <X className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* No Results Message */}
+          {showSearchDropdown && searchQuery && searchResults.length === 0 && (
+            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl p-4 text-center text-sm text-slate-600 dark:text-slate-400 animate-in fade-in slide-in-from-top-2 duration-200">
+              No users found matching "{searchQuery}"
+            </div>
+          )}
         </div>
         {/* Header Section */}
         <div className="text-center space-y-3 md:space-y-4">

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@/server/db";
+import { db } from "../db";
 import { users } from "@shared/schema";
 import { ilike } from "drizzle-orm";
 
