@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,10 @@ import {
   MoonStar,
   Lock,
   Crown,
+  Zap,
+  Calendar,
+  TrendingUp,
+  Infinity,
 } from "lucide-react";
 import {
   SiTiktok,
@@ -238,9 +243,14 @@ interface ContentCalendarProps {
 }
 
 export function ContentCalendar({ user }: ContentCalendarProps) {
+  const [, setLocation] = useLocation();
   const isPremium = user?.membershipTier === "premium";
   const [selectedEntry, setSelectedEntry] = useState<SelectedEntry | null>(null);
   const [startDate, setStartDate] = useState<Date>(() => createMidnightDate());
+
+  const handleUpgradeClick = () => {
+    setLocation("/membership");
+  };
 
   /**
    * Pre-index content by date key for O(1) access.
@@ -367,24 +377,114 @@ export function ContentCalendar({ user }: ContentCalendarProps) {
       
       {/* Premium Lock Overlay */}
       {!isPremium && (
-        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-sm rounded-3xl flex items-center justify-center z-50 flex-col gap-4 p-6 text-center">
-          <div className="space-y-4">
-            <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[2px] shadow-[0_0_32px_rgba(168,85,247,0.9)]">
-              <div className="rounded-full bg-[#080016] p-4">
-                <Lock className="w-8 h-8 text-purple-300" />
+        <div className="absolute inset-0 rounded-3xl flex items-center justify-center z-50 overflow-hidden">
+          {/* Animated background layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/60 via-black/80 to-pink-900/60" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(168,85,247,0.2),rgba(236,72,153,0.1),transparent)]" />
+          <div className="absolute inset-0 backdrop-blur-sm" />
+          
+          {/* Animated gradient orbs */}
+          <div className="absolute top-10 right-10 w-40 h-40 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-20 blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 left-10 w-40 h-40 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          
+          {/* Shimmer effect border */}
+          <div className="absolute inset-0 rounded-3xl" style={{
+            background: "linear-gradient(45deg, transparent 30%, rgba(168,85,247,0.1) 50%, transparent 70%)",
+            backgroundSize: "200% 200%",
+            animation: "shimmer 3s infinite"
+          }} />
+
+          {/* Content */}
+          <div className="relative z-10 px-6 py-8 text-center max-w-md mx-auto space-y-6">
+            {/* Lock Icon with animated glow */}
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-75 blur-lg animate-pulse" />
+                <div className="relative inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[3px] shadow-[0_0_40px_rgba(168,85,247,1)]">
+                  <div className="rounded-full bg-[#080016] p-4">
+                    <Lock className="w-10 h-10 text-purple-200 animate-bounce" style={{ animationDuration: "2s" }} />
+                  </div>
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Premium Feature</h3>
-              <p className="text-sm md:text-base text-gray-300 mb-4">
-                Content Calendar is exclusively for Premium members
+
+            {/* Heading */}
+            <div className="space-y-2">
+              <h3 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 leading-tight">
+                Unlock Your Cosmic Potential
+              </h3>
+              <p className="text-gray-200 text-sm md:text-base">
+                Content Calendar is a premium-only feature designed to help you plan and organize your cosmic ASMR content
               </p>
-              <div className="inline-flex items-center gap-2 bg-primary/20 px-4 py-2 rounded-full border border-primary/40">
-                <Crown className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Upgrade to Premium</span>
+            </div>
+
+            {/* Premium Benefits */}
+            <div className="space-y-3 py-4">
+              <div className="flex items-center gap-3 text-left bg-white/5 p-3 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-colors">
+                <Calendar className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                <span className="text-sm text-gray-300">Plan your content with an advanced calendar</span>
+              </div>
+              <div className="flex items-center gap-3 text-left bg-white/5 p-3 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition-colors">
+                <TrendingUp className="w-5 h-5 text-pink-400 flex-shrink-0" />
+                <span className="text-sm text-gray-300">Track performance across platforms</span>
+              </div>
+              <div className="flex items-center gap-3 text-left bg-white/5 p-3 rounded-xl border border-indigo-500/20 hover:border-indigo-500/40 transition-colors">
+                <Infinity className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <span className="text-sm text-gray-300">Unlimited videos and 4K quality</span>
               </div>
             </div>
+
+            {/* Premium Badge */}
+            <div className="inline-block">
+              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 px-4 py-2 text-sm font-bold shadow-lg">
+                <Crown className="w-4 h-4 mr-2" />
+                PREMIUM EXCLUSIVE
+              </Badge>
+            </div>
+
+            {/* CTA Button - Advanced with animations */}
+            <button
+              onClick={handleUpgradeClick}
+              className="group relative w-full px-8 py-4 font-bold text-lg overflow-hidden rounded-2xl transition-all duration-300 hover:scale-105"
+            >
+              {/* Animated gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 opacity-100 group-hover:opacity-110 transition-opacity" />
+              
+              {/* Shimmer overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{
+                backgroundSize: "200% 100%",
+                animation: "shimmerMove 2s infinite"
+              }} />
+              
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-2xl opacity-0 group-hover:opacity-75 blur-xl transition-opacity duration-300 -z-10" />
+
+              {/* Button content */}
+              <div className="relative flex items-center justify-center gap-2 text-white">
+                <Crown className="w-5 h-5 animate-bounce" />
+                <span>Upgrade to Premium Now</span>
+                <Zap className="w-5 h-5 group-hover:animate-pulse" />
+              </div>
+            </button>
+
+            {/* Secondary CTA text */}
+            <p className="text-xs text-gray-400">
+              Starting at $49/month • Billed monthly • Cancel anytime
+            </p>
           </div>
+
+          {/* CSS for animations */}
+          <style>{`
+            @keyframes shimmer {
+              0% { background-position: 0% center; }
+              50% { background-position: 100% center; }
+              100% { background-position: 0% center; }
+            }
+            @keyframes shimmerMove {
+              0% { background-position: -1000px center; }
+              100% { background-position: 1000px center; }
+            }
+          `}</style>
         </div>
       )}
 
