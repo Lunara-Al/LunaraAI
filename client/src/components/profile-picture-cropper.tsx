@@ -36,22 +36,21 @@ export function ProfilePictureCropper({
   const scaledCanvasSize = CANVAS_SIZE * DPI;
   const scaledRadius = CIRCLE_RADIUS * DPI;
 
-  // Clamp pan values to keep image within bounds
+  // Soft boundary to keep center area covered but allow dragging out
   const clampPan = useCallback(
     (currentPanX: number, currentPanY: number): { x: number; y: number } => {
       if (!imageRef.current) return { x: currentPanX, y: currentPanY };
 
       const imgWidth = imageRef.current.width * zoom;
       const imgHeight = imageRef.current.height * zoom;
-      const maxPan = CIRCLE_RADIUS;
 
-      // Calculate how much the image extends beyond the circle
-      const xExtend = (imgWidth / 2 - CIRCLE_RADIUS) / zoom;
-      const yExtend = (imgHeight / 2 - CIRCLE_RADIUS) / zoom;
+      // Allow dragging but with soft boundaries
+      // Maximum distance from center is based on how far image extends
+      const maxDragX = (imgWidth / 2) / zoom + CIRCLE_RADIUS / zoom;
+      const maxDragY = (imgHeight / 2) / zoom + CIRCLE_RADIUS / zoom;
 
-      // Clamp pan to keep image reasonably positioned
-      const clampedX = Math.max(-xExtend, Math.min(xExtend, currentPanX));
-      const clampedY = Math.max(-yExtend, Math.min(yExtend, currentPanY));
+      const clampedX = Math.max(-maxDragX, Math.min(maxDragX, currentPanX));
+      const clampedY = Math.max(-maxDragY, Math.min(maxDragY, currentPanY));
 
       return { x: clampedX, y: clampedY };
     },
