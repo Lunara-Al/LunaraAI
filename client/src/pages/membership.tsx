@@ -205,17 +205,17 @@ export default function Membership() {
 
   // Credit display component
   const CreditDisplay = ({ credits, monthlyCredits }: { credits: number; monthlyCredits: number }) => (
-    <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+    <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/5 dark:to-secondary/5 rounded-lg border border-primary/20 dark:border-primary/10">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium">Monthly Credits</span>
+          <span className="text-sm font-medium text-slate-900 dark:text-white">Monthly Credits</span>
         </div>
         <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           {credits} / {monthlyCredits}
         </span>
       </div>
-      <div className="w-full bg-background rounded-full h-2 mt-2 overflow-hidden">
+      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 mt-2 overflow-hidden">
         <div 
           className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
           style={{ width: `${Math.min((credits / monthlyCredits) * 100, 100)}%` }}
@@ -225,7 +225,7 @@ export default function Membership() {
   );
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
       <MoonMenu />
       
       <div className="max-w-6xl mx-auto space-y-8">
@@ -254,13 +254,13 @@ export default function Membership() {
           <div className="flex justify-center items-center py-20">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-muted-foreground text-sm">Loading your plan details...</p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm">Loading your plan details...</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-500">
             {/* Free Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-free">
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-free">
               {currentTier === "free" && (
                 <Badge className="moon-glow" data-testid="badge-current-free">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -269,31 +269,31 @@ export default function Membership() {
               )}
               
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold">Free</h2>
-                <p className="text-4xl font-bold">$0<span className="text-base text-muted-foreground font-normal">/month</span></p>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Free</h2>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white">$0<span className="text-base text-slate-600 dark:text-slate-400 font-normal">/month</span></p>
               </div>
               
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">5 videos per month</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">5 videos per month</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Up to 10 seconds</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Up to 10 seconds</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Basic quality</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Basic quality</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">25 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">25 monthly credits</span>
                 </li>
               </ul>
 
-              <div className="pt-4 border-t border-border/50">
-                <div className="text-sm text-muted-foreground mb-2">Monthly Credits</div>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
                   <span className="font-bold text-lg text-primary">25</span>
@@ -317,7 +317,7 @@ export default function Membership() {
             </Card>
 
             {/* Pro Tier */}
-            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate md:scale-105 ${currentTier === "pro" ? "moon-glow" : ""}`} data-testid="card-plan-pro">
+            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate md:scale-105 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "pro" ? "moon-glow" : ""}`} data-testid="card-plan-pro">
               {currentTier === "pro" ? (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow" data-testid="badge-current-pro">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -331,35 +331,35 @@ export default function Membership() {
               )}
               
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold">Pro</h2>
-                <p className="text-4xl font-bold">$19<span className="text-base text-muted-foreground font-normal">/month</span></p>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Pro</h2>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white">$19<span className="text-base text-slate-600 dark:text-slate-400 font-normal">/month</span></p>
               </div>
               
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">100 videos per month</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">100 videos per month</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Up to 15 seconds</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Up to 15 seconds</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">HD quality</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">HD quality</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">300 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">300 monthly credits</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">No watermark</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">No watermark</span>
                 </li>
               </ul>
 
-              <div className="pt-4 border-t border-border/50">
-                <div className="text-sm text-muted-foreground mb-2">Monthly Credits</div>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
                   <span className="font-bold text-lg text-primary">300</span>
@@ -405,7 +405,7 @@ export default function Membership() {
             </Card>
 
             {/* Premium Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-premium">
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-premium">
               {currentTier === "premium" && (
                 <Badge className="moon-glow" data-testid="badge-current-premium">
                   <Crown className="w-3 h-3 mr-1" />
@@ -414,37 +414,37 @@ export default function Membership() {
               )}
               
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold flex items-center gap-2">
+                <h2 className="text-3xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
                   Premium
                   <Crown className="w-7 h-7 text-primary" />
                 </h2>
-                <p className="text-4xl font-bold">$49<span className="text-base text-muted-foreground font-normal">/month</span></p>
+                <p className="text-4xl font-bold text-slate-900 dark:text-white">$49<span className="text-base text-slate-600 dark:text-slate-400 font-normal">/month</span></p>
               </div>
               
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Unlimited videos</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Unlimited videos</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Up to 15 seconds</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Up to 15 seconds</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">4K quality</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">4K quality</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">1,000 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">1,000 monthly credits</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Priority support</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Priority support</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">Commercial license</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Commercial license</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -452,8 +452,8 @@ export default function Membership() {
                 </li>
               </ul>
 
-              <div className="pt-4 border-t border-border/50">
-                <div className="text-sm text-muted-foreground mb-2">Monthly Credits</div>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
                   <span className="font-bold text-lg text-primary">1,000</span>
@@ -500,59 +500,59 @@ export default function Membership() {
         )}
 
         {/* Features comparison section */}
-        <Card className="p-8 mt-12">
-          <h3 className="text-2xl font-bold mb-6">Feature Comparison</h3>
+        <Card className="p-8 mt-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <h3 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Feature Comparison</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-semibold">Feature</th>
-                  <th className="text-center py-3 px-4">Free</th>
-                  <th className="text-center py-3 px-4">Pro</th>
-                  <th className="text-center py-3 px-4">Premium</th>
+                <tr className="border-b border-slate-200 dark:border-slate-700">
+                  <th className="text-left py-3 px-4 font-semibold text-slate-900 dark:text-white">Feature</th>
+                  <th className="text-center py-3 px-4 text-slate-900 dark:text-white">Free</th>
+                  <th className="text-center py-3 px-4 text-slate-900 dark:text-white">Pro</th>
+                  <th className="text-center py-3 px-4 text-slate-900 dark:text-white">Premium</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-border/50 hover:bg-muted/50">
-                  <td className="py-3 px-4">Monthly Videos</td>
-                  <td className="text-center">5</td>
-                  <td className="text-center">100</td>
-                  <td className="text-center">Unlimited</td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Monthly Videos</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">5</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">100</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">Unlimited</td>
                 </tr>
-                <tr className="border-b border-border/50 hover:bg-muted/50">
-                  <td className="py-3 px-4">Max Length</td>
-                  <td className="text-center">10s</td>
-                  <td className="text-center">15s</td>
-                  <td className="text-center">15s</td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Max Length</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">10s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">15s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">15s</td>
                 </tr>
-                <tr className="border-b border-border/50 hover:bg-muted/50">
-                  <td className="py-3 px-4">Quality</td>
-                  <td className="text-center">Basic</td>
-                  <td className="text-center">HD</td>
-                  <td className="text-center">4K</td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Quality</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">Basic</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">HD</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">4K</td>
                 </tr>
-                <tr className="border-b border-border/50 hover:bg-muted/50">
-                  <td className="py-3 px-4">Monthly Credits</td>
-                  <td className="text-center">25</td>
-                  <td className="text-center">300</td>
-                  <td className="text-center">1,000</td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Monthly Credits</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">25</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">300</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">1,000</td>
                 </tr>
-                <tr className="border-b border-border/50 hover:bg-muted/50">
-                  <td className="py-3 px-4">No Watermark</td>
-                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">No Watermark</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
-                <tr className="hover:bg-muted/50">
-                  <td className="py-3 px-4">Priority Support</td>
-                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
-                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Priority Support</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
-                <tr className="border-b border-border/50 hover:bg-muted/50 bg-primary/5">
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 bg-primary/5 dark:bg-primary/10">
                   <td className="py-3 px-4 font-semibold text-primary">Content Calendar</td>
-                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
-                  <td className="text-center"><X className="w-4 h-4 mx-auto text-muted-foreground" /></td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
               </tbody>
@@ -561,7 +561,7 @@ export default function Membership() {
         </Card>
 
         {/* Premium Feature Showcase - Content Calendar (Collapsible) */}
-        <Card className="p-8 mt-12 bg-gradient-to-br from-purple-900/20 via-pink-900/10 to-indigo-900/20 border border-primary/30 relative overflow-hidden transition-all duration-300">
+        <Card className="p-8 mt-12 bg-gradient-to-br from-purple-900/20 via-pink-900/10 to-indigo-900/20 dark:from-purple-900/40 dark:via-pink-900/20 dark:to-indigo-900/40 border border-primary/30 dark:border-primary/50 relative overflow-hidden transition-all duration-300">
           {/* Decorative glow elements */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-5 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-r from-pink-500 to-indigo-500 rounded-full opacity-5 blur-3xl" />

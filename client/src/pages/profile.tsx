@@ -248,7 +248,7 @@ export default function Profile() {
   const createdDate = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
       <MoonMenu />
 
       {/* Image Cropper Modal */}
@@ -272,10 +272,10 @@ export default function Profile() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
             Profile
           </h1>
-          <p className="text-sm md:text-base text-muted-foreground">Your cosmic account information</p>
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">Your cosmic account information</p>
         </div>
 
-        <div className="bg-card border border-card-border rounded-lg p-6 md:p-8 space-y-8 hover-elevate transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 md:p-8 space-y-8 hover-elevate transition-all duration-300">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative animate-in fade-in zoom-in duration-500 group" style={{ animationDelay: '100ms' }}>
               <button
@@ -309,8 +309,8 @@ export default function Profile() {
               />
             </div>
             <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
-              <h2 className="text-2xl md:text-3xl font-bold">{displayName}</h2>
-              <p className="text-xs text-muted-foreground">Click avatar to change profile picture</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{displayName}</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400">Click avatar to change profile picture</p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <Badge variant="outline" className="capitalize bg-primary/10 text-primary border-primary/30">
                   {user.membershipTier} Plan
@@ -333,27 +333,27 @@ export default function Profile() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors duration-200 border border-transparent hover:border-primary/10">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 border border-transparent hover:border-primary/10">
               <User className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm">User ID</h3>
-                <p className="text-xs md:text-sm text-muted-foreground truncate">{user.id}</p>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">User ID</h3>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">{user.id}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors duration-200 border border-transparent hover:border-primary/10">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 border border-transparent hover:border-primary/10">
               <Mail className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm">Email</h3>
-                <p className="text-xs md:text-sm text-muted-foreground truncate">{user.email || 'No email provided'}</p>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Email</h3>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">{user.email || 'No email provided'}</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors duration-200 border border-transparent hover:border-primary/10">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 border border-transparent hover:border-primary/10">
               <CalendarIcon className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1">
-                <h3 className="font-semibold text-sm">Member Since</h3>
-                <p className="text-xs md:text-sm text-muted-foreground">{createdDate}</p>
+                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Member Since</h3>
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">{createdDate}</p>
               </div>
             </div>
           </div>
@@ -401,12 +401,12 @@ export default function Profile() {
           });
         }
       }}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Edit Profile
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-slate-600 dark:text-slate-400">
               Update your personal information. Changes will be saved immediately.
             </DialogDescription>
           </DialogHeader>

@@ -8,7 +8,7 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-white dark:bg-black">
       {/* Glass header with blur */}
       <header className="glass sticky top-0 z-50 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center backdrop-blur-xl">
         <div className="flex items-center gap-3">
@@ -34,7 +34,7 @@ export default function Landing() {
         </Button>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12 md:py-20">
+      <main className="flex-1 flex items-center justify-center px-4 py-12 md:py-20 bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
         <div className="max-w-6xl mx-auto text-center space-y-12">
           {/* Hero Section */}
           <div className="space-y-8">
@@ -76,35 +76,35 @@ export default function Landing() {
 
           {/* Feature Cards with Glass Effect */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
                 <Video className="w-14 h-14 text-primary mx-auto relative" />
               </div>
-              <h3 className="text-xl font-bold">AI-Powered</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">AI-Powered</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Advanced AI creates stunning cosmic ASMR videos from your text prompts
               </p>
             </Card>
             
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-secondary/20 rounded-full group-hover:bg-secondary/30 transition-all" />
                 <Zap className="w-14 h-14 text-secondary mx-auto relative" />
               </div>
-              <h3 className="text-xl font-bold">Lightning Fast</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Lightning Fast</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Generate professional-quality videos in seconds, not hours
               </p>
             </Card>
             
-            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group">
+            <Card className="p-8 space-y-4 hover:scale-105 cursor-pointer group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
                 <Crown className="w-14 h-14 text-primary mx-auto relative" />
               </div>
-              <h3 className="text-xl font-bold">Premium Quality</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Premium Quality</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 From basic to 4K quality, choose the perfect plan for your needs
               </p>
             </Card>
@@ -112,8 +112,8 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="glass px-4 py-8 text-center backdrop-blur-xl">
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <footer className="glass px-4 py-8 text-center backdrop-blur-xl bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-black/80 dark:to-slate-950/80">
+        <div className="flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
           <img 
             src={logoImage} 
             alt="Lunara AI" 

@@ -38,12 +38,12 @@ export default function MoonMenu() {
             />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[85vw] max-w-sm">
+        <SheetContent side="right" className="w-[85vw] max-w-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <SheetHeader>
             <SheetTitle className="text-xl md:text-2xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Lunara AI
             </SheetTitle>
-            <SheetDescription>
+            <SheetDescription className="text-slate-600 dark:text-slate-400">
               Navigate to different sections
             </SheetDescription>
           </SheetHeader>
@@ -70,14 +70,14 @@ export default function MoonMenu() {
           </div>
 
           <div className="absolute bottom-4 left-0 right-0 px-6">
-            <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-primary/5 to-secondary/5 p-4 border border-primary/10">
+            <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 p-4 border border-primary/10 dark:border-primary/20">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
               <div className="relative space-y-2">
-                <div className="flex items-center gap-2 text-muted-foreground/60">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <SiTiktok className="w-4 h-4" />
                   <span className="text-xs font-medium">@lunaralabsai</span>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground/60">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <SiInstagram className="w-4 h-4" />
                   <span className="text-xs font-medium">@lunaralabsai</span>
                 </div>

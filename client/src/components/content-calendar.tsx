@@ -371,7 +371,7 @@ export function ContentCalendar({ user }: ContentCalendarProps) {
   const firstDayOfWeek = startDate.getDay();
 
   return (
-    <Card className="relative p-6 md:p-8 bg-gradient-to-br from-[#0B0320] via-[#080016] to-[#150035] border border-card-border/70 hover:border-primary/60 shadow-[0_0_40px_rgba(168,85,247,0.35)] rounded-3xl hover:shadow-[0_0_60px_rgba(236,72,153,0.55)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden" style={!isPremium ? { opacity: 0.85 } : {}}>
+    <Card className="relative p-6 md:p-8 bg-gradient-to-br from-[#0B0320] via-[#080016] to-[#150035] dark:from-[#0B0320] dark:via-[#080016] dark:to-[#150035] border border-card-border/70 dark:border-card-border/70 hover:border-primary/60 shadow-[0_0_40px_rgba(168,85,247,0.35)] rounded-3xl hover:shadow-[0_0_60px_rgba(236,72,153,0.55)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden" style={!isPremium ? { opacity: 0.85 } : {}}>
       {/* Soft glow overlay */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(244,114,182,0.12),_transparent_60%),_radial-gradient(circle_at_bottom,_rgba(56,189,248,0.12),_transparent_55%)] opacity-90" />
       
