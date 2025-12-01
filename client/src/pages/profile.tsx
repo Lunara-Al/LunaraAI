@@ -65,6 +65,7 @@ import {
 import { compressProfileImage, validateImageFile } from "@/lib/imageUtils";
 import { ProfilePictureCropper } from "@/components/profile-picture-cropper";
 import { ContentCalendar } from "@/components/content-calendar";
+import { CreationsSection } from "@/components/creations-section";
 
 type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 
@@ -687,6 +688,11 @@ export default function Profile() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Creations Section */}
+        <div className="relative mt-20 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "300ms" }}>
+          <CreationsSection userId={user.id} />
         </div>
 
         {/* Content Calendar Section */}
