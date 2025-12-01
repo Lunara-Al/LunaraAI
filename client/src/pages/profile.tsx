@@ -15,6 +15,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Shield,
+  Zap,
+  Info,
 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,8 +40,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -89,6 +93,43 @@ function getErrorPayload(error: unknown): ApiErrorShape {
   return {};
 }
 
+// Password strength checker
+function calculatePasswordStrength(password: string): {
+  score: number;
+  label: string;
+  color: string;
+  requirements: Array<{ met: boolean; label: string }>;
+} {
+  if (!password) {
+    return { score: 0, label: "No password", color: "bg-gray-300", requirements: [] };
+  }
+
+  const requirements = [
+    { met: password.length >= 8, label: "At least 8 characters" },
+    { met: /[A-Z]/.test(password), label: "Uppercase letter" },
+    { met: /[a-z]/.test(password), label: "Lowercase letter" },
+    { met: /[0-9]/.test(password), label: "Number" },
+    { met: /[^A-Za-z0-9]/.test(password), label: "Special character" },
+  ];
+
+  const score = requirements.filter((r) => r.met).length;
+  let label = "Weak";
+  let color = "bg-red-500";
+
+  if (score >= 5) {
+    label = "Very Strong";
+    color = "bg-green-500";
+  } else if (score >= 4) {
+    label = "Strong";
+    color = "bg-emerald-500";
+  } else if (score >= 3) {
+    label = "Fair";
+    color = "bg-yellow-500";
+  }
+
+  return { score, label, color, requirements };
+}
+
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useConditionalToast();
@@ -98,10 +139,12 @@ export default function Profile() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [activeTab, setActiveTab] = useState("account");
 
   const [deletePassword, setDeletePassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingPicture, setIsUploadingPicture] = useState(false);
@@ -126,6 +169,9 @@ export default function Profile() {
       newPassword: "",
     },
   });
+
+  const newPassword = form.watch("newPassword");
+  const passwordStrength = useMemo(() => calculatePasswordStrength(newPassword || ""), [newPassword]);
 
   const uploadPictureMutation = useMutation({
     mutationFn: async (imageData: string) => {
@@ -170,6 +216,7 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       setIsEditDialogOpen(false);
       form.reset();
+      setActiveTab("account");
     },
     onError: (error: unknown) => {
       const { message, errors } = getErrorPayload(error);
@@ -535,7 +582,10 @@ export default function Profile() {
                 {/* Edit Button */}
                 <Button
                   type="button"
-                  onClick={() => setIsEditDialogOpen(true)}
+                  onClick={() => {
+                    setIsEditDialogOpen(true);
+                    setActiveTab("account");
+                  }}
                   className="mt-6 px-8 py-3 h-auto text-base font-bold bg-gradient-to-r from-primary via-purple-500 to-secondary text-primary-foreground hover:shadow-2xl hover:shadow-primary/50 dark:hover:shadow-primary/40 transition-all duration-300 hover-elevate rounded-xl active-elevate-2"
                   data-testid="button-edit-profile"
                 >
@@ -701,7 +751,7 @@ export default function Profile() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Profile Dialog */}
+      {/* Enhanced Edit Profile Dialog with Tabs */}
       <Dialog
         open={isEditDialogOpen}
         onOpenChange={(open) => {
@@ -715,274 +765,356 @@ export default function Profile() {
               currentPassword: "",
               newPassword: "",
             });
+            setActiveTab("account");
           }
         }}
       >
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 rounded-2xl">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Edit Profile
             </DialogTitle>
             <DialogDescription className="text-slate-600 dark:text-slate-400 text-base">
-              Update your personal information. Changes will be saved immediately.
+              Update your profile information and settings securely.
             </DialogDescription>
           </DialogHeader>
 
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit((data) => {
-                const cleanData: Partial<UpdateProfileFormValues> = {};
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-1">
+              <TabsTrigger value="account" className="flex items-center gap-2 rounded-md font-semibold">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Account</span>
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2 rounded-md font-semibold">
+                <Lock className="w-4 h-4" />
+                <span className="hidden sm:inline">Security</span>
+              </TabsTrigger>
+            </TabsList>
 
-                const trimmedFirstName = data.firstName?.trim();
-                const trimmedLastName = data.lastName?.trim();
-                const trimmedEmail = data.email?.trim();
-                const trimmedUsername = data.username?.trim();
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((data) => {
+                  const cleanData: Partial<UpdateProfileFormValues> = {};
 
-                if (trimmedFirstName && trimmedFirstName !== (user.firstName || "")) {
-                  cleanData.firstName = trimmedFirstName;
-                }
-                if (trimmedLastName && trimmedLastName !== (user.lastName || "")) {
-                  cleanData.lastName = trimmedLastName;
-                }
-                if (trimmedEmail && trimmedEmail !== (user.email || "")) {
-                  cleanData.email = trimmedEmail;
-                }
-                if (trimmedUsername && trimmedUsername !== (user.username || "")) {
-                  cleanData.username = trimmedUsername;
-                }
+                  const trimmedFirstName = data.firstName?.trim();
+                  const trimmedLastName = data.lastName?.trim();
+                  const trimmedEmail = data.email?.trim();
+                  const trimmedUsername = data.username?.trim();
 
-                if (data.currentPassword && data.newPassword) {
-                  cleanData.currentPassword = data.currentPassword;
-                  cleanData.newPassword = data.newPassword;
-                }
+                  if (trimmedFirstName && trimmedFirstName !== (user.firstName || "")) {
+                    cleanData.firstName = trimmedFirstName;
+                  }
+                  if (trimmedLastName && trimmedLastName !== (user.lastName || "")) {
+                    cleanData.lastName = trimmedLastName;
+                  }
+                  if (trimmedEmail && trimmedEmail !== (user.email || "")) {
+                    cleanData.email = trimmedEmail;
+                  }
+                  if (trimmedUsername && trimmedUsername !== (user.username || "")) {
+                    cleanData.username = trimmedUsername;
+                  }
 
-                if (Object.keys(cleanData).length === 0) {
-                  toast({
-                    title: "No Changes",
-                    description: "No changes were made to your profile.",
-                  });
-                  return;
-                }
+                  if (data.currentPassword && data.newPassword) {
+                    cleanData.currentPassword = data.currentPassword;
+                    cleanData.newPassword = data.newPassword;
+                  }
 
-                updateProfileMutation.mutate(cleanData);
-              })}
-              className="space-y-6"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
-                  <User className="w-4 h-4" />
-                  Personal Information
-                </div>
+                  if (Object.keys(cleanData).length === 0) {
+                    toast({
+                      title: "No Changes",
+                      description: "No changes were made to your profile.",
+                    });
+                    return;
+                  }
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold">First Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="First name"
-                            {...field}
-                            data-testid="input-edit-firstName"
-                            className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  updateProfileMutation.mutate(cleanData);
+                })}
+                className="space-y-6"
+              >
+                {/* Account Tab */}
+                <TabsContent value="account" className="space-y-6 mt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
+                      <User className="w-4 h-4" />
+                      Personal Information
+                    </div>
 
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold">Last Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Last name"
-                            {...field}
-                            data-testid="input-edit-lastName"
-                            className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-semibold">First Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="First name"
+                                {...field}
+                                data-testid="input-edit-firstName"
+                                className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
-                  <Mail className="w-4 h-4" />
-                  Account Information
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold">Email Address</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="your@email.com"
-                          {...field}
-                          data-testid="input-edit-email"
-                          className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold">Username</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="username"
-                          {...field}
-                          data-testid="input-edit-username"
-                          className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
-                        />
-                      </FormControl>
-                      <FormDescription className="text-xs">
-                        Letters, numbers, and underscores only
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {user?.hasPassword && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
-                    <Lock className="w-4 h-4" />
-                    Change Password
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-semibold">Last Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Last name"
+                                {...field}
+                                data-testid="input-edit-lastName"
+                                className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    Leave blank to keep your current password
-                  </p>
 
-                  <FormField
-                    control={form.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold">Current Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
+                      <Mail className="w-4 h-4" />
+                      Contact Information
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-semibold">Email Address</FormLabel>
+                          <FormControl>
                             <Input
-                              type={showCurrentPassword ? "text" : "password"}
-                              placeholder="Enter current password"
+                              type="email"
+                              placeholder="your@email.com"
                               {...field}
-                              data-testid="input-edit-currentPassword"
+                              data-testid="input-edit-email"
                               className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                              onClick={() => setShowCurrentPassword((prev) => !prev)}
-                              tabIndex={-1}
-                            >
-                              {showCurrentPassword ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold">New Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-semibold">Username</FormLabel>
+                          <FormControl>
                             <Input
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter new password"
+                              placeholder="username"
                               {...field}
-                              data-testid="input-edit-newPassword"
+                              data-testid="input-edit-username"
                               className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                              onClick={() => setShowPassword((prev) => !prev)}
-                              tabIndex={-1}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Eye className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormDescription className="text-xs">
-                          At least 8 characters with uppercase, lowercase, and number
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Letters, numbers, and underscores only. Must be unique.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
 
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 rounded-lg border-slate-200/60 dark:border-slate-700/40 font-semibold"
-                  onClick={() => {
-                    setIsEditDialogOpen(false);
-                    form.reset();
-                  }}
-                  disabled={updateProfileMutation.isPending}
-                  data-testid="button-cancel-edit"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover-elevate active-elevate-2"
-                  disabled={updateProfileMutation.isPending}
-                  data-testid="button-save-profile"
-                >
-                  {updateProfileMutation.isPending ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
+                {/* Security Tab */}
+                <TabsContent value="security" className="space-y-6 mt-6">
+                  {user?.hasPassword ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
+                        <Shield className="w-4 h-4" />
+                        Password Management
+                      </div>
+
+                      <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
+                        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          Leave password fields empty if you don't want to change your password.
+                        </p>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-semibold flex items-center gap-2">
+                              <Lock className="w-4 h-4" />
+                              Current Password
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type={showCurrentPassword ? "text" : "password"}
+                                  placeholder="Enter current password"
+                                  {...field}
+                                  data-testid="input-edit-currentPassword"
+                                  className="rounded-lg border-slate-200/60 dark:border-slate-700/40 pr-10"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                                  tabIndex={-1}
+                                  data-testid="button-toggle-current-password"
+                                >
+                                  {showCurrentPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-semibold flex items-center gap-2">
+                              <Zap className="w-4 h-4" />
+                              New Password
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type={showNewPassword ? "text" : "password"}
+                                  placeholder="Enter new password"
+                                  {...field}
+                                  data-testid="input-edit-newPassword"
+                                  className="rounded-lg border-slate-200/60 dark:border-slate-700/40 pr-10"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                  onClick={() => setShowNewPassword((prev) => !prev)}
+                                  tabIndex={-1}
+                                  data-testid="button-toggle-new-password"
+                                >
+                                  {showNewPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
+                              </div>
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Must be at least 8 characters with uppercase, lowercase, and number.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Password Strength Indicator */}
+                      {newPassword && (
+                        <div className="space-y-3 pt-2 rounded-lg bg-slate-50 dark:bg-slate-800/30 p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Password Strength</span>
+                            <Badge variant="outline" className={`${passwordStrength.color} text-white border-0`}>
+                              {passwordStrength.label}
+                            </Badge>
+                          </div>
+
+                          {/* Strength Bar */}
+                          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                              style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                            />
+                          </div>
+
+                          {/* Requirements Checklist */}
+                          <div className="space-y-2 pt-2">
+                            {passwordStrength.requirements.map((req, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-xs">
+                                {req.met ? (
+                                  <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                ) : (
+                                  <AlertCircle className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                                )}
+                                <span className={req.met ? "text-green-700 dark:text-green-400 font-medium" : "text-slate-500 dark:text-slate-400"}>
+                                  {req.label}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    "Save Changes"
+                    <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-6 text-center space-y-2">
+                      <AlertTriangle className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto" />
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">
+                        Password Management Not Available
+                      </p>
+                      <p className="text-xs text-amber-800 dark:text-amber-300/80">
+                        You're using Replit authentication. Sign in with your password first to manage it.
+                      </p>
+                    </div>
                   )}
-                </Button>
-              </div>
-            </form>
-          </Form>
+                </TabsContent>
+
+                {/* Form Footer */}
+                <div className="flex gap-3 pt-6 border-t border-slate-200/50 dark:border-slate-700/30">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 rounded-lg border-slate-200/60 dark:border-slate-700/40 font-semibold"
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      form.reset();
+                    }}
+                    disabled={updateProfileMutation.isPending}
+                    data-testid="button-cancel-edit"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover-elevate active-elevate-2"
+                    disabled={updateProfileMutation.isPending}
+                    data-testid="button-save-profile"
+                  >
+                    {updateProfileMutation.isPending ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </div>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 mr-2 flex-shrink-0" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
