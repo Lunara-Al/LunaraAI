@@ -8,6 +8,8 @@ import {
   Sparkles,
   X,
   MoonStar,
+  Lock,
+  Crown,
 } from "lucide-react";
 import {
   SiTiktok,
@@ -17,6 +19,7 @@ import {
   SiX,
 } from "react-icons/si";
 import type { IconType } from "react-icons";
+import type { FrontendUser } from "@shared/schema";
 
 /**
  * ============================================
@@ -230,7 +233,12 @@ const createMidnightDate = (base?: Date): Date => {
   return d;
 };
 
-export function ContentCalendar() {
+interface ContentCalendarProps {
+  user?: FrontendUser | null;
+}
+
+export function ContentCalendar({ user }: ContentCalendarProps) {
+  const isPremium = user?.membershipTier === "premium";
   const [selectedEntry, setSelectedEntry] = useState<SelectedEntry | null>(null);
   const [startDate, setStartDate] = useState<Date>(() => createMidnightDate());
 
@@ -309,6 +317,7 @@ export function ContentCalendar() {
 
   // Navigation handlers (one week at a time)
   const goToPrevious = () => {
+    if (!isPremium) return;
     setSelectedEntry(null);
     const newDate = createMidnightDate(startDate);
     newDate.setDate(startDate.getDate() - 7);
@@ -316,6 +325,7 @@ export function ContentCalendar() {
   };
 
   const goToNext = () => {
+    if (!isPremium) return;
     setSelectedEntry(null);
     const newDate = createMidnightDate(startDate);
     newDate.setDate(startDate.getDate() + 7);
@@ -323,12 +333,14 @@ export function ContentCalendar() {
   };
 
   const goToToday = () => {
+    if (!isPremium) return;
     setSelectedEntry(null);
     setStartDate(createMidnightDate());
   };
 
   // Handle clicking on a day cell
   const handleDayClick = (day: CalendarDay) => {
+    if (!isPremium) return;
     if (!day.content) {
       setSelectedEntry(null);
       return;
@@ -349,11 +361,34 @@ export function ContentCalendar() {
   const firstDayOfWeek = startDate.getDay();
 
   return (
-    <Card className="relative p-6 md:p-8 bg-gradient-to-br from-[#0B0320] via-[#080016] to-[#150035] border border-card-border/70 hover:border-primary/60 shadow-[0_0_40px_rgba(168,85,247,0.35)] rounded-3xl hover:shadow-[0_0_60px_rgba(236,72,153,0.55)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+    <Card className="relative p-6 md:p-8 bg-gradient-to-br from-[#0B0320] via-[#080016] to-[#150035] border border-card-border/70 hover:border-primary/60 shadow-[0_0_40px_rgba(168,85,247,0.35)] rounded-3xl hover:shadow-[0_0_60px_rgba(236,72,153,0.55)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden" style={!isPremium ? { opacity: 0.85 } : {}}>
       {/* Soft glow overlay */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(244,114,182,0.12),_transparent_60%),_radial-gradient(circle_at_bottom,_rgba(56,189,248,0.12),_transparent_55%)] opacity-90" />
+      
+      {/* Premium Lock Overlay */}
+      {!isPremium && (
+        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/30 to-black/40 backdrop-blur-sm rounded-3xl flex items-center justify-center z-50 flex-col gap-4 p-6 text-center">
+          <div className="space-y-4">
+            <div className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-[2px] shadow-[0_0_32px_rgba(168,85,247,0.9)]">
+              <div className="rounded-full bg-[#080016] p-4">
+                <Lock className="w-8 h-8 text-purple-300" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Premium Feature</h3>
+              <p className="text-sm md:text-base text-gray-300 mb-4">
+                Content Calendar is exclusively for Premium members
+              </p>
+              <div className="inline-flex items-center gap-2 bg-primary/20 px-4 py-2 rounded-full border border-primary/40">
+                <Crown className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-primary">Upgrade to Premium</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <div className="relative z-10">
+      <div className="relative z-10" style={!isPremium ? { pointerEvents: "none", opacity: 0.6 } : {}}>
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>

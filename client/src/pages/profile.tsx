@@ -384,7 +384,7 @@ export default function Profile() {
 
       {/* Content Calendar Section */}
       <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
-        <ContentCalendar />
+        <ContentCalendar user={user} />
       </div>
 
       {/* Edit Profile Dialog */}
