@@ -14,6 +14,7 @@ import {
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,7 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -376,10 +377,13 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-slate-950 dark:via-purple-950/30 dark:to-pink-950/20">
         <div className="flex flex-col items-center gap-4" aria-busy="true" aria-live="polite">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-          <p className="text-slate-600 dark:text-slate-400 text-sm">Loading your profile...</p>
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur-lg opacity-50 animate-pulse" />
+            <div className="relative w-12 h-12 border-3 border-primary/20 border-t-primary rounded-full animate-spin" />
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Loading your cosmic profile...</p>
         </div>
       </div>
     );
@@ -387,41 +391,36 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const { displayName, userInitials, createdDate, membershipLabel, usernameLabel } = (() => {
-    const firstInitial = user.firstName?.[0] || "";
-    const lastInitial = user.lastName?.[0] || "";
-    const initials = `${firstInitial}${lastInitial}`.toUpperCase() || "LU";
-
-    const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Lunara User";
-
-    let created = "Unknown";
-    if (user.createdAt) {
-      const date = new Date(user.createdAt);
-      if (!isNaN(date.getTime())) {
-        created = date.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-      }
+  const firstInitial = user.firstName?.[0] || "";
+  const lastInitial = user.lastName?.[0] || "";
+  const userInitials = `${firstInitial}${lastInitial}`.toUpperCase() || "LU";
+  const displayName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Lunara User";
+  
+  let createdDate = "Unknown";
+  if (user.createdAt) {
+    const date = new Date(user.createdAt);
+    if (!isNaN(date.getTime())) {
+      createdDate = date.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
     }
-
-    const tierLabel = `${user.membershipTier || "Free"} Member`;
-    const userHandle = user.username || "user";
-
-    return {
-      displayName: fullName,
-      userInitials: initials,
-      createdDate: created,
-      membershipLabel: tierLabel,
-      usernameLabel: userHandle,
-    };
-  })();
+  }
+  
+  const membershipLabel = `${user.membershipTier || "Free"} Member`;
+  const usernameLabel = user.username || "user";
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-950 dark:via-black dark:to-slate-900"
+      className="min-h-screen bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-slate-950 dark:via-purple-950/30 dark:to-pink-950/20 relative overflow-hidden"
       aria-busy={isBusy}
     >
+      {/* Animated cosmic background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-3xl opacity-30 dark:opacity-20 animate-pulse" style={{ animationDuration: "4s" }} />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full blur-3xl opacity-30 dark:opacity-20 animate-pulse" style={{ animationDuration: "5s", animationDelay: "1s" }} />
+      </div>
+
       <MoonMenu />
 
       {imagePreviewForCropper && (
@@ -439,25 +438,40 @@ export default function Profile() {
         />
       )}
 
-      <div className="max-w-5xl mx-auto px-4 py-12 md:py-16 space-y-8 animate-in fade-in duration-500">
-        <div className="text-center space-y-3 md:space-y-4 pb-6">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent drop-shadow-sm">
+      <div className="relative max-w-5xl mx-auto px-4 py-12 md:py-20 space-y-12 animate-in fade-in duration-700">
+        {/* Hero Header with Cosmic Gradient */}
+        <div className="text-center space-y-4 md:space-y-6 pb-6 md:pb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 dark:border-primary/30 backdrop-blur-sm mb-2 md:mb-4">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs md:text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Cosmic Account</span>
+          </div>
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black bg-gradient-to-br from-primary via-secondary to-primary bg-clip-text text-transparent drop-shadow-lg">
             Profile
           </h1>
-          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400 font-medium">
-            Manage your cosmic account
+          <p className="text-sm md:text-lg text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto">
+            Manage your cosmic account and customize your Lunara experience
           </p>
         </div>
 
-        <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-          <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-8 md:p-12 space-y-8 shadow-2xl dark:shadow-2xl">
-            <div
-              className="flex flex-col items-center space-y-6 animate-in zoom-in duration-500"
-              style={{ animationDelay: "100ms" }}
-            >
+        {/* Premium Glassmorphic Profile Card */}
+        <div className="relative group perspective">
+          {/* Enhanced glow background */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
+          
+          {/* Card with dual-layer glassmorphism */}
+          <div className="relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-3xl p-8 md:p-16 space-y-10 shadow-2xl dark:shadow-2xl overflow-hidden">
+            {/* Subtle inner glow */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+
+            {/* Profile Header Section */}
+            <div className="relative flex flex-col items-center space-y-8 animate-in zoom-in duration-700" style={{ animationDelay: "100ms" }}>
+              {/* Avatar with Premium Multi-Layer Glow */}
               <div className="relative group/avatar">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-full blur-2xl opacity-30 group-hover/avatar:opacity-60 transition-all duration-500" />
+                {/* Outer glow layer */}
+                <div className="absolute -inset-3 bg-gradient-to-r from-primary to-secondary rounded-full blur-2xl opacity-40 group-hover/avatar:opacity-70 transition-all duration-500" />
+                {/* Mid glow layer */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-secondary to-primary rounded-full blur-xl opacity-30 group-hover/avatar:opacity-50 transition-all duration-500" />
+                
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -466,17 +480,22 @@ export default function Profile() {
                   data-testid="button-upload-profile-picture"
                   aria-label="Upload profile picture"
                 >
-                  <Avatar className="w-28 h-28 md:w-36 md:h-36 ring-4 ring-primary/40 shadow-2xl">
+                  <Avatar className="w-32 h-32 md:w-40 md:h-40 ring-4 ring-primary/50 shadow-2xl border-2 border-white/50 dark:border-slate-700/50">
                     <AvatarImage src={user.profileImageUrl || ""} alt={displayName} />
-                    <AvatarFallback className="text-4xl md:text-5xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-bold">
+                    <AvatarFallback className="text-5xl md:text-6xl bg-gradient-to-br from-primary to-secondary text-primary-foreground font-black">
                       {userInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent rounded-full opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 flex items-center justify-center">
                     {isUploadingPicture ? (
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="relative w-8 h-8">
+                        <div className="absolute inset-0 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      </div>
                     ) : (
-                      <Upload className="w-6 h-6 text-white" />
+                      <div className="flex flex-col items-center gap-1">
+                        <Upload className="w-6 h-6 text-white" />
+                        <span className="text-xs text-white font-semibold">Upload</span>
+                      </div>
                     )}
                   </div>
                 </button>
@@ -491,81 +510,91 @@ export default function Profile() {
                 />
               </div>
 
+              {/* User Info */}
               <div
-                className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700"
                 style={{ animationDelay: "200ms" }}
               >
                 <div className="space-y-2">
-                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
                     {displayName}
                   </h2>
-                  <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                    @{usernameLabel}
+                  <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 font-semibold flex items-center justify-center gap-2">
+                    <span className="text-primary dark:text-secondary">@</span>{usernameLabel}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-center gap-3 flex-wrap">
-                  <Badge className="px-4 py-2 bg-gradient-to-r from-primary/20 to-secondary/20 text-primary dark:text-secondary border-primary/40 font-semibold capitalize text-xs md:text-sm">
-                    <Crown className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+                {/* Membership Badge */}
+                <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
+                  <Badge className="px-6 py-3 h-auto bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/30 dark:to-secondary/30 text-primary dark:text-secondary border-primary/40 dark:border-primary/50 font-bold capitalize text-sm md:text-base shadow-lg shadow-primary/20 dark:shadow-primary/30">
+                    <Crown className="w-4 h-4 mr-2 flex-shrink-0" />
                     {membershipLabel}
                   </Badge>
                 </div>
 
+                {/* Edit Button */}
                 <Button
                   type="button"
                   onClick={() => setIsEditDialogOpen(true)}
-                  className="mt-4 px-6 py-2 h-auto text-sm font-semibold bg-gradient-to-r from-primary via-purple-500 to-secondary text-primary-foreground hover:shadow-xl hover:shadow-primary/40 dark:hover:shadow-primary/30 transition-all duration-300 hover-elevate rounded-lg"
+                  className="mt-6 px-8 py-3 h-auto text-base font-bold bg-gradient-to-r from-primary via-purple-500 to-secondary text-primary-foreground hover:shadow-2xl hover:shadow-primary/50 dark:hover:shadow-primary/40 transition-all duration-300 hover-elevate rounded-xl active-elevate-2"
                   data-testid="button-edit-profile"
                 >
-                  <Edit2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <Edit2 className="w-5 h-5 mr-2 flex-shrink-0" />
                   Edit Profile
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
-              <div className="group/card p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 hover:from-primary/5 hover:to-secondary/5 dark:hover:from-primary/10 dark:hover:to-secondary/10 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/20 hover-elevate">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-primary/15 text-primary">
-                    <User className="w-5 h-5" />
+            {/* User Details Grid with Enhanced Cards */}
+            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-5 pt-8 border-t border-white/20 dark:border-slate-700/30">
+              {/* User ID Card */}
+              <div className="group/card relative p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 hover:from-primary/8 hover:to-secondary/8 dark:hover:from-primary/15 dark:hover:to-secondary/15 transition-all duration-300 border border-slate-200/60 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary/40 backdrop-blur-sm hover-elevate">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-transparent to-secondary/0 group-hover/card:from-primary/5 group-hover/card:to-secondary/5 rounded-2xl transition-all duration-300 pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/10 text-primary dark:text-secondary shadow-lg shadow-primary/10">
+                    <User className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                       User ID
                     </p>
-                    <p className="text-sm font-mono text-slate-900 dark:text-white truncate mt-1">
+                    <p className="text-base font-mono text-slate-900 dark:text-white truncate mt-1.5 font-semibold">
                       {user.id}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="group/card p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 hover:from-primary/5 hover:to-secondary/5 dark:hover:from-primary/10 dark:hover:to-secondary/10 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/20 hover-elevate">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-primary/15 text-primary">
-                    <Mail className="w-5 h-5" />
+              {/* Email Card */}
+              <div className="group/card relative p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 hover:from-primary/8 hover:to-secondary/8 dark:hover:from-primary/15 dark:hover:to-secondary/15 transition-all duration-300 border border-slate-200/60 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary/40 backdrop-blur-sm hover-elevate">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-transparent to-secondary/0 group-hover/card:from-primary/5 group-hover/card:to-secondary/5 rounded-2xl transition-all duration-300 pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/10 text-primary dark:text-secondary shadow-lg shadow-primary/10">
+                    <Mail className="w-6 h-6" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                       Email
                     </p>
-                    <p className="text-sm text-slate-900 dark:text-white truncate mt-1">
+                    <p className="text-base text-slate-900 dark:text-white truncate mt-1.5 font-semibold">
                       {user.email || "Not provided"}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="group/card p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 hover:from-primary/5 hover:to-secondary/5 dark:hover:from-primary/10 dark:hover:to-secondary/10 transition-all duration-300 border border-slate-200/50 dark:border-slate-700/50 hover:border-primary/30 dark:hover:border-primary/20 hover-elevate">
-                <div className="flex items-start gap-3">
-                  <div className="p-2.5 rounded-lg bg-primary/15 text-primary">
-                    <CalendarIcon className="w-5 h-5" />
+              {/* Member Since Card */}
+              <div className="group/card relative p-6 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/40 dark:to-slate-900/40 hover:from-primary/8 hover:to-secondary/8 dark:hover:from-primary/15 dark:hover:to-secondary/15 transition-all duration-300 border border-slate-200/60 dark:border-slate-700/40 hover:border-primary/30 dark:hover:border-primary/40 backdrop-blur-sm hover-elevate">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-transparent to-secondary/0 group-hover/card:from-primary/5 group-hover/card:to-secondary/5 rounded-2xl transition-all duration-300 pointer-events-none" />
+                <div className="relative flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/10 text-primary dark:text-secondary shadow-lg shadow-primary/10">
+                    <CalendarIcon className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
                       Member Since
                     </p>
-                    <p className="text-sm text-slate-900 dark:text-white mt-1">
+                    <p className="text-base text-slate-900 dark:text-white mt-1.5 font-semibold">
                       {createdDate}
                     </p>
                   </div>
@@ -573,22 +602,23 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50 space-y-3 flex flex-col sm:flex-row gap-3">
+            {/* Action Buttons */}
+            <div className="relative pt-6 border-t border-white/20 dark:border-slate-700/30 space-y-3 flex flex-col sm:flex-row gap-3">
               <Button
                 type="button"
                 onClick={() => setIsSignOutDialogOpen(true)}
                 disabled={isSigningOut}
-                className="flex-1 px-6 py-2.5 h-auto text-sm font-semibold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white hover:shadow-lg hover:shadow-slate-600/20 transition-all duration-300 hover-elevate rounded-lg"
+                className="flex-1 px-6 py-3 h-auto text-base font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white hover:shadow-xl hover:shadow-slate-600/30 transition-all duration-300 hover-elevate rounded-xl active-elevate-2"
                 data-testid="button-logout"
               >
                 {isSigningOut ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
                     Signing Out...
                   </>
                 ) : (
                   <>
-                    <LogOut className="w-4 h-4 mr-2" />
+                    <LogOut className="w-5 h-5 mr-2 flex-shrink-0" />
                     Sign Out
                   </>
                 )}
@@ -597,47 +627,54 @@ export default function Profile() {
               <Button
                 type="button"
                 onClick={() => setIsDeleteDialogOpen(true)}
-                className="flex-1 px-6 py-2.5 h-auto text-sm font-semibold bg-gradient-to-r from-destructive to-red-700 hover:from-red-700 hover:to-red-800 text-white hover:shadow-lg hover:shadow-destructive/20 transition-all duration-300 hover-elevate rounded-lg"
+                className="flex-1 px-6 py-3 h-auto text-base font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white hover:shadow-xl hover:shadow-red-600/30 transition-all duration-300 hover-elevate rounded-xl active-elevate-2"
                 data-testid="button-delete-account"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-5 h-5 mr-2 flex-shrink-0" />
                 Delete Account
               </Button>
             </div>
           </div>
         </div>
+
+        {/* Content Calendar Section */}
+        <div className="relative mt-20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "400ms" }}>
+          <ContentCalendar user={user} />
+        </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 mt-20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
-        <ContentCalendar user={user} />
-      </div>
-
+      {/* Sign Out Dialog */}
       <AlertDialog open={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/40">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <LogOut className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+            <AlertDialogTitle className="flex items-center gap-2 text-2xl font-bold">
+              <LogOut className="w-6 h-6 text-amber-600 dark:text-amber-500" />
               Sign Out
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to sign out? You'll need to log back in to access your
-              account.
+            <AlertDialogDescription className="text-base">
+              Are you sure you want to sign out? You'll need to log back in to access your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg p-4 space-y-2">
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-300 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-5 space-y-3">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
               You will be logged out from this device
             </p>
-            <ul className="text-xs text-amber-800 dark:text-amber-300/90 space-y-1.5 ml-6">
-              <li>Your videos and data will remain safe</li>
-              <li>You can sign back in anytime</li>
+            <ul className="text-sm text-amber-800 dark:text-amber-300/90 space-y-2 ml-7">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">•</span>
+                <span>Your videos and data will remain safe</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 dark:text-amber-400 font-bold mt-0.5">•</span>
+                <span>You can sign back in anytime</span>
+              </li>
             </ul>
           </div>
 
-          <AlertDialogFooter className="mt-6">
-            <AlertDialogCancel disabled={isSigningOut} data-testid="button-cancel-signout">
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel disabled={isSigningOut} data-testid="button-cancel-signout" className="rounded-lg">
               Cancel
             </AlertDialogCancel>
             <Button
@@ -645,17 +682,17 @@ export default function Profile() {
               onClick={handleSignOut}
               disabled={isSigningOut}
               variant="outline"
-              className="border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+              className="border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-lg font-semibold"
               data-testid="button-confirm-signout"
             >
               {isSigningOut ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
                   Signing Out...
                 </>
               ) : (
                 <>
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <LogOut className="w-5 h-5 mr-2 flex-shrink-0" />
                   Sign Out
                 </>
               )}
@@ -664,6 +701,7 @@ export default function Profile() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Edit Profile Dialog */}
       <Dialog
         open={isEditDialogOpen}
         onOpenChange={(open) => {
@@ -680,12 +718,12 @@ export default function Profile() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <DialogTitle className="text-3xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Edit Profile
             </DialogTitle>
-            <DialogDescription className="text-slate-600 dark:text-slate-400">
+            <DialogDescription className="text-slate-600 dark:text-slate-400 text-base">
               Update your personal information. Changes will be saved immediately.
             </DialogDescription>
           </DialogHeader>
@@ -731,7 +769,7 @@ export default function Profile() {
               className="space-y-6"
             >
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
                   <User className="w-4 h-4" />
                   Personal Information
                 </div>
@@ -742,12 +780,13 @@ export default function Profile() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel className="font-semibold">First Name</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="First name"
                             {...field}
                             data-testid="input-edit-firstName"
+                            className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                           />
                         </FormControl>
                         <FormMessage />
@@ -760,12 +799,13 @@ export default function Profile() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel className="font-semibold">Last Name</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Last name"
                             {...field}
                             data-testid="input-edit-lastName"
+                            className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                           />
                         </FormControl>
                         <FormMessage />
@@ -776,7 +816,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
                   <Mail className="w-4 h-4" />
                   Account Information
                 </div>
@@ -786,13 +826,14 @@ export default function Profile() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel className="font-semibold">Email Address</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="your@email.com"
                           {...field}
                           data-testid="input-edit-email"
+                          className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                         />
                       </FormControl>
                       <FormMessage />
@@ -805,12 +846,13 @@ export default function Profile() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel className="font-semibold">Username</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="username"
                           {...field}
                           data-testid="input-edit-username"
+                          className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                         />
                       </FormControl>
                       <FormDescription className="text-xs">
@@ -824,11 +866,11 @@ export default function Profile() {
 
               {user?.hasPassword && (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground border-b pb-2">
+                  <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground border-b pb-3">
                     <Lock className="w-4 h-4" />
                     Change Password
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-medium">
                     Leave blank to keep your current password
                   </p>
 
@@ -837,7 +879,7 @@ export default function Profile() {
                     name="currentPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Current Password</FormLabel>
+                        <FormLabel className="font-semibold">Current Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
@@ -845,6 +887,7 @@ export default function Profile() {
                               placeholder="Enter current password"
                               {...field}
                               data-testid="input-edit-currentPassword"
+                              className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                             />
                             <Button
                               type="button"
@@ -872,7 +915,7 @@ export default function Profile() {
                     name="newPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New Password</FormLabel>
+                        <FormLabel className="font-semibold">New Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
@@ -880,6 +923,7 @@ export default function Profile() {
                               placeholder="Enter new password"
                               {...field}
                               data-testid="input-edit-newPassword"
+                              className="rounded-lg border-slate-200/60 dark:border-slate-700/40"
                             />
                             <Button
                               type="button"
@@ -911,7 +955,7 @@ export default function Profile() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 rounded-lg border-slate-200/60 dark:border-slate-700/40 font-semibold"
                   onClick={() => {
                     setIsEditDialogOpen(false);
                     form.reset();
@@ -923,7 +967,7 @@ export default function Profile() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                  className="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-lg hover-elevate active-elevate-2"
                   disabled={updateProfileMutation.isPending}
                   data-testid="button-save-profile"
                 >
@@ -942,6 +986,7 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Account Dialog */}
       <AlertDialog
         open={isDeleteDialogOpen}
         onOpenChange={(open) => {
@@ -949,32 +994,41 @@ export default function Profile() {
           else setIsDeleteDialogOpen(true);
         }}
       >
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/40 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
+            <AlertDialogTitle className="flex items-center gap-2 text-2xl font-bold">
+              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-500" />
               Delete Account
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-base">
               This action cannot be undone. Enter your password to continue.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <form onSubmit={handleDeleteAccount} className="space-y-4">
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <h4 className="font-semibold text-destructive text-sm mb-2 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl p-5">
+              <h4 className="font-bold text-red-700 dark:text-red-400 text-base mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
                 This action is permanent
               </h4>
-              <ul className="text-xs text-muted-foreground space-y-1.5 ml-6">
-                <li>All your videos will be deleted forever</li>
-                <li>Your profile and account data will be erased</li>
-                <li>You cannot undo this action</li>
+              <ul className="text-sm text-red-700 dark:text-red-300/90 space-y-2 ml-7">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span>All your videos will be deleted forever</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span>Your profile and account data will be erased</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold mt-0.5">•</span>
+                  <span>You cannot undo this action</span>
+                </li>
               </ul>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="delete-password" className="text-sm font-semibold block">
+            <div className="space-y-3">
+              <label htmlFor="delete-password" className="text-base font-bold block">
                 Enter your password to confirm
               </label>
 
@@ -990,9 +1044,9 @@ export default function Profile() {
                   aria-invalid={deletePasswordVerification === "incorrect"}
                   data-testid="input-delete-password"
                   autoFocus
-                  className={`pl-11 pr-10 transition-colors ${
+                  className={`pl-11 pr-10 transition-colors rounded-lg border-slate-200/60 dark:border-slate-700/40 ${
                     deletePasswordVerification === "incorrect"
-                      ? "border-destructive focus:border-destructive"
+                      ? "border-red-500 focus:border-red-500"
                       : deletePasswordVerification === "correct"
                       ? "border-green-500 focus:border-green-500"
                       : ""
@@ -1018,7 +1072,7 @@ export default function Profile() {
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
                 )}
                 {deletePasswordVerification === "incorrect" && (
-                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0 pointer-events-none" />
+                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500 flex-shrink-0 pointer-events-none" />
                 )}
                 {deletePasswordVerification === "correct" && (
                   <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0 pointer-events-none" />
@@ -1033,7 +1087,7 @@ export default function Profile() {
               )}
 
               {deletePasswordVerification === "incorrect" && (
-                <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
+                <p className="text-xs text-red-600 dark:text-red-500 flex items-center gap-1.5" role="alert">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   Incorrect password. Try again.
                 </p>
@@ -1047,33 +1101,34 @@ export default function Profile() {
               )}
             </div>
 
-            <AlertDialogFooter className="mt-6">
+            <AlertDialogFooter className="mt-6 gap-3">
               <AlertDialogCancel
                 onClick={handleCloseDeleteDialog}
                 disabled={deleteAccountMutation.isPending}
                 data-testid="button-cancel-delete"
+                className="rounded-lg"
               >
                 Cancel
               </AlertDialogCancel>
               <Button
                 type="submit"
                 disabled={!isPasswordCorrect || deleteAccountMutation.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover-elevate active-elevate-2"
                 data-testid="button-confirm-delete"
               >
                 {deleteAccountMutation.isPending ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
                     Deleting Account...
                   </>
                 ) : !isPasswordCorrect ? (
                   <>
-                    <Lock className="w-4 h-4 mr-2" />
+                    <Lock className="w-5 h-5 mr-2 flex-shrink-0" />
                     Enter Correct Password
                   </>
                 ) : (
                   <>
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-5 h-5 mr-2 flex-shrink-0" />
                     Permanently Delete
                   </>
                 )}
