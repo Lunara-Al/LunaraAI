@@ -446,6 +446,10 @@ export default function Membership() {
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm">Commercial license</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Content Calendar</span>
+                </li>
               </ul>
 
               <div className="pt-4 border-t border-border/50">
