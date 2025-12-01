@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
@@ -16,6 +16,16 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+
+  // Force dark mode on register page
+  useEffect(() => {
+    const root = document.documentElement;
+    const originalClass = root.classList.contains('dark');
+    root.classList.add('dark');
+    return () => {
+      if (!originalClass) root.classList.remove('dark');
+    };
+  }, []);
 
   const form = useForm<RegisterRequest>({
     resolver: zodResolver(registerSchema),
