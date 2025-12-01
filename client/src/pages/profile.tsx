@@ -49,6 +49,7 @@ export default function Profile() {
   const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [showDeletePasswordInput, setShowDeletePasswordInput] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -280,6 +281,7 @@ export default function Profile() {
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
+    setShowDeletePasswordInput(false);
     setDeletePassword("");
     setDeletePasswordVerification(null);
     setDeletePasswordFocused(false);
@@ -821,7 +823,7 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Account Dialog - Secure Password Verification */}
+      {/* Delete Account Dialog - Two Step Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
         if (!open) handleCloseDeleteDialog();
         else setIsDeleteDialogOpen(true);
@@ -833,140 +835,169 @@ export default function Profile() {
               Delete Account
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Enter your password to continue.
+              {!showDeletePasswordInput 
+                ? "This action cannot be undone."
+                : "Enter your password to continue."}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <form onSubmit={handleDeleteAccount} className="space-y-4">
-            {/* Warning Section */}
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <h4 className="font-semibold text-destructive text-sm mb-2 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                This action is permanent
-              </h4>
-              <ul className="text-xs text-muted-foreground space-y-1.5 ml-6">
-                <li>• All your videos will be deleted forever</li>
-                <li>• Your profile and account data will be erased</li>
-                <li>• You cannot undo this action</li>
-              </ul>
-            </div>
+          {/* Step 1: Initial Confirmation */}
+          {!showDeletePasswordInput ? (
+            <div className="space-y-4">
+              {/* Warning Section */}
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <h4 className="font-semibold text-destructive text-sm mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  This action is permanent
+                </h4>
+                <ul className="text-xs text-muted-foreground space-y-1.5 ml-6">
+                  <li>• All your videos will be deleted forever</li>
+                  <li>• Your profile and account data will be erased</li>
+                  <li>• You cannot undo this action</li>
+                </ul>
+              </div>
 
-            {/* Password Input Field */}
-            <div className="space-y-2">
-              <label htmlFor="delete-password" className="text-sm font-semibold block">
-                Enter your password
-              </label>
-
-              <div className="relative">
-                <Input
-                  id="delete-password"
-                  type={showDeletePassword ? "text" : "password"}
-                  value={deletePassword}
-                  onChange={(e) => handleDeletePasswordChange(e.target.value)}
-                  onFocus={() => setDeletePasswordFocused(true)}
-                  onBlur={() => setDeletePasswordFocused(false)}
-                  placeholder="••••••••"
-                  disabled={deleteAccountMutation.isPending}
-                  aria-label="Password for account deletion"
-                  aria-invalid={deletePasswordVerification === "incorrect"}
-                  data-testid="input-delete-password"
-                  autoFocus
-                  className={`pl-11 pr-10 transition-colors ${
-                    deletePasswordVerification === "incorrect"
-                      ? "border-destructive focus:border-destructive"
-                      : deletePasswordVerification === "correct"
-                      ? "border-green-500 focus:border-green-500"
-                      : ""
-                  }`}
-                />
-
-                {/* Password Visibility Toggle Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowDeletePassword(!showDeletePassword)}
-                  disabled={deleteAccountMutation.isPending || !deletePassword}
-                  aria-label={showDeletePassword ? "Hide password" : "Show password"}
-                  data-testid="button-toggle-password-visibility"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded px-1"
+              {/* Step 1 Actions */}
+              <AlertDialogFooter className="mt-6">
+                <AlertDialogCancel
+                  onClick={handleCloseDeleteDialog}
+                  data-testid="button-cancel-delete"
                 >
-                  {showDeletePassword ? (
-                    <EyeOff className="w-4 h-4 flex-shrink-0" />
-                  ) : (
-                    <Eye className="w-4 h-4 flex-shrink-0" />
-                  )}
-                </button>
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeletePasswordInput(true)}
+                  data-testid="button-confirm-delete-step1"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  I want to delete
+                </Button>
+              </AlertDialogFooter>
+            </div>
+          ) : (
+            /* Step 2: Password Verification */
+            <form onSubmit={handleDeleteAccount} className="space-y-4">
+              {/* Password Input Field */}
+              <div className="space-y-2">
+                <label htmlFor="delete-password" className="text-sm font-semibold block">
+                  Enter your password
+                </label>
 
-                {/* Status Icon */}
+                <div className="relative">
+                  <Input
+                    id="delete-password"
+                    type={showDeletePassword ? "text" : "password"}
+                    value={deletePassword}
+                    onChange={(e) => handleDeletePasswordChange(e.target.value)}
+                    onFocus={() => setDeletePasswordFocused(true)}
+                    onBlur={() => setDeletePasswordFocused(false)}
+                    placeholder="••••••••"
+                    disabled={deleteAccountMutation.isPending}
+                    aria-label="Password for account deletion"
+                    aria-invalid={deletePasswordVerification === "incorrect"}
+                    data-testid="input-delete-password"
+                    autoFocus
+                    className={`pl-11 pr-10 transition-colors ${
+                      deletePasswordVerification === "incorrect"
+                        ? "border-destructive focus:border-destructive"
+                        : deletePasswordVerification === "correct"
+                        ? "border-green-500 focus:border-green-500"
+                        : ""
+                    }`}
+                  />
+
+                  {/* Password Visibility Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowDeletePassword(!showDeletePassword)}
+                    disabled={deleteAccountMutation.isPending || !deletePassword}
+                    aria-label={showDeletePassword ? "Hide password" : "Show password"}
+                    data-testid="button-toggle-password-visibility"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded px-1"
+                  >
+                    {showDeletePassword ? (
+                      <EyeOff className="w-4 h-4 flex-shrink-0" />
+                    ) : (
+                      <Eye className="w-4 h-4 flex-shrink-0" />
+                    )}
+                  </button>
+
+                  {/* Status Icon */}
+                  {deletePasswordVerification === "verifying" && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
+                  )}
+                  {deletePasswordVerification === "incorrect" && (
+                    <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0 pointer-events-none" />
+                  )}
+                  {deletePasswordVerification === "correct" && (
+                    <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0 pointer-events-none" />
+                  )}
+                </div>
+
+                {/* Verifying State */}
                 {deletePasswordVerification === "verifying" && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    Verifying password...
+                  </p>
                 )}
+
+                {/* Incorrect Password State */}
                 {deletePasswordVerification === "incorrect" && (
-                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0 pointer-events-none" />
+                  <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    Incorrect password. Try again.
+                  </p>
                 )}
+
+                {/* Correct Password State */}
                 {deletePasswordVerification === "correct" && (
-                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0 pointer-events-none" />
+                  <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    Password verified. Ready to delete.
+                  </p>
                 )}
               </div>
 
-              {/* Verifying State */}
-              {deletePasswordVerification === "verifying" && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                  Verifying password...
-                </p>
-              )}
-
-              {/* Incorrect Password State */}
-              {deletePasswordVerification === "incorrect" && (
-                <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  Incorrect password. Try again.
-                </p>
-              )}
-
-              {/* Correct Password State */}
-              {deletePasswordVerification === "correct" && (
-                <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  Password verified. Ready to delete.
-                </p>
-              )}
-            </div>
-
-            {/* Footer */}
-            <AlertDialogFooter className="mt-6">
-              <AlertDialogCancel
-                onClick={handleCloseDeleteDialog}
-                disabled={deleteAccountMutation.isPending}
-                data-testid="button-cancel-delete"
-              >
-                Cancel
-              </AlertDialogCancel>
-              <Button
-                type="submit"
-                disabled={!isPasswordCorrect || deleteAccountMutation.isPending}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-confirm-delete"
-              >
-                {deleteAccountMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting Account...
-                  </>
-                ) : !isPasswordCorrect ? (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Enter Correct Password
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Permanently Delete
-                  </>
-                )}
-              </Button>
-            </AlertDialogFooter>
-          </form>
+              {/* Step 2 Actions */}
+              <AlertDialogFooter className="mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowDeletePasswordInput(false)}
+                  disabled={deleteAccountMutation.isPending}
+                  data-testid="button-back-delete"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!isPasswordCorrect || deleteAccountMutation.isPending}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-confirm-delete"
+                >
+                  {deleteAccountMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting Account...
+                    </>
+                  ) : !isPasswordCorrect ? (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Enter Correct Password
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Permanently Delete
+                    </>
+                  )}
+                </Button>
+              </AlertDialogFooter>
+            </form>
+          )}
         </AlertDialogContent>
       </AlertDialog>
     </div>
