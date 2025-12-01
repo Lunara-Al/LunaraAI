@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import Landing from "@/pages/landing";
 import Register from "@/pages/register";
 import Login from "@/pages/login";
@@ -44,13 +45,19 @@ function Router() {
   );
 }
 
+function SyncProvider() {
+  // Initialize real-time sync
+  useRealtimeSync();
+  return <Router />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <SyncProvider />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
