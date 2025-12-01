@@ -1,0 +1,95 @@
+You are a senior full-stack engineer working on my SaaS app "Lunara AI" inside Replit.
+
+GOAL:
+Add a "Content Calendar" section to the BOTTOM of the user profile page. This calendar will show the user's ASMR content plan for the next 30 days (idea + platform). It does NOT need to be connected to a real database yet; use a simple in-code data structure that I can edit.
+
+ASSUMPTIONS (feel free to adjust intelligently if my project is different):
+- Frontend is plain HTML/CSS/JS (no heavy frameworks).
+- There is a `profile.html` page (or similar, like `templates/profile.html`).
+- If there's a different profile file, detect it and use that.
+- If there is no profile page at all, create one called `profile.html` and treat it as the user profile.
+
+WHAT I WANT YOU TO BUILD:
+
+1. CONTENT CALENDAR UI (at bottom of profile page)
+   - Add a new section at the bottom of the profile page:
+     - Title: "Content Calendar"
+     - Subtitle: "Your next 30 days of ASMR posts"
+   - Under that, show a simple MONTH VIEW calendar:
+     - 7 columns (Mon–Sun or Sun–Sat, whichever is easier).
+     - 4–5 rows to cover ~30 days.
+   - Each day cell should:
+     - Show the day number (1, 2, 3...).
+     - If there is a planned content idea, show a short label like:
+       - "Fruit Cosmic ASMR – TikTok"
+       - "Gem Cut – Shorts"
+     - If there's no content for that day, leave it blank or show a light placeholder like "Free".
+
+2. DATA STRUCTURE FOR ENTRIES
+   - Use a simple JS array like this (or similar):
+     ```js
+     const contentPlan = [
+       { date: "2025-12-01", idea: "Cosmic watermelon slice", platform: "TikTok" },
+       { date: "2025-12-02", idea: "Galaxy gem cutting", platform: "YouTube Shorts" },
+       // ...
+     ];
+     ```
+   - Dynamically map this array into the calendar grid so that:
+     - The correct day cell shows the idea + platform.
+   - Make it easy for me to add, remove, or modify entries in that array.
+
+3. INTERACTION
+   - When I click on a date that has planned content:
+     - Show a small popup or info area below the calendar with:
+       - Full idea title
+       - Platform
+       - Optional description field
+   - This can be super simple: no external libraries needed. A basic div that updates when a day is clicked is fine.
+
+4. STYLING / THEME
+   - Use a "Lunara" style (cosmic / space / clean).
+   - Calendar requirements:
+     - Rounded corners.
+     - Subtle shadow.
+     - Hover effect for each day cell.
+     - Use soft gradients or border accents to match a space/cosmic aesthetic.
+   - Days with content should be clearly highlighted so they stand out (bolder border or subtle background).
+
+5. FILE STRUCTURE & CODE ORGANIZATION
+   - Show me:
+     - Where you modify the profile page HTML.
+     - Where the CSS for the calendar lives (new file or existing).
+     - Where the JS lives (new `profile.js` or existing script).
+   - If needed, create:
+     - `static/css/profile.css` (or similar) for calendar styling.
+     - `static/js/profile.js` for calendar logic.
+   - Make sure scripts are properly linked in the HTML (e.g., `<script src="..."></script>` at the bottom of the body).
+
+6. IMPLEMENTATION DETAILS
+   - Use vanilla JS (no React, no heavy frameworks).
+   - Make sure the calendar:
+     - Automatically calculates the correct position of each date for the current month OR
+     - For simplicity, you can generate a "Next 30 Days from today" linear grid (explain which approach you used).
+   - Include comments in the JS explaining:
+     - How to change the content plan data.
+     - How to change how many days are displayed.
+
+7. EXPLANATION AFTER CODE
+   - After writing all code, explain:
+     - Which files were changed or created.
+     - How the calendar works step-by-step.
+     - How I can customize:
+       - The contentPlan data.
+       - Colors / theme of the calendar.
+       - Number of days shown (e.g., 7 days, 14, 30).
+
+8. OUTPUT FORMAT (VERY IMPORTANT)
+   - First: show the updated project/file structure.
+   - Then: show the COMPLETE code for every new or changed file in separate code blocks.
+   - Then: give me a short "How to run this in Replit" section.
+   - Finally: give me a simple explanation "Explain like I'm 15" of how the calendar logic works.
+
+Remember:
+- Make everything copy-paste ready.
+- Don’t leave TODOs for core logic; implement all the basics fully.
+- Optimize for clarity and ease of editing for me later.

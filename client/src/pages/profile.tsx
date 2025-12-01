@@ -1,4 +1,4 @@
-import { User, Mail, Calendar, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock } from "lucide-react";
+import { User, Mail, Calendar as CalendarIcon, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/form";
 import { compressProfileImage, validateImageFile } from "@/lib/imageUtils";
 import { ProfilePictureCropper } from "@/components/profile-picture-cropper";
+import { ContentCalendar } from "@/components/content-calendar";
 
 export default function Profile() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -349,7 +350,7 @@ export default function Profile() {
             </div>
             
             <div className="flex items-center gap-3 p-4 rounded-lg bg-background/40 hover:bg-background/60 transition-colors duration-200 border border-transparent hover:border-primary/10">
-              <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+              <CalendarIcon className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-semibold text-sm">Member Since</h3>
                 <p className="text-xs md:text-sm text-muted-foreground">{createdDate}</p>
@@ -379,6 +380,11 @@ export default function Profile() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Content Calendar Section */}
+      <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
+        <ContentCalendar />
       </div>
 
       {/* Edit Profile Dialog */}
