@@ -103,13 +103,15 @@ export function createAuthRouter(): Router {
     }
   });
 
-  router.post("/delete-account", isAuthenticated, async (req: any, res) => {
+  router.post("/request-deletion-code", isAuthenticated, async (req: any, res) => {
     try {
       const user = await getAuthenticatedUser(req);
       if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user.email) return res.status(400).json({ message: "Email not found for user" });
 
       const { method, password, confirmation } = req.body;
 
+      // Verify first step (password or DELETE confirmation)
       if (method === "password") {
         if (!user.passwordHash) return res.status(400).json({ message: "Invalid verification method" });
         if (!password) return res.status(400).json({ message: "Password is required" });
@@ -120,6 +122,50 @@ export function createAuthRouter(): Router {
         if (confirmation !== "DELETE") return res.status(400).json({ message: "Invalid confirmation text" });
       } else {
         return res.status(400).json({ message: "Invalid verification method" });
+      }
+
+      // Generate 6-digit deletion code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const codeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      
+      // Store code in user's reset token field temporarily
+      await storage.updateProfile(user.id, { 
+        resetToken: code,
+        resetTokenExpiry: codeExpiry
+      });
+
+      // In production, send email here
+      console.log(`[DEV] Deletion code for ${user.email}: ${code}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Verification code sent to your email. Check spam folder if not found.",
+        // In dev, return code for testing
+        ...(process.env.NODE_ENV !== 'production' && { code })
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to request deletion code" });
+    }
+  });
+
+  router.post("/delete-account", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const { verificationCode } = req.body;
+
+      if (!verificationCode) {
+        return res.status(400).json({ message: "Verification code is required" });
+      }
+
+      // Check if code matches and is not expired
+      if (user.resetToken !== verificationCode) {
+        return res.status(401).json({ message: "Invalid verification code" });
+      }
+
+      if (!user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
+        return res.status(401).json({ message: "Verification code has expired. Request a new one." });
       }
 
       await storage.logAccountAudit({

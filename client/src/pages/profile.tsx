@@ -123,9 +123,34 @@ export default function Profile() {
     },
   });
 
-  const deleteAccountMutation = useMutation({
+  const [deleteStep, setDeleteStep] = useState(1);
+  const [deletionCode, setDeletionCode] = useState("");
+  const [codeDevDisplay, setCodeDevDisplay] = useState("");
+
+  const requestDeletionCodeMutation = useMutation({
     mutationFn: async (payload: { method: string; password?: string; confirmation?: string }) => {
-      return await apiRequest("POST", "/api/auth/delete-account", payload);
+      return await apiRequest("POST", "/api/auth/request-deletion-code", payload);
+    },
+    onSuccess: (data: any) => {
+      if (data.code) setCodeDevDisplay(data.code);
+      setDeleteStep(2);
+      toast({
+        title: "Code Sent",
+        description: "A verification code has been sent to your email.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send verification code.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (verificationCode: string) => {
+      return await apiRequest("POST", "/api/auth/delete-account", { verificationCode });
     },
     onSuccess: () => {
       toast({
@@ -199,19 +224,26 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = () => {
-    if (user?.hasPassword) {
-      // Local users verify with password
-      if (deletePassword) {
-        deleteAccountMutation.mutate({ method: "password", password: deletePassword });
-        setIsDeleteDialogOpen(false);
-        setDeletePassword("");
+    if (deleteStep === 1) {
+      // Step 1: Verify password/confirmation and request code
+      if (user?.hasPassword) {
+        if (deletePassword) {
+          requestDeletionCodeMutation.mutate({ method: "password", password: deletePassword });
+        }
+      } else {
+        if (deleteConfirmation === "DELETE") {
+          requestDeletionCodeMutation.mutate({ method: "text", confirmation: deleteConfirmation });
+        }
       }
     } else {
-      // OIDC users verify with "DELETE" text
-      if (deleteConfirmation === "DELETE") {
-        deleteAccountMutation.mutate({ method: "text", confirmation: deleteConfirmation });
+      // Step 2: Verify code and delete account
+      if (deletionCode) {
+        deleteAccountMutation.mutate(deletionCode);
         setIsDeleteDialogOpen(false);
+        setDeleteStep(1);
+        setDeletePassword("");
         setDeleteConfirmation("");
+        setDeletionCode("");
       }
     }
   };
@@ -669,54 +701,86 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Account Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Delete Account Dialog - 2-Step Verification */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
+        setIsDeleteDialogOpen(open);
+        if (!open) {
+          setDeleteStep(1);
+          setDeletePassword("");
+          setDeleteConfirmation("");
+          setDeletionCode("");
+          setCodeDevDisplay("");
+        }
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogTitle>Delete Account - Step {deleteStep} of 2</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your account and all associated data.
+              {deleteStep === 1 
+                ? "This action cannot be undone. We'll send a verification code to your email for confirmation."
+                : "Enter the verification code sent to your email to permanently delete your account."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="py-4">
-            {user?.hasPassword ? (
+          <div className="py-4 space-y-3">
+            {deleteStep === 1 ? (
               <>
-                <label htmlFor="delete-password" className="text-sm font-medium mb-2 block">
-                  Enter your password to confirm
-                </label>
-                <Input
-                  id="delete-password"
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                  placeholder="Password"
-                  data-testid="input-delete-password"
-                />
+                {user?.hasPassword ? (
+                  <>
+                    <label htmlFor="delete-password" className="text-sm font-medium mb-2 block">
+                      Enter your password to continue
+                    </label>
+                    <Input
+                      id="delete-password"
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="Password"
+                      data-testid="input-delete-password"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
+                      Type <span className="font-bold">DELETE</span> to continue
+                    </label>
+                    <Input
+                      id="delete-confirmation"
+                      type="text"
+                      value={deleteConfirmation}
+                      onChange={(e) => setDeleteConfirmation(e.target.value)}
+                      placeholder="DELETE"
+                      data-testid="input-delete-confirmation"
+                    />
+                  </>
+                )}
               </>
             ) : (
               <>
-                <label htmlFor="delete-confirmation" className="text-sm font-medium mb-2 block">
-                  Type <span className="font-bold">DELETE</span> to confirm
+                <label htmlFor="deletion-code" className="text-sm font-medium mb-2 block">
+                  Enter the 6-digit code from your email
                 </label>
                 <Input
-                  id="delete-confirmation"
+                  id="deletion-code"
                   type="text"
-                  value={deleteConfirmation}
-                  onChange={(e) => setDeleteConfirmation(e.target.value)}
-                  placeholder="DELETE"
-                  data-testid="input-delete-confirmation"
+                  maxLength={6}
+                  value={deletionCode}
+                  onChange={(e) => setDeletionCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  data-testid="input-deletion-code"
+                  className="text-center text-2xl tracking-widest"
                 />
+                {codeDevDisplay && (
+                  <p className="text-xs text-muted-foreground text-center bg-muted p-2 rounded">
+                    Dev: Code is {codeDevDisplay}
+                  </p>
+                )}
               </>
             )}
           </div>
 
           <AlertDialogFooter>
             <AlertDialogCancel
-              onClick={() => {
-                setDeleteConfirmation("");
-                setDeletePassword("");
-              }}
               data-testid="button-cancel-delete"
             >
               Cancel
@@ -724,13 +788,20 @@ export default function Profile() {
             <AlertDialogAction
               onClick={handleDeleteAccount}
               disabled={
-                (user?.hasPassword ? !deletePassword : deleteConfirmation !== "DELETE") ||
-                deleteAccountMutation.isPending
+                deleteStep === 1
+                  ? ((user?.hasPassword ? !deletePassword : deleteConfirmation !== "DELETE") || requestDeletionCodeMutation.isPending)
+                  : (!deletionCode || deleteAccountMutation.isPending)
               }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-delete"
             >
-              {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account"}
+              {requestDeletionCodeMutation.isPending 
+                ? "Sending Code..." 
+                : deleteAccountMutation.isPending 
+                ? "Deleting..." 
+                : deleteStep === 1 
+                ? "Send Code" 
+                : "Delete Account"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
