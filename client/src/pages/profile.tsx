@@ -1,4 +1,4 @@
-import { User, Mail, Calendar as CalendarIcon, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock } from "lucide-react";
+import { User, Mail, Calendar as CalendarIcon, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock, Loader2 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
