@@ -601,9 +601,9 @@ export default function Membership() {
             {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               {/* Feature 1 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-purple-500/20 hover:border-purple-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/40 dark:hover:border-purple-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-6 h-6 text-purple-400 flex-shrink-0 mt-1" />
+                  <Calendar className="w-6 h-6 text-purple-500 dark:text-purple-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">30-Day Planning View</h4>
                     <p className="text-sm text-muted-foreground">
@@ -614,9 +614,9 @@ export default function Membership() {
               </div>
 
               {/* Feature 2 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-pink-500/20 hover:border-pink-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-pink-500/20 dark:border-pink-500/30 hover:border-pink-500/40 dark:hover:border-pink-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <TrendingUp className="w-6 h-6 text-pink-400 flex-shrink-0 mt-1" />
+                  <TrendingUp className="w-6 h-6 text-pink-500 dark:text-pink-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">Platform Tracking</h4>
                     <p className="text-sm text-muted-foreground">
@@ -627,9 +627,9 @@ export default function Membership() {
               </div>
 
               {/* Feature 3 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-indigo-500/20 hover:border-indigo-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-indigo-500/20 dark:border-indigo-500/30 hover:border-indigo-500/40 dark:hover:border-indigo-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <Sparkles className="w-6 h-6 text-indigo-400 flex-shrink-0 mt-1" />
+                  <Sparkles className="w-6 h-6 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">Content Details</h4>
                     <p className="text-sm text-muted-foreground">
@@ -640,9 +640,9 @@ export default function Membership() {
               </div>
 
               {/* Feature 4 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-cyan-500/20 dark:border-cyan-500/30 hover:border-cyan-500/40 dark:hover:border-cyan-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <Infinity className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-1" />
+                  <Infinity className="w-6 h-6 text-cyan-500 dark:text-cyan-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">Unlimited Entries</h4>
                     <p className="text-sm text-muted-foreground">
@@ -653,9 +653,9 @@ export default function Membership() {
               </div>
 
               {/* Feature 5 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-amber-500/20 dark:border-amber-500/30 hover:border-amber-500/40 dark:hover:border-amber-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <Zap className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+                  <Zap className="w-6 h-6 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">Smart Navigation</h4>
                     <p className="text-sm text-muted-foreground">
@@ -666,9 +666,9 @@ export default function Membership() {
               </div>
 
               {/* Feature 6 */}
-              <div className="p-4 rounded-xl bg-white/5 border border-rose-500/20 hover:border-rose-500/40 hover:bg-white/10 transition-all">
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-rose-500/20 dark:border-rose-500/30 hover:border-rose-500/40 dark:hover:border-rose-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
-                  <Crown className="w-6 h-6 text-rose-400 flex-shrink-0 mt-1" />
+                  <Crown className="w-6 h-6 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-1" />
                   <div className="space-y-2">
                     <h4 className="font-semibold text-foreground">Priority Feature</h4>
                     <p className="text-sm text-muted-foreground">
@@ -696,7 +696,7 @@ export default function Membership() {
             </div>
 
               {/* Call to Action */}
-              <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 rounded-xl border border-primary/40 text-center space-y-3">
+              <div className="bg-gradient-to-r from-purple-600/15 dark:from-purple-600/25 to-pink-600/15 dark:to-pink-600/25 p-6 rounded-xl border border-primary/30 dark:border-primary/40 text-center space-y-3">
                 <p className="text-sm text-muted-foreground">
                   Start organizing your cosmic content strategy with Premium membership
                 </p>
