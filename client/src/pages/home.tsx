@@ -309,13 +309,13 @@ export default function Home() {
             <Search className="w-4 h-4 md:w-5 md:h-5 text-primary/60 dark:text-secondary/60 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Search users by username..."
+              placeholder={searchTab === "users" ? "Search users by username..." : "Search creations by prompt..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => searchQuery && searchResults.length > 0 && setShowSearchDropdown(true)}
+              onFocus={() => searchQuery && ((searchTab === "users" && searchResults.length > 0) || (searchTab === "creations" && creationResults.length > 0)) && setShowSearchDropdown(true)}
               className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:placeholder-opacity-100 transition-all"
               data-testid="input-search-bar"
-              aria-label="Search users by username"
+              aria-label={searchTab === "users" ? "Search users by username" : "Search creations by prompt"}
               autoComplete="off"
             />
             {searchQuery && (
@@ -324,6 +324,7 @@ export default function Home() {
                 onClick={() => {
                   setSearchQuery("");
                   setSearchResults([]);
+                  setCreationResults([]);
                   setShowSearchDropdown(false);
                 }}
                 className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-full transition-colors hover-elevate"
@@ -335,8 +336,43 @@ export default function Home() {
             )}
           </div>
 
-          {/* Search Results Dropdown */}
-          {showSearchDropdown && searchResults.length > 0 && (
+          {/* Search Tabs */}
+          <div className="absolute -bottom-12 left-0 flex gap-2" data-testid="search-tabs">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTab("users");
+                setCreationResults([]);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                searchTab === "users"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
+              }`}
+              data-testid="button-search-tab-users"
+            >
+              Users
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTab("creations");
+                setSearchResults([]);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                searchTab === "creations"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
+              }`}
+              data-testid="button-search-tab-creations"
+            >
+              <Star className="w-3 h-3" />
+              Creations
+            </button>
+          </div>
+
+          {/* Search Results Dropdown - Users */}
+          {showSearchDropdown && searchTab === "users" && searchResults.length > 0 && (
             <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="max-h-96 overflow-y-auto">
                 {searchResults.map((result, idx) => {
@@ -387,10 +423,48 @@ export default function Home() {
             </div>
           )}
 
+          {/* Search Results Dropdown - Creations */}
+          {showSearchDropdown && searchTab === "creations" && creationResults.length > 0 && (
+            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-1">
+                  {creationResults.map((creation) => (
+                    <button
+                      key={creation.id}
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCreationResults([]);
+                        setShowSearchDropdown(false);
+                      }}
+                      className="group relative aspect-square overflow-hidden hover:opacity-80 transition-opacity"
+                      data-testid={`button-creation-result-${creation.id}`}
+                    >
+                      <video
+                        src={creation.videoUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs line-clamp-1 font-semibold">
+                            {creation.prompt}
+                          </p>
+                          <p className="text-white/70 text-[10px]">
+                            {creation.length}s • {creation.aspectRatio}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* No Results Message */}
-          {showSearchDropdown && searchQuery && searchResults.length === 0 && (
+          {showSearchDropdown && searchQuery && searchResults.length === 0 && creationResults.length === 0 && (
             <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl p-4 text-center text-sm text-slate-600 dark:text-slate-400 animate-in fade-in slide-in-from-top-2 duration-200">
-              No users found matching "{searchQuery}"
+              No {searchTab === "users" ? "users" : "creations"} found matching "{searchQuery}"
             </div>
           )}
         </div>

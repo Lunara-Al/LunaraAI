@@ -121,5 +121,29 @@ export function createGalleryRouter(): Router {
     }
   });
 
+  router.get("/search", async (req: any, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+
+      const searchTerm = query.toLowerCase();
+      const allCreations = await storage.getAllVideoGenerations();
+      
+      const filtered = allCreations
+        .filter(video => 
+          video.displayOnProfile === 1 &&
+          (video.prompt.toLowerCase().includes(searchTerm) ||
+           (video.style && video.style.toLowerCase().includes(searchTerm)))
+        )
+        .slice(0, 12);
+
+      return res.json(filtered);
+    } catch (error) {
+      return res.status(500).json({ error: "Failed to search creations" });
+    }
+  });
+
   return router;
 }

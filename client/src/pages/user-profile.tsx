@@ -1,11 +1,12 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Crown, Calendar, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Crown, Calendar, User as UserIcon, Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MoonMenu from "@/components/moon-menu";
 import { format } from "date-fns";
+import { CreationsSection } from "@/components/creations-section";
 
 type UserProfileData = {
   id: string;
@@ -191,6 +192,11 @@ export default function UserProfile() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Creations Section */}
+        <div className="relative mt-12 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <CreationsSection userId={user.id} />
         </div>
       </div>
     </div>
