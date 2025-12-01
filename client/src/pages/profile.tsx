@@ -497,7 +497,7 @@ export default function Profile() {
       </div>
 
       {/* Content Calendar Section */}
-      <div className="max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
+      <div className="max-w-4xl mx-auto px-4 mt-20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
         <ContentCalendar user={user} />
       </div>
 
