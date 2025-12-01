@@ -95,15 +95,7 @@ export function createGalleryRouter(): Router {
         return res.status(404).json({ error: "Video not found or unauthorized" });
       }
 
-      const wsManager = getWebSocketManager();
-      if (wsManager) {
-        wsManager.broadcastToUser(userId, {
-          type: 'video-creation-toggled',
-          userId,
-          videoId: id,
-          display
-        });
-      }
+      // Note: WebSocket sync for creation toggle can be added when extending message types
 
       return res.json(updated);
     } catch (error) {

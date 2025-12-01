@@ -299,81 +299,85 @@ export default function Home() {
       <MoonMenu />
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
-        {/* Slim Glass Bubble Search Bar */}
+        {/* Search Section with Integrated Tabs */}
         <div className="relative group" ref={searchContainerRef}>
-          {/* Subtle glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 rounded-full blur-lg opacity-0 group-hover:opacity-60 transition-all duration-500" />
+          {/* Cosmic glow effect - enhanced */}
+          <div className="absolute -inset-2 bg-gradient-to-r from-primary/40 via-secondary/30 to-primary/40 rounded-2xl blur-2xl opacity-0 group-hover:opacity-70 group-focus-within:opacity-70 transition-all duration-500" />
           
-          {/* Search bar with glassmorphism */}
-          <div className="relative flex items-center gap-3 px-4 py-2.5 md:py-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-full shadow-lg hover:shadow-xl hover:shadow-primary/20 dark:hover:shadow-primary/20 transition-all duration-300 group-hover:border-primary/60 dark:group-hover:border-primary/50">
-            <Search className="w-4 h-4 md:w-5 md:h-5 text-primary/60 dark:text-secondary/60 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder={searchTab === "users" ? "Search users by username..." : "Search creations by prompt..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => searchQuery && ((searchTab === "users" && searchResults.length > 0) || (searchTab === "creations" && creationResults.length > 0)) && setShowSearchDropdown(true)}
-              className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:placeholder-opacity-100 transition-all"
-              data-testid="input-search-bar"
-              aria-label={searchTab === "users" ? "Search users by username" : "Search creations by prompt"}
-              autoComplete="off"
-            />
-            {searchQuery && (
+          {/* Main Container */}
+          <div className="relative space-y-2">
+            {/* Search Tabs - Segment Control Style */}
+            <div className="flex gap-1.5 px-1.5 py-1.5 bg-white/30 dark:bg-slate-900/30 backdrop-blur-md rounded-xl border border-white/40 dark:border-slate-700/40 w-fit" data-testid="search-tabs">
               <button
                 type="button"
                 onClick={() => {
-                  setSearchQuery("");
-                  setSearchResults([]);
+                  setSearchTab("users");
                   setCreationResults([]);
-                  setShowSearchDropdown(false);
                 }}
-                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-full transition-colors hover-elevate"
-                data-testid="button-clear-search"
-                aria-label="Clear search"
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  searchTab === "users"
+                    ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/50 scale-105"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/20 dark:hover:bg-slate-700/30"
+                }`}
+                data-testid="button-search-tab-users"
               >
-                <X className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <Search className="w-3 h-3" />
+                Users
               </button>
-            )}
-          </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTab("creations");
+                  setSearchResults([]);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                  searchTab === "creations"
+                    ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/50 scale-105"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/20 dark:hover:bg-slate-700/30"
+                }`}
+                data-testid="button-search-tab-creations"
+              >
+                <Star className="w-3 h-3" />
+                Creations
+              </button>
+            </div>
 
-          {/* Search Tabs */}
-          <div className="absolute -bottom-12 left-0 flex gap-2" data-testid="search-tabs">
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTab("users");
-                setCreationResults([]);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                searchTab === "users"
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
-              }`}
-              data-testid="button-search-tab-users"
-            >
-              Users
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchTab("creations");
-                setSearchResults([]);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                searchTab === "creations"
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
-              }`}
-              data-testid="button-search-tab-creations"
-            >
-              <Star className="w-3 h-3" />
-              Creations
-            </button>
+            {/* Search Input Bar */}
+            <div className="relative flex items-center gap-3 px-5 py-3 md:py-4 bg-white/60 dark:bg-slate-900/50 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-primary/20 dark:hover:shadow-primary/30 transition-all duration-300 group-hover:border-primary/70 dark:group-hover:border-primary/60">
+              <Search className="w-5 h-5 text-primary dark:text-secondary flex-shrink-0 opacity-70" />
+              <input
+                type="text"
+                placeholder={searchTab === "users" ? "Find users by username..." : "Discover creations by prompt..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery && ((searchTab === "users" && searchResults.length > 0) || (searchTab === "creations" && creationResults.length > 0)) && setShowSearchDropdown(true)}
+                className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium transition-all"
+                data-testid="input-search-bar"
+                aria-label={searchTab === "users" ? "Search users by username" : "Search creations by prompt"}
+                autoComplete="off"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                    setCreationResults([]);
+                    setShowSearchDropdown(false);
+                  }}
+                  className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded-full transition-all duration-200 hover-elevate"
+                  data-testid="button-clear-search"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Search Results Dropdown - Users */}
           {showSearchDropdown && searchTab === "users" && searchResults.length > 0 && (
-            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full mt-3 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="max-h-96 overflow-y-auto">
                 {searchResults.map((result, idx) => {
                   const initials = `${result.firstName?.[0] || ""}${result.lastName?.[0] || ""}`.toUpperCase() || "LU";
@@ -425,7 +429,7 @@ export default function Home() {
 
           {/* Search Results Dropdown - Creations */}
           {showSearchDropdown && searchTab === "creations" && creationResults.length > 0 && (
-            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full mt-3 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="max-h-96 overflow-y-auto">
                 <div className="grid grid-cols-2 gap-1">
                   {creationResults.map((creation) => (
@@ -463,8 +467,10 @@ export default function Home() {
 
           {/* No Results Message */}
           {showSearchDropdown && searchQuery && searchResults.length === 0 && creationResults.length === 0 && (
-            <div className="absolute top-full mt-2 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl p-4 text-center text-sm text-slate-600 dark:text-slate-400 animate-in fade-in slide-in-from-top-2 duration-200">
-              No {searchTab === "users" ? "users" : "creations"} found matching "{searchQuery}"
+            <div className="absolute top-full mt-3 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-2xl p-6 text-center text-sm text-slate-600 dark:text-slate-400 animate-in fade-in slide-in-from-top-2 duration-200 space-y-2">
+              <Sparkles className="w-8 h-8 mx-auto text-primary/40" />
+              <p className="font-medium">No {searchTab === "users" ? "users" : "creations"} found</p>
+              <p className="text-xs opacity-70">Try a different search query</p>
             </div>
           )}
         </div>
