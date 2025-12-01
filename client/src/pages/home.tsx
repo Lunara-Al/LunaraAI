@@ -563,13 +563,13 @@ export default function Home() {
               className="group relative bg-card rounded-2xl overflow-hidden border border-card-border hover-elevate transition-all duration-300 shadow-sm hover:shadow-lg"
               data-testid={`showcase-${index}`}
             >
-              <div className="aspect-video relative overflow-hidden bg-black/40">
+              <div className="aspect-video relative overflow-hidden bg-slate-100 dark:bg-black/40">
                 <img
                   src={video.image}
                   alt={video.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 dark:bg-black/60 backdrop-blur-sm">
                   <div className="rounded-full bg-gradient-to-r from-primary to-secondary p-3 shadow-lg">
                     <svg className="w-6 h-6 text-white fill-white" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
