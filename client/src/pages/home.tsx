@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,15 @@ type SearchResult = {
   createdAt: string | null;
 };
 
+type CreationSearchResult = {
+  id: number;
+  prompt: string;
+  videoUrl: string;
+  length: number;
+  aspectRatio: string;
+  userId: string | null;
+};
+
 export default function Home() {
   const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
@@ -58,7 +67,9 @@ export default function Home() {
   const [showPresets, setShowPresets] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [creationResults, setCreationResults] = useState<CreationSearchResult[]>([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchTab, setSearchTab] = useState<"users" | "creations">("users");
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   
@@ -80,17 +91,29 @@ export default function Home() {
 
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setCreationResults([]);
       setShowSearchDropdown(false);
       return;
     }
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
-        if (response.ok) {
-          const results = await response.json();
-          setSearchResults(results);
-          setShowSearchDropdown(true);
+        if (searchTab === "users") {
+          const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+          if (response.ok) {
+            const results = await response.json();
+            setSearchResults(results);
+            setCreationResults([]);
+            setShowSearchDropdown(true);
+          }
+        } else {
+          const response = await fetch(`/api/creations/search?q=${encodeURIComponent(searchQuery)}`);
+          if (response.ok) {
+            const results = await response.json();
+            setCreationResults(results);
+            setSearchResults([]);
+            setShowSearchDropdown(true);
+          }
         }
       } catch (error) {
         console.error("Search error:", error);
@@ -100,7 +123,7 @@ export default function Home() {
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [searchQuery]);
+  }, [searchQuery, searchTab]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
