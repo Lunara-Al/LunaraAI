@@ -89,7 +89,7 @@ export default function Contact() {
     sendMessageMutation.mutate({ name, email, message });
   };
   return (
-    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
       <MoonMenu />
       
       <div className="max-w-4xl mx-auto space-y-8">

@@ -139,7 +139,7 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Loading your settings...</p>
@@ -149,7 +149,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 md:py-12 bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen px-4 py-8 md:py-12 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
       <MoonMenu />
       
       <div className="max-w-5xl mx-auto space-y-8 pt-6 md:pt-8">

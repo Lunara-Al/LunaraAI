@@ -61,7 +61,7 @@ export default function Gallery() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card px-4 py-6 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900 px-4 py-6 md:p-8">
       <MoonMenu />
 
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">

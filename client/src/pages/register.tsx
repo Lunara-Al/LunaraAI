@@ -59,8 +59,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-card">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
+      <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-3">
           <div className="flex justify-center">
             <div className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 moon-glow">
@@ -73,7 +73,7 @@ export default function Register() {
           <p className="text-muted-foreground">Create your cosmic ASMR account</p>
         </div>
 
-        <Card className="moon-glow">
+        <Card className="moon-glow hover-elevate transition-all duration-300">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Create Account</CardTitle>
             <CardDescription>Start generating cosmic ASMR videos for free</CardDescription>
