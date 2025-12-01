@@ -232,10 +232,10 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-          <p className="text-muted-foreground text-sm">Loading your profile...</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">Loading your profile...</p>
         </div>
       </div>
     );
