@@ -36,6 +36,28 @@ export function ProfilePictureCropper({
   const scaledCanvasSize = CANVAS_SIZE * DPI;
   const scaledRadius = CIRCLE_RADIUS * DPI;
 
+  // Clamp pan values to keep image within bounds
+  const clampPan = useCallback(
+    (currentPanX: number, currentPanY: number): { x: number; y: number } => {
+      if (!imageRef.current) return { x: currentPanX, y: currentPanY };
+
+      const imgWidth = imageRef.current.width * zoom;
+      const imgHeight = imageRef.current.height * zoom;
+      const maxPan = CIRCLE_RADIUS;
+
+      // Calculate how much the image extends beyond the circle
+      const xExtend = (imgWidth / 2 - CIRCLE_RADIUS) / zoom;
+      const yExtend = (imgHeight / 2 - CIRCLE_RADIUS) / zoom;
+
+      // Clamp pan to keep image reasonably positioned
+      const clampedX = Math.max(-xExtend, Math.min(xExtend, currentPanX));
+      const clampedY = Math.max(-yExtend, Math.min(yExtend, currentPanY));
+
+      return { x: clampedX, y: clampedY };
+    },
+    [zoom]
+  );
+
   // Draw canvas
   const draw = useCallback(
     (currentZoom: number, currentPanX: number, currentPanY: number) => {
@@ -126,9 +148,11 @@ export function ProfilePictureCropper({
     const newPanX = panX + movementX;
     const newPanY = panY + movementY;
 
-    setPanX(newPanX);
-    setPanY(newPanY);
-    scheduleRedraw(zoom, newPanX, newPanY);
+    const clamped = clampPan(newPanX, newPanY);
+
+    setPanX(clamped.x);
+    setPanY(clamped.y);
+    scheduleRedraw(zoom, clamped.x, clamped.y);
   };
 
   const handleMouseUp = () => {
@@ -173,10 +197,12 @@ export function ProfilePictureCropper({
       const newPanX = panX + movementX;
       const newPanY = panY + movementY;
 
-      setPanX(newPanX);
-      setPanY(newPanY);
+      const clamped = clampPan(newPanX, newPanY);
+
+      setPanX(clamped.x);
+      setPanY(clamped.y);
       setDragStart({ x: touch.clientX, y: touch.clientY });
-      scheduleRedraw(zoom, newPanX, newPanY);
+      scheduleRedraw(zoom, clamped.x, clamped.y);
     } else if (e.touches.length === 2 && touchDistance !== null) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
