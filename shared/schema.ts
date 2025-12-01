@@ -121,6 +121,7 @@ export const videoGenerations = pgTable("video_generations", {
   length: integer("length").default(DEFAULT_VIDEO_LENGTH),
   aspectRatio: varchar("aspect_ratio", { length: 10 }).default("1:1"),
   style: text("style"),
+  displayOnProfile: integer("display_on_profile").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
