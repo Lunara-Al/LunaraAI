@@ -1,4 +1,4 @@
-import { User, Mail, Calendar as CalendarIcon, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock, Loader2 } from "lucide-react";
+import { User, Mail, Calendar as CalendarIcon, LogOut, Crown, Trash2, Upload, Edit2, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -124,6 +124,9 @@ export default function Profile() {
   });
 
   const [deletePasswordError, setDeletePasswordError] = useState<string>("");
+  const [deletePasswordFocused, setDeletePasswordFocused] = useState(false);
+
+  const isPasswordValid = deletePassword.length > 0 && !deletePasswordError;
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -202,12 +205,26 @@ export default function Profile() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (deletePassword) {
-      deleteAccountMutation.mutate(deletePassword);
-      setIsDeleteDialogOpen(false);
-      setDeletePassword("");
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!deletePassword.trim()) {
+      setDeletePasswordError("Password is required");
+      return;
     }
+
+    deleteAccountMutation.mutate(deletePassword);
+    setIsDeleteDialogOpen(false);
+    setDeletePassword("");
+    setDeletePasswordError("");
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeletePassword("");
+    setDeletePasswordError("");
+    setDeletePasswordFocused(false);
+    setDeleteConfirmation("");
   };
 
   // Handle unauthorized access
@@ -663,40 +680,42 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Account Dialog - Password Verification */}
+      {/* Delete Account Dialog - Secure Password Verification */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={(open) => {
-        setIsDeleteDialogOpen(open);
-        if (!open) {
-          setDeletePassword("");
-          setDeleteConfirmation("");
-        }
+        if (!open) handleCloseDeleteDialog();
+        else setIsDeleteDialogOpen(true);
       }}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Delete Account
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Enter your password to continue.
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          
-          <div className="space-y-4">
+
+          <form onSubmit={handleDeleteAccount} className="space-y-4">
             {/* Warning Section */}
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-              <div className="flex gap-3">
-                <div className="text-destructive text-xl mt-0.5">⚠️</div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-destructive text-sm">This action is permanent</h4>
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>All your videos will be deleted forever</li>
-                    <li>Your profile and account data will be erased</li>
-                    <li>You cannot undo this action</li>
-                  </ul>
-                </div>
-              </div>
+              <h4 className="font-semibold text-destructive text-sm mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                This action is permanent
+              </h4>
+              <ul className="text-xs text-muted-foreground space-y-1.5 ml-6">
+                <li>• All your videos will be deleted forever</li>
+                <li>• Your profile and account data will be erased</li>
+                <li>• You cannot undo this action</li>
+              </ul>
             </div>
 
-            {/* Password Input */}
+            {/* Password Input Field */}
             <div className="space-y-2">
               <label htmlFor="delete-password" className="text-sm font-semibold block">
-                Enter your password to delete your account
+                Enter your password
               </label>
+              
               <div className="relative">
                 <Input
                   id="delete-password"
@@ -704,64 +723,80 @@ export default function Profile() {
                   value={deletePassword}
                   onChange={(e) => {
                     setDeletePassword(e.target.value);
-                    setDeletePasswordError("");
+                    if (deletePasswordError) setDeletePasswordError("");
                   }}
-                  onFocus={() => setDeletePasswordError("")}
+                  onFocus={() => setDeletePasswordFocused(true)}
+                  onBlur={() => setDeletePasswordFocused(false)}
                   placeholder="••••••••"
+                  disabled={deleteAccountMutation.isPending}
+                  aria-label="Password for account deletion"
+                  aria-invalid={!!deletePasswordError}
                   data-testid="input-delete-password"
                   autoFocus
-                  className={deletePasswordError ? "border-destructive pr-10" : ""}
+                  className={`pr-10 transition-colors ${
+                    deletePasswordError 
+                      ? "border-destructive focus:border-destructive" 
+                      : isPasswordValid 
+                      ? "border-green-500 focus:border-green-500" 
+                      : ""
+                  }`}
                 />
+
+                {/* Status Icon */}
                 {deletePasswordError && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-destructive">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18.101 12.93a1 1 0 00-1.414-1.414L10 14.586l-6.687-6.687a1 1 0 00-1.414 1.414l8.101 8.101a1 1 0 001.414 0l8.101-8.101z" clipRule="evenodd" />
-                    </svg>
-                  </div>
+                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0" />
+                )}
+                {isPasswordValid && (
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0" />
                 )}
               </div>
+
+              {/* Error Message */}
               {deletePasswordError && (
-                <p className="text-xs text-destructive flex items-center gap-1.5">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
+                <p className="text-xs text-destructive flex items-center gap-1.5" role="alert">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {deletePasswordError}
                 </p>
               )}
-              {deletePassword && !deletePasswordError && (
+
+              {/* Success Message */}
+              {isPasswordValid && (
                 <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  Password entered
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  Password verified. Ready to delete.
                 </p>
               )}
             </div>
-          </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setDeletePassword("")}
-              data-testid="button-cancel-delete"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <Button
-              onClick={handleDeleteAccount}
-              disabled={!deletePassword || deleteAccountMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="button-confirm-delete"
-            >
-              {deleteAccountMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Permanently Delete"
-              )}
-            </Button>
-          </AlertDialogFooter>
+            {/* Footer */}
+            <AlertDialogFooter className="mt-6">
+              <AlertDialogCancel
+                onClick={handleCloseDeleteDialog}
+                disabled={deleteAccountMutation.isPending}
+                data-testid="button-cancel-delete"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <Button
+                type="submit"
+                disabled={!isPasswordValid || deleteAccountMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="button-confirm-delete"
+              >
+                {deleteAccountMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting Account...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Permanently Delete
+                  </>
+                )}
+              </Button>
+            </AlertDialogFooter>
+          </form>
         </AlertDialogContent>
       </AlertDialog>
     </div>

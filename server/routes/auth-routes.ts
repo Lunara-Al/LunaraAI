@@ -103,28 +103,35 @@ export function createAuthRouter(): Router {
     }
   });
 
+  // Delete user account with password verification
   router.post("/delete-account", isAuthenticated, async (req: any, res) => {
     try {
       const user = await getAuthenticatedUser(req);
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
       const { password } = req.body;
 
-      // Validate password is provided
-      if (!password) return res.status(400).json({ message: "Password is required" });
-
-      // Verify password authentication method exists for this user
-      if (!user.passwordHash) {
-        return res.status(400).json({ message: "This account uses a different authentication method. Password deletion is not available." });
+      // Step 1: Validate password input
+      if (!password || typeof password !== "string") {
+        return res.status(400).json({ message: "Password is required" });
       }
 
-      // Verify the password against THIS user's password hash (personal verification)
-      const isValid = await authService.verifyPassword(password, user.passwordHash);
-      if (!isValid) {
+      // Step 2: Verify user has password-based authentication
+      if (!user.passwordHash) {
+        return res.status(400).json({ 
+          message: "This account uses a different authentication method. Password deletion is not available." 
+        });
+      }
+
+      // Step 3: Verify password matches THIS user's personal password hash
+      const isPasswordValid = await authService.verifyPassword(password, user.passwordHash);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "Incorrect password" });
       }
 
-      // Log account deletion for audit trail
+      // Step 4: Log deletion for audit trail (before deletion)
       await storage.logAccountAudit({
         userId: user.id,
         email: user.email || "",
@@ -133,15 +140,18 @@ export function createAuthRouter(): Router {
         authProvider: "local",
       });
 
-      // Permanently delete all user data
+      // Step 5: Delete all user data
       await storage.deleteUserAccount(user.id);
 
-      // End user session
-      req.logout(() => {
+      // Step 6: End user session
+      req.logout((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Account deleted but logout failed" });
+        }
         res.json({ success: true, message: "Account deleted successfully" });
       });
     } catch (error) {
-      console.error("Error in delete-account:", error);
+      console.error("Error in delete-account route:", error);
       res.status(500).json({ message: "Failed to delete account. Please try again." });
     }
   });
