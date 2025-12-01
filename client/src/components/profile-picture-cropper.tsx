@@ -10,11 +10,6 @@ interface ProfilePictureCropperProps {
   onCancel: () => void;
 }
 
-interface CropState {
-  zoom: number;
-  pan: { x: number; y: number };
-}
-
 interface TouchPoint {
   id: number;
   x: number;
@@ -25,7 +20,7 @@ interface GestureState {
   touchPoints: Map<number, TouchPoint>;
   initialDistance: number | null;
   initialZoom: number | null;
-  previousPan: { x: number; y: number };
+  initialTouchPosition: { x: number; y: number } | null;
 }
 
 // Type-safe canvas context utilities
@@ -51,7 +46,7 @@ const clampZoom = (zoom: number, min: number = 0.5, max: number = 4): number => 
   return Math.max(min, Math.min(max, zoom));
 };
 
-// Advanced input validation utilities
+// Input validation utilities
 interface ZoomInputValidation {
   isValid: boolean;
   error: string | null;
@@ -106,12 +101,13 @@ export function ProfilePictureCropper({
   const [zoomInputError, setZoomInputError] = useState<string | null>(null);
 
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const stateRef = useRef<CropState>({ zoom: 1, pan: { x: 0, y: 0 } });
+  const panRef = useRef({ x: 0, y: 0 });
+  const zoomRef = useRef(1);
   const gestureRef = useRef<GestureState>({
     touchPoints: new Map(),
     initialDistance: null,
     initialZoom: null,
-    previousPan: { x: 0, y: 0 },
+    initialTouchPosition: null,
   });
 
   // High-DPI support for crisp rendering
@@ -244,7 +240,8 @@ export function ProfilePictureCropper({
       const processedImg = downscaleImage(img);
       processedImg.onload = () => {
         imageRef.current = processedImg;
-        stateRef.current = { zoom: 1, pan: { x: 0, y: 0 } };
+        panRef.current = { x: 0, y: 0 };
+        zoomRef.current = 1;
         setZoom(1);
         setPan({ x: 0, y: 0 });
         setZoomInputValue(normalizeZoomDisplay(1));
@@ -267,37 +264,43 @@ export function ProfilePictureCropper({
     setDragStart({ x: e.clientX, y: e.clientY });
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !imageRef.current) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (!isDragging || !imageRef.current) return;
 
-    const deltaX = e.clientX - dragStart.x;
-    const deltaY = e.clientY - dragStart.y;
+      const deltaX = e.clientX - dragStart.x;
+      const deltaY = e.clientY - dragStart.y;
 
-    const newPan = {
-      x: stateRef.current.pan.x + deltaX,
-      y: stateRef.current.pan.y + deltaY,
-    };
+      const newPan = {
+        x: panRef.current.x + deltaX,
+        y: panRef.current.y + deltaY,
+      };
 
-    stateRef.current.pan = newPan;
-    setPan(newPan);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    scheduleRedraw(imageRef.current, stateRef.current.zoom, newPan);
-  }, [isDragging, dragStart, scheduleRedraw]);
+      panRef.current = newPan;
+      setPan(newPan);
+      setDragStart({ x: e.clientX, y: e.clientY });
+      scheduleRedraw(imageRef.current, zoomRef.current, newPan);
+    },
+    [isDragging, dragStart, scheduleRedraw]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!imageRef.current) return;
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
+      if (!imageRef.current) return;
 
-    const newZoom = clampZoom(stateRef.current.zoom + (e.deltaY > 0 ? -0.1 : 0.1));
-    stateRef.current.zoom = newZoom;
-    setZoom(newZoom);
-    setZoomInputValue(normalizeZoomDisplay(newZoom));
-    scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
-  }, [scheduleRedraw]);
+      const newZoom = clampZoom(zoomRef.current + (e.deltaY > 0 ? -0.1 : 0.1));
+      zoomRef.current = newZoom;
+      setZoom(newZoom);
+      setZoomInputValue(normalizeZoomDisplay(newZoom));
+      scheduleRedraw(imageRef.current, newZoom, panRef.current);
+    },
+    [scheduleRedraw]
+  );
 
   // ============ TOUCH HANDLERS ============
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
@@ -322,61 +325,65 @@ export function ProfilePictureCropper({
     if (gesture.touchPoints.size === 2) {
       const points = Array.from(gesture.touchPoints.values());
       gesture.initialDistance = calculateDistance(points[0], points[1]);
-      gesture.initialZoom = stateRef.current.zoom;
-      gesture.previousPan = { ...stateRef.current.pan };
+      gesture.initialZoom = zoomRef.current;
     } else if (gesture.touchPoints.size === 1) {
-      gesture.previousPan = { ...stateRef.current.pan };
+      const point = Array.from(gesture.touchPoints.values())[0];
+      gesture.initialTouchPosition = { x: point.x, y: point.y };
     }
   }, []);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!imageRef.current || gestureRef.current.touchPoints.size === 0) return;
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      e.preventDefault();
+      if (!imageRef.current || gestureRef.current.touchPoints.size === 0) return;
 
-    const gesture = gestureRef.current;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+      const gesture = gestureRef.current;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
 
-    Array.from(e.touches).forEach((touch) => {
-      const point = gesture.touchPoints.get(touch.identifier);
-      if (point) {
-        point.x = touch.clientX - rect.left;
-        point.y = touch.clientY - rect.top;
+      // Update touch points
+      Array.from(e.touches).forEach((touch) => {
+        const point = gesture.touchPoints.get(touch.identifier);
+        if (point) {
+          point.x = touch.clientX - rect.left;
+          point.y = touch.clientY - rect.top;
+        }
+      });
+
+      if (gesture.touchPoints.size === 2) {
+        // Two-finger pinch zoom
+        const points = Array.from(gesture.touchPoints.values());
+        const currentDistance = calculateDistance(points[0], points[1]);
+
+        if (gesture.initialDistance && gesture.initialZoom) {
+          const pinchRatio = currentDistance / gesture.initialDistance;
+          const newZoom = clampZoom(gesture.initialZoom * pinchRatio);
+
+          zoomRef.current = newZoom;
+          setZoom(newZoom);
+          setZoomInputValue(normalizeZoomDisplay(newZoom));
+          scheduleRedraw(imageRef.current, newZoom, panRef.current);
+        }
+      } else if (gesture.touchPoints.size === 1 && gesture.initialTouchPosition) {
+        // Single-finger pan
+        const point = Array.from(gesture.touchPoints.values())[0];
+        const deltaX = point.x - gesture.initialTouchPosition.x;
+        const deltaY = point.y - gesture.initialTouchPosition.y;
+
+        const newPan = {
+          x: panRef.current.x + deltaX,
+          y: panRef.current.y + deltaY,
+        };
+
+        panRef.current = newPan;
+        setPan(newPan);
+        scheduleRedraw(imageRef.current, zoomRef.current, newPan);
       }
-    });
-
-    if (gesture.touchPoints.size === 2) {
-      const points = Array.from(gesture.touchPoints.values());
-      const currentDistance = calculateDistance(points[0], points[1]);
-
-      if (gesture.initialDistance && gesture.initialZoom) {
-        const pinchRatio = currentDistance / gesture.initialDistance;
-        const newZoom = clampZoom(gesture.initialZoom * pinchRatio);
-
-        stateRef.current.zoom = newZoom;
-        setZoom(newZoom);
-        setZoomInputValue(normalizeZoomDisplay(newZoom));
-        scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
-      }
-    } else if (gesture.touchPoints.size === 1) {
-      const point = Array.from(gesture.touchPoints.values())[0];
-      const initialPoint = gesture.previousPan;
-
-      const deltaX = point.x - (rect.left + rect.width / 2);
-      const deltaY = point.y - (rect.top + rect.height / 2);
-
-      const newPan = {
-        x: initialPoint.x + deltaX,
-        y: initialPoint.y + deltaY,
-      };
-
-      stateRef.current.pan = newPan;
-      setPan(newPan);
-      scheduleRedraw(imageRef.current, stateRef.current.zoom, newPan);
-    }
-  }, [scheduleRedraw]);
+    },
+    [scheduleRedraw]
+  );
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -389,31 +396,33 @@ export function ProfilePictureCropper({
     if (gesture.touchPoints.size === 0) {
       gesture.initialDistance = null;
       gesture.initialZoom = null;
+      gesture.initialTouchPosition = null;
     }
   }, []);
 
   // ============ ZOOM CONTROL HANDLERS ============
   const handleZoomIn = useCallback(() => {
     if (!imageRef.current) return;
-    const newZoom = clampZoom(stateRef.current.zoom + 0.2);
-    stateRef.current.zoom = newZoom;
+    const newZoom = clampZoom(zoomRef.current + 0.2);
+    zoomRef.current = newZoom;
     setZoom(newZoom);
     setZoomInputValue(normalizeZoomDisplay(newZoom));
-    scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
+    scheduleRedraw(imageRef.current, newZoom, panRef.current);
   }, [scheduleRedraw]);
 
   const handleZoomOut = useCallback(() => {
     if (!imageRef.current) return;
-    const newZoom = clampZoom(stateRef.current.zoom - 0.2);
-    stateRef.current.zoom = newZoom;
+    const newZoom = clampZoom(zoomRef.current - 0.2);
+    zoomRef.current = newZoom;
     setZoom(newZoom);
     setZoomInputValue(normalizeZoomDisplay(newZoom));
-    scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
+    scheduleRedraw(imageRef.current, newZoom, panRef.current);
   }, [scheduleRedraw]);
 
   const handleReset = useCallback(() => {
     if (!imageRef.current) return;
-    stateRef.current = { zoom: 1, pan: { x: 0, y: 0 } };
+    panRef.current = { x: 0, y: 0 };
+    zoomRef.current = 1;
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setZoomInputValue(normalizeZoomDisplay(1));
@@ -426,14 +435,14 @@ export function ProfilePictureCropper({
   const closeZoomInput = useCallback(() => {
     setIsZoomInputMode(false);
     setZoomInputError(null);
-    setZoomInputValue(normalizeZoomDisplay(stateRef.current.zoom));
+    setZoomInputValue(normalizeZoomDisplay(zoomRef.current));
     blurProcessingRef.current = false;
   }, []);
 
   const handleZoomDisplayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     setIsZoomInputMode(true);
-    setZoomInputValue(normalizeZoomDisplay(stateRef.current.zoom));
+    setZoomInputValue(normalizeZoomDisplay(zoomRef.current));
     setZoomInputError(null);
     blurProcessingRef.current = false;
 
@@ -444,7 +453,7 @@ export function ProfilePictureCropper({
   }, []);
 
   const applyZoomInput = useCallback((inputValue: string) => {
-    if (!imageRef.current) return;
+    if (!imageRef.current) return false;
 
     const validation = parseZoomInput(inputValue);
 
@@ -456,12 +465,12 @@ export function ProfilePictureCropper({
     if (validation.value === null) return false;
 
     const newZoom = clampZoom(validation.value);
-    stateRef.current.zoom = newZoom;
+    zoomRef.current = newZoom;
     setZoom(newZoom);
     setZoomInputValue(normalizeZoomDisplay(newZoom));
     setZoomInputError(null);
     closeZoomInput();
-    scheduleRedraw(imageRef.current, newZoom, stateRef.current.pan);
+    scheduleRedraw(imageRef.current, newZoom, panRef.current);
     return true;
   }, [closeZoomInput, scheduleRedraw]);
 
@@ -470,15 +479,18 @@ export function ProfilePictureCropper({
     setZoomInputError(null);
   }, []);
 
-  const handleZoomInputKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      applyZoomInput(zoomInputValue);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      closeZoomInput();
-    }
-  }, [zoomInputValue, applyZoomInput, closeZoomInput]);
+  const handleZoomInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        applyZoomInput(zoomInputValue);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeZoomInput();
+      }
+    },
+    [zoomInputValue, applyZoomInput, closeZoomInput]
+  );
 
   const handleZoomInputBlur = useCallback(() => {
     if (blurProcessingRef.current) return;
@@ -494,6 +506,7 @@ export function ProfilePictureCropper({
     }
   }, [isZoomInputMode, zoomInputValue, applyZoomInput]);
 
+  // ============ CROP HANDLER - FIXED ============
   const handleCrop = useCallback(() => {
     if (!imageRef.current) return;
 
@@ -505,32 +518,46 @@ export function ProfilePictureCropper({
     const ctx = cropCanvas.getContext("2d") as CanvasRenderingContext2D;
     if (!ctx) return;
 
+    // Create circular clipping region
     ctx.beginPath();
     ctx.arc(cropSize / 2, cropSize / 2, cropSize / 2, 0, Math.PI * 2);
     ctx.clip();
 
     const centerX = SCALED_CANVAS_SIZE / 2;
     const centerY = SCALED_CANVAS_SIZE / 2;
-    const scaledWidth = imageRef.current.width * stateRef.current.zoom;
-    const scaledHeight = imageRef.current.height * stateRef.current.zoom;
-    const imgX = (SCALED_CANVAS_SIZE - scaledWidth) / 2 + stateRef.current.pan.x * DPI;
-    const imgY = (SCALED_CANVAS_SIZE - scaledHeight) / 2 + stateRef.current.pan.y * DPI;
 
-    const cropX = centerX - SCALED_CROP_RADIUS;
-    const cropY = centerY - SCALED_CROP_RADIUS;
+    // Calculate scaled image dimensions on the display canvas
+    const scaledWidth = imageRef.current.width * zoomRef.current;
+    const scaledHeight = imageRef.current.height * zoomRef.current;
 
+    // Position of image on display canvas (accounting for pan and center offset)
+    const displayImgX = (SCALED_CANVAS_SIZE - scaledWidth) / 2 + panRef.current.x * DPI;
+    const displayImgY = (SCALED_CANVAS_SIZE - scaledHeight) / 2 + panRef.current.y * DPI;
+
+    // Circle bounds on display canvas
+    const circleLeft = centerX - SCALED_CROP_RADIUS;
+    const circleTop = centerY - SCALED_CROP_RADIUS;
+
+    // Map circle bounds to image coordinates
+    const srcX = (circleLeft - displayImgX) / zoomRef.current;
+    const srcY = (circleTop - displayImgY) / zoomRef.current;
+    const srcWidth = (SCALED_CROP_RADIUS * 2) / zoomRef.current;
+    const srcHeight = (SCALED_CROP_RADIUS * 2) / zoomRef.current;
+
+    // Draw the cropped portion
     ctx.drawImage(
       imageRef.current,
-      (cropX - imgX) / stateRef.current.zoom,
-      (cropY - imgY) / stateRef.current.zoom,
-      (SCALED_CROP_RADIUS * 2) / stateRef.current.zoom,
-      (SCALED_CROP_RADIUS * 2) / stateRef.current.zoom,
+      srcX,
+      srcY,
+      srcWidth,
+      srcHeight,
       0,
       0,
       cropSize,
       cropSize
     );
 
+    // Convert to blob and send
     cropCanvas.toBlob(
       (blob) => {
         if (!blob) return;
