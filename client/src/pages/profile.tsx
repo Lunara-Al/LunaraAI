@@ -125,6 +125,7 @@ export default function Profile() {
 
   const [deletePasswordVerification, setDeletePasswordVerification] = useState<"verifying" | "correct" | "incorrect" | null>(null);
   const [deletePasswordFocused, setDeletePasswordFocused] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   // Debounce timer for password verification
   const verifyPasswordTimeoutRef = useRef<NodeJS.Timeout>();
@@ -281,6 +282,7 @@ export default function Profile() {
     setDeletePasswordVerification(null);
     setDeletePasswordFocused(false);
     setDeleteConfirmation("");
+    setShowDeletePassword(false);
 
     // Clear any pending verification timeout
     if (verifyPasswordTimeoutRef.current) {
@@ -780,7 +782,7 @@ export default function Profile() {
               <div className="relative">
                 <Input
                   id="delete-password"
-                  type="password"
+                  type={showDeletePassword ? "text" : "password"}
                   value={deletePassword}
                   onChange={(e) => handleDeletePasswordChange(e.target.value)}
                   onFocus={() => setDeletePasswordFocused(true)}
@@ -791,7 +793,7 @@ export default function Profile() {
                   aria-invalid={deletePasswordVerification === "incorrect"}
                   data-testid="input-delete-password"
                   autoFocus
-                  className={`pr-10 transition-colors ${
+                  className={`pl-11 pr-10 transition-colors ${
                     deletePasswordVerification === "incorrect"
                       ? "border-destructive focus:border-destructive"
                       : deletePasswordVerification === "correct"
@@ -800,15 +802,31 @@ export default function Profile() {
                   }`}
                 />
 
+                {/* Password Visibility Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword(!showDeletePassword)}
+                  disabled={deleteAccountMutation.isPending || !deletePassword}
+                  aria-label={showDeletePassword ? "Hide password" : "Show password"}
+                  data-testid="button-toggle-password-visibility"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded px-1"
+                >
+                  {showDeletePassword ? (
+                    <EyeOff className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <Eye className="w-4 h-4 flex-shrink-0" />
+                  )}
+                </button>
+
                 {/* Status Icon */}
                 {deletePasswordVerification === "verifying" && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
                 )}
                 {deletePasswordVerification === "incorrect" && (
-                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0" />
+                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive flex-shrink-0 pointer-events-none" />
                 )}
                 {deletePasswordVerification === "correct" && (
-                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0 pointer-events-none" />
                 )}
               </div>
 
