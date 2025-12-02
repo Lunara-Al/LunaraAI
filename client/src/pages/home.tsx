@@ -446,15 +446,26 @@ export default function Home() {
         <Card className="p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
             {/* Image Upload Section */}
-            <div className="space-y-3">
+            <div className="space-y-3 relative">
+              {user?.membershipTier === 'free' && (
+                <div className="absolute inset-0 bg-background/70 dark:bg-slate-950/70 rounded-lg z-20 flex items-center justify-center backdrop-blur-sm">
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/20 rounded-full">
+                      <Crown className="w-3 h-3 text-primary" />
+                      <span className="text-xs font-semibold text-primary">Pro Feature</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Upgrade to Pro or Premium</p>
+                  </div>
+                </div>
+              )}
               <Label className="text-sm font-semibold flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-secondary" />
-                Reference Image (Recommended)
+                Reference Image {user?.membershipTier === 'free' && <span className="text-primary text-xs ml-auto">Pro</span>}
               </Label>
               <p className="text-xs text-muted-foreground">Upload an image to blend with your prompt for more consistent visual style</p>
               
               {!imagePreview ? (
-                <label className="flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 dark:border-primary/40 rounded-lg bg-primary/5 dark:bg-primary/15 hover:border-primary/50 dark:hover:border-primary/60 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer group">
+                <label className={`flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 dark:border-primary/40 rounded-lg bg-primary/5 dark:bg-primary/15 hover:border-primary/50 dark:hover:border-primary/60 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer group ${user?.membershipTier === 'free' ? 'opacity-50' : ''}`}>
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <Upload className="w-6 h-6 text-primary/60 dark:text-primary/50 group-hover:text-primary dark:group-hover:text-primary/80 transition-colors" />
                     <div className="text-center">
@@ -466,13 +477,13 @@ export default function Home() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageSelect}
-                    disabled={generateVideoMutation.isPending || isProcessingImage}
+                    disabled={generateVideoMutation.isPending || isProcessingImage || user?.membershipTier === 'free'}
                     className="hidden"
                     data-testid="input-image"
                   />
                 </label>
               ) : (
-                <div className="relative rounded-lg overflow-hidden border-2 border-primary/30 dark:border-primary/40 bg-primary/5 dark:bg-primary/15 p-3">
+                <div className={`relative rounded-lg overflow-hidden border-2 border-primary/30 dark:border-primary/40 bg-primary/5 dark:bg-primary/15 p-3 ${user?.membershipTier === 'free' ? 'opacity-50' : ''}`}>
                   <img 
                     src={imagePreview} 
                     alt="Reference" 
@@ -484,7 +495,7 @@ export default function Home() {
                     size="icon"
                     variant="destructive"
                     onClick={handleRemoveImage}
-                    disabled={generateVideoMutation.isPending}
+                    disabled={generateVideoMutation.isPending || user?.membershipTier === 'free'}
                     className="absolute top-2 right-2 h-8 w-8"
                     data-testid="button-remove-image"
                   >
@@ -545,9 +556,19 @@ export default function Home() {
               </div>
 
               {/* Style */}
-              <div className="space-y-3">
+              <div className="space-y-3 relative">
+                {user?.membershipTier === 'free' && (
+                  <div className="absolute inset-0 bg-background/70 dark:bg-slate-950/70 rounded-lg z-20 flex items-center justify-center backdrop-blur-sm">
+                    <div className="text-center space-y-1">
+                      <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-primary/20 rounded-full">
+                        <Crown className="w-2.5 h-2.5 text-primary" />
+                        <span className="text-xs font-semibold text-primary">Pro</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <Label htmlFor="style" className="text-xs font-semibold text-muted-foreground">
-                  Style (Optional)
+                  Style (Optional) {user?.membershipTier === 'free' && <span className="text-primary text-xs">Pro</span>}
                 </Label>
                 <Input
                   id="style"
@@ -555,7 +576,7 @@ export default function Home() {
                   placeholder="e.g. cinematic"
                   value={style}
                   onChange={(e) => setStyle(e.target.value)}
-                  disabled={generateVideoMutation.isPending}
+                  disabled={generateVideoMutation.isPending || user?.membershipTier === 'free'}
                   data-testid="input-style"
                 />
               </div>
