@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MoonMenu from "@/components/moon-menu";
 import { format } from "date-fns";
-import { CreationsSection } from "@/components/creations-section";
 
 type UserProfileData = {
   id: string;
@@ -192,11 +191,6 @@ export default function UserProfile() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Creations Section */}
-        <div className="relative mt-12 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <CreationsSection userId={user.id} />
         </div>
       </div>
     </div>

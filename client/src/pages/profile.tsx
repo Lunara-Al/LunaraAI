@@ -689,10 +689,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Creations Section */}
-        <div className="relative mt-20 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "300ms" }}>
-        </div>
-
         {/* Content Calendar Section */}
         <div className="relative mt-20 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "400ms" }}>
           <ContentCalendar user={user} />
