@@ -14,17 +14,21 @@ export default function Gallery() {
   const { toast } = useToast();
   const [limit, setLimit] = useState(VIDEOS_PER_PAGE);
 
-  const { data: videos, isLoading } = useQuery<VideoGeneration[]>({
+  const { data: videos, isLoading, error } = useQuery<VideoGeneration[]>({
     queryKey: ["/api/history", limit],
     queryFn: async () => {
       const response = await fetch(`/api/history?limit=${limit}`);
-      return await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to fetch videos");
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
   // Separate creations from all videos
   const { creations, nonCreations } = useMemo(() => {
-    if (!videos) return { creations: [], nonCreations: [] };
+    if (!videos || !Array.isArray(videos)) return { creations: [], nonCreations: [] };
     return {
       creations: videos.filter((v) => v.displayOnProfile),
       nonCreations: videos.filter((v) => !v.displayOnProfile),
@@ -227,8 +231,31 @@ export default function Gallery() {
           </div>
         )}
 
+        {/* Error State */}
+        {!isLoading && error && (
+          <div className="text-center py-16 md:py-24 space-y-6" data-testid="error-gallery">
+            <div className="flex justify-center">
+              <Sparkles className="w-16 h-16 md:w-20 md:h-20 text-destructive/30" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground">Unable to load gallery</h3>
+              <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto">
+                Something went wrong while loading your videos. Please try refreshing the page.
+              </p>
+            </div>
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => window.location.reload()}
+              data-testid="button-retry-gallery"
+            >
+              Refresh Page
+            </Button>
+          </div>
+        )}
+
         {/* Empty State */}
-        {!isLoading && (!videos || videos.length === 0) && (
+        {!isLoading && !error && (!videos || videos.length === 0) && (
           <div className="text-center py-16 md:py-24 space-y-6" data-testid="empty-gallery">
             <div className="flex justify-center">
               <Sparkles className="w-16 h-16 md:w-20 md:h-20 text-primary/30" />
@@ -249,7 +276,7 @@ export default function Gallery() {
         )}
 
         {/* My Creations Section */}
-        {!isLoading && creations.length > 0 && (
+        {!isLoading && !error && creations.length > 0 && (
           <div className="space-y-6" data-testid="creations-section">
             <div className="flex items-center gap-3 pb-4 border-b border-primary/20">
               <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10">
@@ -273,7 +300,7 @@ export default function Gallery() {
         )}
 
         {/* All Videos Section */}
-        {!isLoading && videos && videos.length > 0 && (
+        {!isLoading && !error && videos && videos.length > 0 && (
           <div className="space-y-6" data-testid="all-videos-section">
             <div className="flex items-center gap-3 pb-4 border-b border-secondary/20">
               <div className="p-2 rounded-lg bg-gradient-to-br from-secondary/20 to-primary/10">
@@ -297,7 +324,7 @@ export default function Gallery() {
         )}
 
         {/* Load More Button */}
-        {!isLoading && videos && videos.length >= limit && (
+        {!isLoading && !error && videos && videos.length >= limit && (
           <div className="flex justify-center pt-8" data-testid="load-more-container">
             <Button
               size="lg"
