@@ -15,6 +15,7 @@ export function useRealtimeSync() {
   const { user } = useAuth();
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasAttemptedRef = useRef(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -22,7 +23,18 @@ export function useRealtimeSync() {
     const connectWebSocket = () => {
       try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}/api/sync`);
+        const host = window.location.host;
+        
+        // Gracefully handle invalid WebSocket URLs (e.g., missing port in development)
+        if (!host || host.includes('undefined')) {
+          if (!hasAttemptedRef.current) {
+            console.warn('WebSocket host is invalid, skipping sync connection');
+            hasAttemptedRef.current = true;
+          }
+          return;
+        }
+
+        const ws = new WebSocket(`${protocol}//${host}/api/sync`);
 
         ws.onopen = () => {
           wsRef.current = ws;
@@ -71,20 +83,20 @@ export function useRealtimeSync() {
         };
 
         ws.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          console.warn('WebSocket error (non-critical):', error);
           ws.close();
         };
 
         ws.onclose = () => {
           wsRef.current = null;
-          // Attempt to reconnect after 3 seconds
+          // Attempt to reconnect after 5 seconds with graceful degradation
           if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current);
           }
-          reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
+          reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
         };
       } catch (error) {
-        console.error('Failed to establish WebSocket connection:', error);
+        console.warn('WebSocket connection unavailable (non-critical):', error);
       }
     };
 

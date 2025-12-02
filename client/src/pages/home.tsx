@@ -14,14 +14,6 @@ import { useConditionalToast } from "@/hooks/useConditionalToast";
 import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
 
-// Advertisement Images
-import aiTech1 from "@assets/stock_images/futuristic_ai_techno_780c4237.jpg";
-import aiTech2 from "@assets/stock_images/futuristic_ai_techno_2bbcd194.jpg";
-import aiTech3 from "@assets/stock_images/futuristic_ai_techno_50511b21.jpg";
-import meditation1 from "@assets/stock_images/peaceful_meditation__f0b4b6f6.jpg";
-import meditation2 from "@assets/stock_images/peaceful_meditation__b7f215c8.jpg";
-import meditation3 from "@assets/stock_images/peaceful_meditation__45257c38.jpg";
-import appScreenshot from "@assets/app-screenshot-mobile.png";
 
 const PRESET_PROMPTS = [
   "A glowing crystal peach sliced in slow motion with cosmic dust",
@@ -249,50 +241,6 @@ export default function Home() {
     });
   };
 
-  const showcaseVideos = [
-    { 
-      image: appScreenshot, 
-      title: "Lunara AI App", 
-      description: "Experience the cosmic ASMR creation platform on mobile",
-      videoUrl: "https://example.com/video_app.mp4"
-    },
-    { 
-      image: aiTech1, 
-      title: "Futuristic AI Dreams", 
-      description: "Holographic neural networks",
-      videoUrl: "https://example.com/video1.mp4" // Replace with actual video URL
-    },
-    { 
-      image: meditation1, 
-      title: "Cosmic Meditation", 
-      description: "Journey through space",
-      videoUrl: "https://example.com/video2.mp4" // Replace with actual video URL
-    },
-    { 
-      image: aiTech2, 
-      title: "Digital Harmony", 
-      description: "AI-powered visuals",
-      videoUrl: "https://example.com/video3.mp4" // Replace with actual video URL
-    },
-    { 
-      image: meditation2, 
-      title: "Zen Universe", 
-      description: "Peaceful cosmic flow",
-      videoUrl: "https://example.com/video4.mp4" // Replace with actual video URL
-    },
-    { 
-      image: aiTech3, 
-      title: "Tech Aurora", 
-      description: "Glowing data streams",
-      videoUrl: "https://example.com/video5.mp4" // Replace with actual video URL
-    },
-    { 
-      image: meditation3, 
-      title: "Stellar Peace", 
-      description: "Tranquil star fields",
-      videoUrl: "https://example.com/video6.mp4" // Replace with actual video URL
-    },
-  ];
 
   return (
     <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
@@ -805,76 +753,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Advertisement Showcase Section */}
-      <div className="w-full max-w-6xl mx-auto mt-20 md:mt-32 px-4 pb-20">
-        <div className="text-center space-y-4 mb-12 md:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Badge variant="secondary" className="mb-3 backdrop-blur-sm">
-            ✨ Showcase
-          </Badge>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent leading-tight">
-            Cosmic ASMR Gallery
-          </h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Experience the mesmerizing fusion of artificial intelligence and ethereal ASMR visuals. Each video is a journey through cosmic realms.
-          </p>
-        </div>
-
-        {/* Showcase Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {showcaseVideos.map((video, index) => (
-            <div
-              key={index}
-              className="group relative bg-card rounded-2xl overflow-hidden border border-card-border hover-elevate transition-all duration-300 shadow-sm hover:shadow-lg"
-              data-testid={`showcase-${index}`}
-            >
-              <div className="aspect-video relative overflow-hidden bg-slate-100 dark:bg-black/40">
-                <img
-                  src={video.image}
-                  alt={video.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 dark:bg-black/60 backdrop-blur-sm">
-                  <div className="rounded-full bg-gradient-to-r from-primary to-secondary p-3 shadow-lg">
-                    <svg className="w-6 h-6 text-white fill-white" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 md:p-5 space-y-2">
-                <h3 className="text-sm md:text-base font-bold text-foreground line-clamp-1">{video.title}</h3>
-                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{video.description}</p>
-                <div className="pt-2 flex items-center gap-1">
-                  <div className="w-1 h-1 rounded-full bg-primary" />
-                  <span className="text-xs text-muted-foreground font-medium">AI-Generated</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA */}
-        <div className="text-center mt-12 md:mt-16 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-          <div className="space-y-2">
-            <p className="text-base md:text-lg text-muted-foreground font-medium">
-              Ready to create your own cosmic ASMR masterpiece?
-            </p>
-            <p className="text-xs md:text-sm text-muted-foreground">
-              Join thousands of creators bringing their imagination to life
-            </p>
-          </div>
-          <Button
-            size="lg"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="bg-gradient-to-r from-primary via-secondary to-primary text-white shadow-lg hover:shadow-xl moon-glow"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Start Creating Now
-          </Button>
-        </div>
-      </div>
 
       <style>{`
         @keyframes gradient {
