@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,34 @@ const PRESET_PROMPTS = [
   "Golden particles dancing in a spiral vortex",
   "Bioluminescent jellyfish floating through deep space",
   "Holographic aurora borealis over digital mountains",
+];
+
+// Example ASMR Videos Data
+const EXAMPLE_VIDEOS = [
+  {
+    id: "example-1",
+    title: "Cosmic Ocean Waves",
+    description: "Gentle waves crashing on a distant cosmic shore with ethereal ambient sounds",
+    icon: Cloud,
+    gradient: "from-blue-600 via-purple-600 to-blue-700",
+    accentGradient: "from-blue-500 to-cyan-500",
+  },
+  {
+    id: "example-2",
+    title: "Lunar Meditation",
+    description: "Serene moonlight meditation with soft celestial chimes and ambient whispers",
+    icon: Moon,
+    gradient: "from-purple-600 via-pink-600 to-purple-700",
+    accentGradient: "from-purple-500 to-pink-500",
+  },
+  {
+    id: "example-3",
+    title: "Stellar Winds",
+    description: "Mystical cosmic winds with twinkling stars and calming atmospheric soundscapes",
+    icon: Wind,
+    gradient: "from-indigo-600 via-purple-600 to-pink-600",
+    accentGradient: "from-indigo-500 to-purple-500",
+  },
 ];
 
 type SearchResult = {
@@ -716,7 +744,7 @@ export default function Home() {
 
       {/* Preset Prompts Section - Collapsible */}
       {!videoUrl && (
-        <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16 px-4">
+        <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16 px-4 space-y-12">
           <div className="space-y-4">
             <button
               onClick={() => setShowPresets(!showPresets)}
@@ -770,6 +798,84 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Featured Examples Section */}
+          <div className="space-y-5 border-t border-gradient-to-r from-primary/30 via-transparent to-secondary/30 pt-8">
+            <div className="flex items-start gap-3 group">
+              <div className="p-2.5 rounded-lg bg-gradient-to-br from-primary/25 to-secondary/15 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110 flex-shrink-0">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary/40" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                  Featured ASMR Examples
+                </h2>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1 font-medium">
+                  Explore these cosmic soundscapes to inspire your creations
+                </p>
+              </div>
+            </div>
+
+            {/* Example Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+              {EXAMPLE_VIDEOS.map((example, index) => {
+                const IconComponent = example.icon;
+                return (
+                  <div
+                    key={example.id}
+                    className="group relative h-64 overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 cursor-pointer"
+                    style={{
+                      animation: `fadeInUp 0.6s ease-out ${index * 120}ms both`,
+                    }}
+                    data-testid={`example-video-${example.id}`}
+                  >
+                    {/* Background Gradient */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${example.gradient} opacity-60 group-hover:opacity-80 transition-opacity duration-300`} />
+                    
+                    {/* Animated Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent group-hover:from-black/95 transition-all duration-300" />
+
+                    {/* Shine Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-700 opacity-0 group-hover:opacity-100" />
+
+                    {/* Icon Glow */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-50 transition-opacity duration-300">
+                      <div className={`absolute inset-1/4 bg-gradient-to-br ${example.accentGradient} rounded-full blur-3xl`} />
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative h-full flex flex-col justify-between p-5 md:p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="p-3 rounded-xl bg-white/15 backdrop-blur-xl border border-white/30 group-hover:bg-white/25 transition-all duration-300 shadow-xl flex-shrink-0">
+                          <IconComponent className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-lg" />
+                        </div>
+                        <div className={`px-3 py-1.5 rounded-full bg-gradient-to-r ${example.accentGradient} text-white text-xs font-bold shadow-lg flex-shrink-0 whitespace-nowrap`}>
+                          Featured
+                        </div>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <h3 className="text-lg md:text-xl font-bold text-white drop-shadow-lg leading-tight line-clamp-2">
+                          {example.title}
+                        </h3>
+                        <p className="text-xs md:text-sm text-white/90 line-clamp-2 drop-shadow-md leading-relaxed">
+                          {example.description}
+                        </p>
+                      </div>
+
+                      {/* Play Button */}
+                      <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="flex-1 h-1 bg-white/40 rounded-full group-hover:bg-white/60 transition-all duration-300" />
+                        <div className="relative flex items-center justify-center">
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <Play className="w-5 h-5 text-white fill-white drop-shadow-lg relative z-10" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

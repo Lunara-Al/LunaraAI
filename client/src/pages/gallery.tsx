@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Cloud, Moon, Wind } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
@@ -9,34 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { VideoGeneration } from "@shared/schema";
 
 const VIDEOS_PER_PAGE = 12;
-
-// Example ASMR Videos Data
-const EXAMPLE_VIDEOS = [
-  {
-    id: "example-1",
-    title: "Cosmic Ocean Waves",
-    description: "Gentle waves crashing on a distant cosmic shore with ethereal ambient sounds",
-    icon: Cloud,
-    gradient: "from-blue-600 via-purple-600 to-blue-700",
-    accentGradient: "from-blue-500 to-cyan-500",
-  },
-  {
-    id: "example-2",
-    title: "Lunar Meditation",
-    description: "Serene moonlight meditation with soft celestial chimes and ambient whispers",
-    icon: Moon,
-    gradient: "from-purple-600 via-pink-600 to-purple-700",
-    accentGradient: "from-purple-500 to-pink-500",
-  },
-  {
-    id: "example-3",
-    title: "Stellar Winds",
-    description: "Mystical cosmic winds with twinkling stars and calming atmospheric soundscapes",
-    icon: Wind,
-    gradient: "from-indigo-600 via-purple-600 to-pink-600",
-    accentGradient: "from-indigo-500 to-purple-500",
-  },
-];
 
 export default function Gallery() {
   const { toast } = useToast();
@@ -131,61 +103,6 @@ export default function Gallery() {
         description: "Failed to download video. Please try again.",
       });
     }
-  };
-
-  // Example Video Card Component
-  const ExampleVideoCard = ({ example, index }: { example: typeof EXAMPLE_VIDEOS[0]; index: number }) => {
-    const IconComponent = example.icon;
-    return (
-      <div
-        className="group relative h-64 overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 cursor-pointer"
-        style={{
-          animation: `fadeInUp 0.6s ease-out ${index * 100}ms both`,
-        }}
-        data-testid={`example-video-${example.id}`}
-      >
-        {/* Background Gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${example.gradient} opacity-60 group-hover:opacity-80 transition-opacity duration-300`} />
-        
-        {/* Animated Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent group-hover:from-black/90 transition-all duration-300" />
-
-        {/* Shine Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-700 opacity-0 group-hover:opacity-100" />
-
-        {/* Icon Glow */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity duration-300">
-          <div className={`absolute inset-1/3 bg-gradient-to-br ${example.accentGradient} rounded-full blur-3xl`} />
-        </div>
-
-        {/* Content */}
-        <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
-          <div className="flex items-start justify-between">
-            <div className="p-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 group-hover:bg-white/20 transition-all duration-300 shadow-lg">
-              <IconComponent className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-lg" />
-            </div>
-            <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${example.accentGradient} text-white text-xs font-bold shadow-lg`}>
-              Example
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow-lg leading-tight">
-              {example.title}
-            </h3>
-            <p className="text-sm md:text-base text-white/90 line-clamp-2 drop-shadow-md">
-              {example.description}
-            </p>
-          </div>
-
-          {/* Play Button */}
-          <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <div className="flex-1 h-1 bg-white/30 rounded-full group-hover:bg-white/50 transition-colors duration-300" />
-            <Play className="w-5 h-5 text-white fill-white drop-shadow-lg" />
-          </div>
-        </div>
-      </div>
-    );
   };
 
   // Enhanced Video Card Component
@@ -324,30 +241,6 @@ export default function Gallery() {
       <MoonMenu />
 
       <div className="max-w-7xl mx-auto space-y-10 md:space-y-16 relative z-10">
-        {/* Featured Examples Section */}
-        {!isLoading && !error && (!videos || videos.length === 0) && (
-          <div className="space-y-8">
-            <div className="flex items-start gap-4 pb-6 border-b border-gradient-to-r from-cyan-500/40 via-purple-500/20 to-transparent group">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/30 to-purple-500/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-cyan-400 fill-cyan-400/50" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                  Featured Examples
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
-                  Explore these cosmic ASMR experiences
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              {EXAMPLE_VIDEOS.map((example, index) => (
-                <ExampleVideoCard key={example.id} example={example} index={index} />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Enhanced Header Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-8 border-b border-gradient-to-r from-primary/30 via-transparent to-secondary/30">
           <div className="space-y-3 md:space-y-4 group">
