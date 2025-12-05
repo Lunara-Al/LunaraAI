@@ -205,19 +205,21 @@ export default function Membership() {
 
   // Credit display component
   const CreditDisplay = ({ credits, monthlyCredits }: { credits: number; monthlyCredits: number }) => (
-    <div className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 dark:from-primary/5 dark:to-secondary/5 rounded-lg border border-primary/20 dark:border-primary/10">
-      <div className="flex items-center justify-between">
+    <div className="w-full mt-4 p-4 bg-gradient-to-r from-primary/20 to-secondary/18 dark:from-primary/15 dark:to-secondary/12 rounded-lg border-2 border-primary/40 dark:border-primary/30 shadow-md hover:shadow-lg transition-all duration-300">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-primary" />
-          <span className="text-sm font-medium text-slate-900 dark:text-white">Monthly Credits</span>
+          <div className="p-1.5 rounded-full bg-primary/20 dark:bg-primary/15">
+            <Zap className="w-4 h-4 text-primary dark:text-primary" />
+          </div>
+          <span className="text-sm font-bold text-slate-900 dark:text-white">Monthly Credits</span>
         </div>
         <span className="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           {credits} / {monthlyCredits}
         </span>
       </div>
-      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 mt-2 overflow-hidden">
+      <div className="w-full bg-slate-200/60 dark:bg-slate-700/60 rounded-full h-2.5 overflow-hidden border border-primary/30 dark:border-primary/20 shadow-inner">
         <div 
-          className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
+          className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 shadow-lg shadow-primary/50"
           style={{ width: `${Math.min((credits / monthlyCredits) * 100, 100)}%` }}
         />
       </div>
@@ -242,10 +244,16 @@ export default function Membership() {
           <p className="text-muted-foreground animate-fade-in-up" style={{ animationDelay: '100ms' }}>Choose the perfect plan for your cosmic video journey</p>
           
           {!isLoading && subscription && (
-            <Card className="inline-flex flex-col items-center gap-3 px-6 py-4 glass-card animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
-              <div className="flex items-center gap-3 flex-wrap justify-center">
-                <Badge className="capitalize moon-glow">{currentTier}</Badge>
-                <span className="text-sm text-muted-foreground font-medium">
+            <Card className="inline-flex flex-col items-center gap-4 px-8 py-6 glass-card animate-fade-in-scale bg-gradient-to-br from-white/95 to-slate-50/80 dark:from-slate-900/95 dark:to-slate-900/80 border-2 border-purple-200/60 dark:border-purple-500/40 shadow-lg hover:shadow-xl transition-all duration-300" style={{ animationDelay: '150ms' }}>
+              <div className="flex items-center gap-4 flex-wrap justify-center">
+                <Badge className={`capitalize text-sm font-bold px-4 py-2 rounded-full transition-all duration-300 ${
+                  currentTier === "premium" 
+                    ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg moon-glow" 
+                    : currentTier === "pro"
+                    ? "bg-gradient-to-r from-primary/90 to-secondary/85 text-white shadow-md moon-glow"
+                    : "bg-slate-200/80 dark:bg-slate-700/80 text-slate-900 dark:text-white shadow-sm"
+                }`}>{currentTier}</Badge>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 bg-white/50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg backdrop-blur-sm">
                   {subscription.videosLimit === -1 
                     ? `${subscription.videosUsed} videos created`
                     : `${subscription.videosUsed}/${subscription.videosLimit} videos this month`}
