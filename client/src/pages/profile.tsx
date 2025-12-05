@@ -574,8 +574,14 @@ export default function Profile() {
                 </div>
 
                 {/* Membership Badge */}
-                <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
-                  <Badge className="px-6 py-3 h-auto bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/30 dark:to-secondary/30 text-primary dark:text-secondary border-primary/40 dark:border-primary/50 font-bold capitalize text-sm md:text-base shadow-lg shadow-primary/20 dark:shadow-primary/30">
+                <div className="flex items-center justify-center gap-3 flex-wrap pt-4">
+                  <Badge className={`px-6 py-3 h-auto font-bold capitalize text-sm md:text-base shadow-lg transition-all duration-300 rounded-full border-2 ${
+                    user.membershipTier === "premium" 
+                      ? "bg-gradient-to-r from-primary to-secondary text-white border-primary/80 shadow-lg shadow-primary/50" 
+                      : user.membershipTier === "pro"
+                      ? "bg-gradient-to-r from-primary/90 to-secondary/85 text-white border-primary/70 shadow-md shadow-primary/40"
+                      : "bg-slate-200/90 dark:bg-slate-700/90 text-slate-900 dark:text-white border-slate-300/60 dark:border-slate-600/60 shadow-sm"
+                  }`}>
                     <Crown className="w-4 h-4 mr-2 flex-shrink-0" />
                     {membershipLabel}
                   </Badge>
