@@ -301,13 +301,13 @@ html {
 @layer utilities {
   /* Glass Bubble Moon Effects - Light Mode Enhanced */
   .glass {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(107, 91, 255, 0.18);
+    border: 1px solid rgba(107, 91, 255, 0.22);
     box-shadow: 
       var(--shadow-sm),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
   }
 
   .dark .glass {
@@ -321,14 +321,14 @@ html {
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
-    border: 1px solid rgba(107, 91, 255, 0.15);
+    border: 1px solid rgba(107, 91, 255, 0.22);
     box-shadow:
       var(--shadow),
       inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      inset 0 -1px 0 rgba(107, 91, 255, 0.05);
+      inset 0 -1px 0 rgba(107, 91, 255, 0.08);
   }
 
   .dark .glass-card {
@@ -343,13 +343,13 @@ html {
   }
 
   .glass-button {
-    background: rgba(107, 91, 255, 0.12);
+    background: rgba(107, 91, 255, 0.15);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(107, 91, 255, 0.28);
+    border: 1px solid rgba(107, 91, 255, 0.32);
     box-shadow: 
       var(--shadow-xs),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
   }
 
   .dark .glass-button {
@@ -418,7 +418,7 @@ html {
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.5),
       transparent
     );
     transition: left 0.5s ease;
@@ -442,6 +442,21 @@ html {
     -webkit-appearance: none;
     appearance: none;
     display: none;
+  }
+
+  /* Enhanced input styling for light mode */
+  input, textarea, select {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: hsl(var(--foreground));
+  }
+
+  .dark input, .dark textarea, .dark select {
+    background-color: hsl(var(--input));
+    color: hsl(var(--foreground));
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: hsl(var(--muted-foreground) / 0.7);
   }
 
   /* Placeholder styling for contentEditable div */

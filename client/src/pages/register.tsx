@@ -75,10 +75,10 @@ export default function Register() {
               <Moon className="w-12 h-12 text-primary animate-float-slow" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%' }}>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent" style={{ backgroundSize: '200% 200%' }}>
             Join Lunara AI
           </h1>
-          <p className="text-muted-foreground animate-fade-in-up" style={{ animationDelay: '100ms' }}>Create your cosmic ASMR account</p>
+          <p className="text-muted-foreground">Create your cosmic ASMR account</p>
         </div>
 
         <Card className="glass-card hover-shadow transition-all duration-300 animate-fade-in-scale" style={{ animationDelay: '150ms' }}>

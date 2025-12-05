@@ -73,10 +73,10 @@ export default function Login() {
               <Moon className="w-12 h-12 text-primary animate-float-slow" />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%', animationDelay: '100ms' }}>
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent" style={{ backgroundSize: '200% 200%' }}>
             Welcome Back
           </h1>
-          <p className="text-sm md:text-base text-muted-foreground animate-fade-in-up" style={{ animationDelay: '150ms' }}>Sign in to continue your cosmic journey</p>
+          <p className="text-sm md:text-base text-muted-foreground" style={{ animationDelay: '150ms' }}>Sign in to continue your cosmic journey</p>
         </div>
 
         <Card className="glass-card hover-shadow transition-all duration-300 animate-fade-in-scale" style={{ animationDelay: '200ms' }}>
