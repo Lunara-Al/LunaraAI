@@ -271,10 +271,10 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
+    <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900 transition-colors duration-300">
       <MoonMenu />
 
-      <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12">
+      <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12 animate-fade-in-up">
         {/* Search Section with Integrated Tabs */}
         <div className="relative group" ref={searchContainerRef}>
           {/* Cosmic glow effect - enhanced */}
@@ -453,25 +453,24 @@ export default function Home() {
         {/* Header Section */}
         <div className="text-center space-y-3 md:space-y-4">
           <h1 
-            className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient drop-shadow-sm"
             style={{
               backgroundSize: '200% 200%',
-              animation: 'gradient 8s ease infinite'
             }}
             data-testid="text-title"
           >
             Lunara AI
           </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4" data-testid="text-subtitle">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '100ms' }} data-testid="text-subtitle">
             <span className="inline-flex items-center gap-2 flex-wrap justify-center">
               <span>Write your prompt and add a reference image to guide your cosmic video</span>
-              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary animate-pulse-glow" />
             </span>
           </p>
         </div>
 
         {/* Generation Form with Glass Card */}
-        <Card className="p-6 md:p-8">
+        <Card className="p-6 md:p-8 glass-card hover-shadow animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
           <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
             {/* Image Upload Section */}
             <div className="space-y-3 relative">
@@ -487,8 +486,8 @@ export default function Home() {
                 </div>
               )}
               <Label className="text-sm font-semibold flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-secondary" />
-                Reference Image {user?.membershipTier === 'free' && <span className="text-primary text-xs ml-auto">Pro</span>}
+                <ImageIcon className="w-4 h-4 text-secondary transition-transform hover:scale-110" />
+                Reference Image {user?.membershipTier === 'free' && <span className="text-primary text-xs ml-auto animate-pulse">Pro</span>}
               </Label>
               <p className="text-xs text-muted-foreground">Upload an image to blend with your prompt for more consistent visual style</p>
               
@@ -540,7 +539,7 @@ export default function Home() {
             {/* Prompt Input */}
             <div className="space-y-3">
               <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-2">
-                <Moon className="w-4 h-4 text-primary" />
+                <Moon className="w-4 h-4 text-primary animate-float-slow" />
                 Your Cosmic Vision
               </Label>
               <Input
@@ -551,7 +550,7 @@ export default function Home() {
                 onChange={(e) => setPrompt(e.target.value)}
                 required
                 disabled={generateVideoMutation.isPending}
-                className="text-base h-12"
+                className="text-base h-12 transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
                 data-testid="input-prompt"
               />
             </div>
@@ -642,7 +641,7 @@ export default function Home() {
               type="submit"
               size="lg"
               disabled={generateVideoMutation.isPending || !prompt.trim() || isProcessingImage}
-              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow text-white"
+              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ripple"
               data-testid="button-generate"
             >
               {generateVideoMutation.isPending ? (
@@ -657,7 +656,7 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-5 h-5 mr-2" />
+                  <Wand2 className="w-5 h-5 mr-2 transition-transform group-hover:rotate-12" />
                   Generate Cosmic Video
                 </>
               )}
@@ -690,30 +689,39 @@ export default function Home() {
 
         {/* Loading State */}
         {generateVideoMutation.isPending && (
-          <div className="mt-12 flex flex-col items-center justify-center space-y-6" data-testid="loading-state">
+          <div className="mt-12 flex flex-col items-center justify-center space-y-6 animate-fade-in-up" data-testid="loading-state">
             <div className="relative">
-              <div className="w-20 h-20 border-4 border-primary/20 rounded-full"></div>
+              <div className="w-20 h-20 border-4 border-primary/20 dark:border-primary/30 rounded-full animate-pulse-glow"></div>
               <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Moon className="w-8 h-8 text-primary/60 animate-float" />
+              </div>
             </div>
-            <p className="text-lg text-muted-foreground animate-pulse">
+            <p className="text-lg text-muted-foreground animate-pulse font-medium">
               Creating your cosmic masterpiece...
             </p>
+            <div className="flex gap-1">
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
           </div>
         )}
 
         {/* Video Display */}
         {videoUrl && !generateVideoMutation.isPending && (
-          <div className="mt-12 flex justify-center" data-testid="video-container">
+          <div className="mt-12 flex justify-center animate-fade-in-scale" data-testid="video-container">
             <div className="relative w-full max-w-2xl space-y-4">
-              <div className="relative">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/20 to-primary/30 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
                 <video
                   src={videoUrl}
                   controls
                   autoPlay
                   loop
-                  className="w-full rounded-xl border-2 border-primary/20 shadow-2xl"
+                  className="relative w-full rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black"
                   style={{
-                    boxShadow: '0 25px 50px -12px rgba(255, 80, 225, 0.4)'
+                    boxShadow: '0 25px 50px -12px rgba(107, 91, 255, 0.25), 0 15px 30px -8px rgba(255, 79, 225, 0.2)'
                   }}
                   data-testid="video-player"
                 />
@@ -748,11 +756,11 @@ export default function Home() {
           <div className="space-y-4">
             <button
               onClick={() => setShowPresets(!showPresets)}
-              className="flex items-center justify-between w-full group"
+              className="flex items-center justify-between w-full group p-3 -m-3 rounded-xl hover:bg-accent/50 dark:hover:bg-accent/30 transition-all duration-200"
               data-testid="button-toggle-presets"
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Sparkles className="w-4 h-4 text-primary group-hover:animate-wiggle transition-transform" />
                 <h3 className="text-sm md:text-base font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
                   Quick Start - Try These Prompts
                 </h3>
@@ -776,21 +784,21 @@ export default function Home() {
                     key={presetPrompt}
                     onClick={() => handlePresetClick(presetPrompt)}
                     disabled={generateVideoMutation.isPending}
-                    className="text-left p-3 rounded-lg bg-card border border-card-border hover-elevate transition-all disabled:opacity-50 animate-in fade-in slide-in-from-bottom-2 duration-300"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="text-left p-3.5 rounded-xl bg-card/80 dark:bg-card border border-card-border/80 dark:border-card-border hover:border-primary/40 dark:hover:border-primary/50 hover:bg-card hover:shadow-md dark:hover:shadow-lg transition-all duration-200 disabled:opacity-50 animate-fade-in-up group/preset"
+                    style={{ animationDelay: `${index * 60}ms` }}
                     data-testid="button-preset-prompt"
                   >
-                    <p className="text-xs md:text-sm text-foreground line-clamp-2">
+                    <p className="text-xs md:text-sm text-foreground line-clamp-2 group-hover/preset:text-primary/90 dark:group-hover/preset:text-primary transition-colors">
                       {presetPrompt}
                     </p>
                     {copiedPreset === presetPrompt ? (
-                      <div className="flex items-center gap-1 mt-2 text-primary">
-                        <Check className="w-3 h-3" />
-                        <span className="text-xs">Loaded</span>
+                      <div className="flex items-center gap-1.5 mt-2.5 text-primary">
+                        <Check className="w-3.5 h-3.5 animate-scale-pulse" />
+                        <span className="text-xs font-medium">Loaded</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1 mt-2 text-muted-foreground">
-                        <Copy className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5 mt-2.5 text-muted-foreground group-hover/preset:text-primary/70 transition-colors">
+                        <Copy className="w-3 h-3 group-hover/preset:scale-110 transition-transform" />
                         <span className="text-xs">Click to use</span>
                       </div>
                     )}
@@ -801,10 +809,10 @@ export default function Home() {
           </div>
 
           {/* Featured Examples Section */}
-          <div className="space-y-5 border-t border-gradient-to-r from-primary/30 via-transparent to-secondary/30 pt-8">
-            <div className="flex items-start gap-3 group">
-              <div className="p-2.5 rounded-lg bg-gradient-to-br from-primary/25 to-secondary/15 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110 flex-shrink-0">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary/40" />
+          <div className="space-y-5 border-t border-primary/20 dark:border-primary/30 pt-8">
+            <div className="flex items-start gap-3 group animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/15 dark:from-primary/30 dark:to-secondary/20 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-110 flex-shrink-0 animate-float-slow">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary/30 dark:fill-primary/40" />
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">

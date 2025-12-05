@@ -109,13 +109,13 @@ export default function Gallery() {
   const VideoCard = ({ video, isCreation, index }: { video: VideoGeneration; isCreation?: boolean; index: number }) => (
     <div
       key={video.id}
-      className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 ${
+      className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.03] ${
         isCreation
-          ? "bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 shadow-[0_8px_32px_rgba(107,91,255,0.15)]"
-          : "bg-gradient-to-br from-card/80 to-card/40 border border-primary/10 shadow-[0_4px_20px_rgba(107,91,255,0.08)]"
-      }`}
+          ? "bg-gradient-to-br from-primary/8 to-secondary/8 dark:from-primary/10 dark:to-secondary/10 border border-primary/25 dark:border-primary/30 shadow-md dark:shadow-[0_8px_32px_rgba(107,91,255,0.15)]"
+          : "bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/8 dark:border-primary/10 shadow-sm dark:shadow-[0_4px_20px_rgba(107,91,255,0.08)]"
+      } hover:shadow-lg dark:hover:shadow-xl`}
       style={{
-        animation: `fadeInUp 0.5s ease-out ${index * 50}ms both`,
+        animation: `fadeInUp 0.5s ease-out ${index * 60}ms both`,
       }}
       data-testid={isCreation ? `creation-item-${video.id}` : `gallery-item-${video.id}`}
     >
@@ -231,39 +231,40 @@ export default function Gallery() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card/50 dark:from-background dark:via-slate-950 dark:to-slate-900/50 relative overflow-hidden px-4 py-6 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900/50 relative overflow-hidden px-4 py-6 md:p-8 transition-colors duration-300">
       {/* Animated Background Elements */}
-      <div className="fixed inset-0 pointer-events-none opacity-30">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
+      <div className="fixed inset-0 pointer-events-none opacity-20 dark:opacity-30">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/25 dark:bg-primary/20 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/20 dark:bg-secondary/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
       </div>
 
       <MoonMenu />
 
-      <div className="max-w-7xl mx-auto space-y-10 md:space-y-16 relative z-10">
+      <div className="max-w-7xl mx-auto space-y-10 md:space-y-16 relative z-10 animate-fade-in-up">
         {/* Enhanced Header Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-8 border-b border-gradient-to-r from-primary/30 via-transparent to-secondary/30">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-8 border-b border-primary/15 dark:border-primary/30">
           <div className="space-y-3 md:space-y-4 group">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/10 group-hover:from-primary/30 group-hover:to-secondary/20 transition-all duration-300">
-                <Zap className="w-5 h-5 md:w-6 md:h-6 text-primary animate-pulse" />
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/15 to-secondary/10 dark:from-primary/20 dark:to-secondary/10 group-hover:from-primary/25 group-hover:to-secondary/15 transition-all duration-300 shadow-sm group-hover:shadow-md">
+                <Zap className="w-5 h-5 md:w-6 md:h-6 text-primary animate-icon-glow" />
               </div>
               <h1 
-                className="text-4xl sm:text-5xl md:text-6xl font-black bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent drop-shadow-lg"
+                className="text-4xl sm:text-5xl md:text-6xl font-black bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient"
+                style={{ backgroundSize: '200% 200%' }}
                 data-testid="text-gallery-title"
               >
                 My Gallery
               </h1>
             </div>
             <p className="text-base md:text-lg text-muted-foreground font-medium flex items-center gap-2" data-testid="text-gallery-subtitle">
-              <Sparkles className="w-4 h-4 text-primary/50" />
+              <Sparkles className="w-4 h-4 text-primary/60 dark:text-primary/50 animate-pulse-glow" />
               {videos?.length || 0} videos • {creations.length} creations
             </p>
           </div>
           <Link href="/">
             <Button 
               size="lg" 
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-primary-foreground whitespace-nowrap font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" 
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-primary-foreground whitespace-nowrap font-semibold shadow-md hover:shadow-lg dark:shadow-lg dark:hover:shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] ripple" 
               data-testid="button-create-new"
             >
               <Sparkles className="w-5 h-5 mr-2" />
@@ -278,12 +279,13 @@ export default function Gallery() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div 
                 key={i} 
-                className="aspect-square bg-gradient-to-br from-card to-card/50 rounded-xl animate-pulse border border-primary/10 shadow-lg"
+                className="aspect-square rounded-xl border border-primary/10 dark:border-primary/20 shadow-md dark:shadow-lg skeleton overflow-hidden"
                 style={{
-                  animation: `pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
                   animationDelay: `${i * 100}ms`
                 }}
-              />
+              >
+                <div className="w-full h-full bg-gradient-to-br from-card/80 to-card/40 dark:from-card dark:to-card/50" />
+              </div>
             ))}
           </div>
         )}

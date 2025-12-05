@@ -225,18 +225,24 @@ export default function Membership() {
   );
 
   return (
-    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-white via-white to-slate-50 dark:from-black dark:via-black dark:to-slate-950">
+    <div className="min-h-screen px-4 py-8 md:p-8 bg-gradient-to-br from-white via-purple-50/30 to-pink-50/20 dark:from-black dark:via-black dark:to-slate-950 transition-colors duration-300 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 pointer-events-none opacity-25 dark:opacity-20">
+        <div className="absolute top-20 right-1/4 w-72 h-72 bg-primary/20 dark:bg-primary/15 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-20 left-1/4 w-64 h-64 bg-secondary/20 dark:bg-secondary/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
+      </div>
+
       <MoonMenu />
       
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-8 relative z-10 animate-fade-in-up">
         <div className="text-center space-y-3">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%' }}>
             Membership Plans
           </h1>
-          <p className="text-muted-foreground">Choose the perfect plan for your cosmic video journey</p>
+          <p className="text-muted-foreground animate-fade-in-up" style={{ animationDelay: '100ms' }}>Choose the perfect plan for your cosmic video journey</p>
           
           {!isLoading && subscription && (
-            <Card className="inline-flex flex-col items-center gap-3 px-6 py-4">
+            <Card className="inline-flex flex-col items-center gap-3 px-6 py-4 glass-card animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
               <div className="flex items-center gap-3 flex-wrap justify-center">
                 <Badge className="capitalize moon-glow">{currentTier}</Badge>
                 <span className="text-sm text-muted-foreground font-medium">
@@ -258,9 +264,9 @@ export default function Membership() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-500">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Free Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-free">
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl bg-white/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '200ms' }} data-testid="card-plan-free">
               {currentTier === "free" && (
                 <Badge className="moon-glow" data-testid="badge-current-free">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -317,7 +323,7 @@ export default function Membership() {
             </Card>
 
             {/* Pro Tier */}
-            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover-elevate md:scale-105 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "pro" ? "moon-glow" : ""}`} data-testid="card-plan-pro">
+            <Card className={`p-8 space-y-6 relative ring-2 ring-primary transition-all duration-300 hover:shadow-xl dark:hover:shadow-2xl md:scale-105 bg-white/95 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "pro" ? "moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '300ms' }} data-testid="card-plan-pro">
               {currentTier === "pro" ? (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 moon-glow" data-testid="badge-current-pro">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -405,7 +411,7 @@ export default function Membership() {
             </Card>
 
             {/* Premium Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover-elevate bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""}`} data-testid="card-plan-premium">
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl bg-white/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "premium" ? "ring-2 ring-primary moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '400ms' }} data-testid="card-plan-premium">
               {currentTier === "premium" && (
                 <Badge className="moon-glow" data-testid="badge-current-premium">
                   <Crown className="w-3 h-3 mr-1" />

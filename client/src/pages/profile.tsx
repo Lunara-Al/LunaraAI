@@ -461,13 +461,13 @@ export default function Profile() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-slate-950 dark:via-purple-950/30 dark:to-pink-950/20 relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-br from-white via-purple-50/40 to-pink-50/30 dark:from-slate-950 dark:via-purple-950/30 dark:to-pink-950/20 relative overflow-hidden transition-colors duration-300"
       aria-busy={isBusy}
     >
       {/* Animated cosmic background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-3xl opacity-30 dark:opacity-20 animate-pulse" style={{ animationDuration: "4s" }} />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full blur-3xl opacity-30 dark:opacity-20 animate-pulse" style={{ animationDuration: "5s", animationDelay: "1s" }} />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary/25 to-secondary/25 dark:from-primary/20 dark:to-secondary/20 rounded-full blur-3xl opacity-40 dark:opacity-20 animate-float-slow" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-secondary/25 to-primary/25 dark:from-secondary/20 dark:to-primary/20 rounded-full blur-3xl opacity-40 dark:opacity-20 animate-float" style={{ animationDelay: "2s" }} />
       </div>
 
       <MoonMenu />
@@ -487,30 +487,30 @@ export default function Profile() {
         />
       )}
 
-      <div className="relative max-w-5xl mx-auto px-4 py-12 md:py-20 space-y-12 animate-in fade-in duration-700">
+      <div className="relative max-w-5xl mx-auto px-4 py-12 md:py-20 space-y-12 animate-fade-in-up">
         {/* Hero Header with Cosmic Gradient */}
         <div className="text-center space-y-4 md:space-y-6 pb-6 md:pb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 dark:border-primary/30 backdrop-blur-sm mb-2 md:mb-4">
-            <Sparkles className="w-4 h-4 text-primary" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/15 dark:border-primary/30 backdrop-blur-sm mb-2 md:mb-4 shadow-sm animate-fade-in-scale">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse-glow" />
             <span className="text-xs md:text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Cosmic Account</span>
           </div>
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black bg-gradient-to-br from-primary via-secondary to-primary bg-clip-text text-transparent drop-shadow-lg">
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black bg-gradient-to-br from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%' }}>
             Profile
           </h1>
-          <p className="text-sm md:text-lg text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto">
+          <p className="text-sm md:text-lg text-slate-600 dark:text-slate-400 font-medium max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '100ms' }}>
             Manage your cosmic account and customize your Lunara experience
           </p>
         </div>
 
         {/* Premium Glassmorphic Profile Card */}
-        <div className="relative group perspective">
+        <div className="relative group perspective animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
           {/* Enhanced glow background */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 via-secondary/40 to-primary/40 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/25 to-primary/30 dark:from-primary/40 dark:via-secondary/40 dark:to-primary/40 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
           
           {/* Card with dual-layer glassmorphism */}
-          <div className="relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-3xl p-8 md:p-16 space-y-10 shadow-2xl dark:shadow-2xl overflow-hidden">
+          <div className="relative bg-white/80 dark:bg-slate-900/60 backdrop-blur-2xl border border-white/50 dark:border-slate-700/40 rounded-3xl p-8 md:p-16 space-y-10 shadow-xl dark:shadow-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300">
             {/* Subtle inner glow */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/3 via-transparent to-secondary/3 dark:from-primary/5 dark:to-secondary/5 pointer-events-none" />
 
             {/* Profile Header Section */}
             <div className="relative flex flex-col items-center space-y-8 animate-in zoom-in duration-700" style={{ animationDelay: "100ms" }}>

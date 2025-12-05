@@ -17,15 +17,7 @@ export default function Register() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
 
-  // Force dark mode on register page
-  useEffect(() => {
-    const root = document.documentElement;
-    const originalClass = root.classList.contains('dark');
-    root.classList.add('dark');
-    return () => {
-      if (!originalClass) root.classList.remove('dark');
-    };
-  }, []);
+  // Theme-aware register page (no longer force dark mode)
 
   const form = useForm<RegisterRequest>({
     resolver: zodResolver(registerSchema),
@@ -69,21 +61,27 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-background via-background to-card dark:from-background dark:via-slate-950 dark:to-slate-900">
-      <div className="w-full max-w-md space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-gradient-to-br from-white via-purple-50/30 to-pink-50/20 dark:from-background dark:via-slate-950 dark:to-slate-900 transition-colors duration-300 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 pointer-events-none opacity-25 dark:opacity-20">
+        <div className="absolute top-1/3 right-1/3 w-72 h-72 bg-primary/20 dark:bg-primary/15 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-1/3 left-1/3 w-60 h-60 bg-secondary/20 dark:bg-secondary/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
+      </div>
+
+      <div className="w-full max-w-md space-y-6 animate-fade-in-up relative z-10">
         <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 moon-glow">
-              <Moon className="w-12 h-12 text-primary" />
+          <div className="flex justify-center animate-fade-in-scale">
+            <div className="p-4 rounded-full bg-gradient-to-br from-primary/15 to-secondary/15 dark:from-primary/20 dark:to-secondary/20 moon-glow shadow-lg">
+              <Moon className="w-12 h-12 text-primary animate-float-slow" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%' }}>
             Join Lunara AI
           </h1>
-          <p className="text-muted-foreground">Create your cosmic ASMR account</p>
+          <p className="text-muted-foreground animate-fade-in-up" style={{ animationDelay: '100ms' }}>Create your cosmic ASMR account</p>
         </div>
 
-        <Card className="moon-glow hover-elevate transition-all duration-300">
+        <Card className="glass-card hover-shadow transition-all duration-300 animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Create Account</CardTitle>
             <CardDescription>Start generating cosmic ASMR videos for free</CardDescription>
