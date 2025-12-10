@@ -117,26 +117,26 @@ export default function MoonMenu() {
 
                   {/* Instagram Link */}
                   <a 
-                    href="https://www.instagram.com/asmr.manny?igsh=MWNicHEycHp4Z2N0bQ%3D%3D&utm_source=qr" 
+                    href="https://instagram.com/lunaralabsai" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Follow ASMR Manny on Instagram"
-                    className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1 cursor-pointer group/social rounded-xl p-2.5 hover:bg-gradient-to-r hover:from-pink-300/15 hover:to-purple-300/15 dark:hover:from-pink-500/20 dark:hover:to-purple-500/20"
+                    aria-label="Follow Lunara AI on Instagram"
+                    className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1 cursor-pointer group/social rounded-xl p-2.5 hover:bg-black/5 dark:hover:bg-white/8"
                   >
                     <div className="relative flex items-center justify-center flex-shrink-0">
                       {/* Outer glow for Instagram */}
                       <div className="absolute inset-0 bg-gradient-to-br from-pink-400/30 via-purple-400/20 to-pink-400/10 dark:from-pink-500/50 dark:via-purple-500/40 dark:to-pink-500/20 rounded-xl opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 blur-md scale-150" />
                       
-                      {/* Icon container with gradient border effect */}
-                      <div className="relative p-3 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950 border-2 border-transparent group-hover/social:border-pink-400/60 dark:group-hover/social:border-pink-400/60 shadow-md group-hover/social:shadow-2xl group-hover/social:shadow-pink-500/30 dark:group-hover/social:shadow-pink-500/40 transition-all duration-300">
-                        <SiInstagram className="w-5 h-5 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-400 dark:from-pink-400 dark:via-purple-400 dark:to-pink-300 bg-clip-text text-transparent group-hover/social:scale-125 group-hover/social:rotate-12 transition-all duration-300 flex-shrink-0" />
+                      {/* Icon container - matching TikTok style */}
+                      <div className="relative p-3 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-md group-hover/social:shadow-xl group-hover/social:border-pink-400/50 dark:group-hover/social:border-pink-400/50 transition-all duration-300">
+                        <SiInstagram className="w-5 h-5 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-400 bg-clip-text text-transparent group-hover/social:scale-125 group-hover/social:rotate-12 transition-all duration-300 flex-shrink-0" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 group-hover/social:from-pink-700 group-hover/social:to-purple-700 dark:group-hover/social:from-pink-300 dark:group-hover/social:to-purple-300 bg-clip-text text-transparent transition-all duration-300">@asmr.manny</span>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 group-hover/social:bg-gradient-to-r group-hover/social:from-pink-600 group-hover/social:to-purple-600 dark:group-hover/social:from-pink-400 dark:group-hover/social:to-purple-400 group-hover/social:bg-clip-text group-hover/social:text-transparent transition-colors duration-300">Instagram</p>
+                      <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent transition-all duration-300">@lunaralabsai</span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 group-hover/social:text-slate-700 dark:group-hover/social:text-slate-300 transition-colors duration-300">Instagram</p>
                     </div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0 shadow-lg shadow-pink-500/50" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0" />
                   </a>
                 </div>
               </div>
