@@ -86,21 +86,50 @@ export default function MoonMenu() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-purple-100/40 dark:border-purple-500/20">
-            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider">Follow Us</p>
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 to-secondary/12 dark:from-primary/20 dark:to-secondary/15 p-4 border border-primary/25 dark:border-primary/30 shadow-md hover-elevate transition-all duration-300">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-40" />
-              <div className="relative space-y-3">
-                <a href="https://tiktok.com/@lunaralabsai" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-all duration-200 hover:translate-x-1 cursor-pointer group">
-                  <div className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 group-hover:bg-primary/20 transition-colors duration-200">
-                    <SiTiktok className="w-4 h-4" />
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-3 uppercase tracking-wider opacity-75">Follow Us</p>
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 to-secondary/8 dark:from-primary/15 dark:to-secondary/12 p-4 border border-primary/20 dark:border-primary/25 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-30 pointer-events-none" />
+              <div className="relative space-y-2.5">
+                {/* TikTok Link */}
+                <a 
+                  href="https://tiktok.com/@lunaralabsai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Follow Lunara AI on TikTok"
+                  className="flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-all duration-300 hover:translate-x-1 cursor-pointer group/social rounded-lg p-2 hover:bg-white/40 dark:hover:bg-slate-800/60"
+                >
+                  <div className="relative flex items-center justify-center">
+                    {/* Icon background with platform-specific styling */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/0 dark:from-black/40 dark:to-black/20 rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-300" />
+                    <div className="relative p-2.5 rounded-lg bg-gradient-to-br from-white/60 to-slate-100/50 dark:from-slate-800/70 dark:to-slate-900/70 border border-white/30 dark:border-slate-700/40 shadow-sm group-hover/social:shadow-md group-hover/social:border-black/40 dark:group-hover/social:border-white/30 transition-all duration-300">
+                      <SiTiktok className="w-4 h-4 text-black dark:text-white group-hover/social:scale-110 transition-transform duration-300 flex-shrink-0" />
+                    </div>
                   </div>
-                  <span className="text-sm font-medium">@lunaralabsai</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover/social:text-black dark:group-hover/social:text-white transition-colors duration-300">@lunaralabsai</span>
+                  </div>
+                  <div className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-500 opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0" />
                 </a>
-                <a href="https://instagram.com/lunaralabsai" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-slate-700 dark:text-slate-300 hover:text-secondary dark:hover:text-secondary transition-all duration-200 hover:translate-x-1 cursor-pointer group">
-                  <div className="p-2 rounded-lg bg-white/50 dark:bg-slate-800/50 group-hover:bg-secondary/20 transition-colors duration-200">
-                    <SiInstagram className="w-4 h-4" />
+
+                {/* Instagram Link */}
+                <a 
+                  href="https://instagram.com/lunaralabsai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label="Follow Lunara AI on Instagram"
+                  className="flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-all duration-300 hover:translate-x-1 cursor-pointer group/social rounded-lg p-2 hover:bg-gradient-to-r hover:from-pink-200/30 hover:to-purple-200/30 dark:hover:from-pink-950/40 dark:hover:to-purple-950/40"
+                >
+                  <div className="relative flex items-center justify-center">
+                    {/* Icon background with platform-specific styling */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-400/10 to-purple-400/10 dark:from-pink-500/20 dark:to-purple-500/20 rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 blur-sm" />
+                    <div className="relative p-2.5 rounded-lg bg-gradient-to-br from-white/60 to-slate-100/50 dark:from-slate-800/70 dark:to-slate-900/70 border border-white/30 dark:border-slate-700/40 shadow-sm group-hover/social:shadow-md group-hover/social:border-pink-400/40 dark:group-hover/social:border-pink-400/50 transition-all duration-300">
+                      <SiInstagram className="w-4 h-4 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-400 bg-clip-text text-transparent dark:from-pink-400 dark:via-purple-400 dark:to-pink-300 group-hover/social:scale-110 transition-transform duration-300 flex-shrink-0" />
+                    </div>
                   </div>
-                  <span className="text-sm font-medium">@lunaralabsai</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover/social:bg-gradient-to-r group-hover/social:from-pink-600 group-hover/social:to-purple-600 dark:group-hover/social:from-pink-400 dark:group-hover/social:to-purple-400 group-hover/social:bg-clip-text group-hover/social:text-transparent transition-all duration-300">@lunaralabsai</span>
+                  </div>
+                  <div className="w-1 h-1 rounded-full bg-gradient-to-r from-pink-400 to-purple-400 opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0" />
                 </a>
               </div>
             </div>
