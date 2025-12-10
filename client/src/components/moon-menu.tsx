@@ -117,10 +117,10 @@ export default function MoonMenu() {
 
                   {/* Instagram Link */}
                   <a 
-                    href="https://instagram.com/lunaralabsai" 
+                    href="https://www.instagram.com/asmr.manny?igsh=MWNicHEycHp4Z2N0bQ%3D%3D&utm_source=qr" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    aria-label="Follow Lunara AI on Instagram"
+                    aria-label="Follow ASMR Manny on Instagram"
                     className="flex items-center gap-3 transition-all duration-300 hover:translate-x-1 cursor-pointer group/social rounded-xl p-2.5 hover:bg-gradient-to-r hover:from-pink-300/15 hover:to-purple-300/15 dark:hover:from-pink-500/20 dark:hover:to-purple-500/20"
                   >
                     <div className="relative flex items-center justify-center flex-shrink-0">
@@ -133,7 +133,7 @@ export default function MoonMenu() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 group-hover/social:from-pink-700 group-hover/social:to-purple-700 dark:group-hover/social:from-pink-300 dark:group-hover/social:to-purple-300 bg-clip-text text-transparent transition-all duration-300">@lunaralabsai</span>
+                      <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 group-hover/social:from-pink-700 group-hover/social:to-purple-700 dark:group-hover/social:from-pink-300 dark:group-hover/social:to-purple-300 bg-clip-text text-transparent transition-all duration-300">@asmr.manny</span>
                       <p className="text-xs text-slate-500 dark:text-slate-400 group-hover/social:bg-gradient-to-r group-hover/social:from-pink-600 group-hover/social:to-purple-600 dark:group-hover/social:from-pink-400 dark:group-hover/social:to-purple-400 group-hover/social:bg-clip-text group-hover/social:text-transparent transition-colors duration-300">Instagram</p>
                     </div>
                     <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0 shadow-lg shadow-pink-500/50" />
