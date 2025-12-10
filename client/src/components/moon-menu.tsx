@@ -109,7 +109,7 @@ export default function MoonMenu() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white group-hover/social:text-black dark:group-hover/social:text-white transition-colors duration-300">@lunaralabsai</span>
+                      <span className="text-sm font-bold bg-gradient-to-r from-pink-600 to-purple-600 dark:from-pink-400 dark:to-purple-400 bg-clip-text text-transparent transition-all duration-300">@lunaralabsai</span>
                       <p className="text-xs text-slate-500 dark:text-slate-400 group-hover/social:text-slate-700 dark:group-hover/social:text-slate-300 transition-colors duration-300">TikTok</p>
                     </div>
                     <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white opacity-0 group-hover/social:opacity-100 transition-opacity duration-300 flex-shrink-0" />
