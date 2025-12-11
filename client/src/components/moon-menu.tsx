@@ -129,7 +129,7 @@ export default function MoonMenu() {
                       
                       {/* Icon container - matching TikTok style */}
                       <div className="relative p-3 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950 border-2 border-slate-200/60 dark:border-slate-700/50 shadow-md group-hover/social:shadow-xl group-hover/social:border-pink-400/50 dark:group-hover/social:border-pink-400/50 transition-all duration-300">
-                        <SiInstagram className="w-5 h-5 bg-gradient-to-br from-pink-500 via-purple-500 to-pink-400 bg-clip-text text-transparent group-hover/social:scale-125 group-hover/social:rotate-12 transition-all duration-300 flex-shrink-0" />
+                        <SiInstagram className="w-5 h-5 text-pink-500 dark:text-pink-400 group-hover/social:scale-125 group-hover/social:rotate-12 transition-all duration-300 flex-shrink-0" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
