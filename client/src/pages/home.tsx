@@ -327,7 +327,7 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery && ((searchTab === "users" && searchResults.length > 0) || (searchTab === "creations" && creationResults.length > 0)) && setShowSearchDropdown(true)}
-                className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium transition-all"
+                className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-foreground dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium transition-all [&:-webkit-autofill]:[background-color:transparent!important] [&:-webkit-autofill]:[box-shadow:0_0_0_1000px_transparent_inset!important]"
                 data-testid="input-search-bar"
                 aria-label={searchTab === "users" ? "Search users by username" : "Search creations by prompt"}
                 autoComplete="off"
