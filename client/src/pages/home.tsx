@@ -469,7 +469,7 @@ export default function Home() {
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '100ms' }} data-testid="text-subtitle">
             <span className="inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Write your prompt and add a reference image to guide your cosmic video</span>
+              <span>Write your prompt and use a reference image to guide your cosmic video</span>
               <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary animate-pulse-glow" />
             </span>
           </p>

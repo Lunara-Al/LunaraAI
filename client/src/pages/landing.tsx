@@ -1,4 +1,4 @@
-import { Sparkles, Video, Zap, Crown, Moon } from "lucide-react";
+import { Sparkles, Video, Zap, Crown, Moon, Image as ImageIcon } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -81,11 +81,11 @@ export default function Landing() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative inline-block">
                 <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full group-hover:bg-primary/30 transition-all" />
-                <Video className="w-14 h-14 text-primary mx-auto relative" />
+                <ImageIcon className="w-14 h-14 text-primary mx-auto relative" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">AI-Powered</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Image Guidance</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Advanced AI creates stunning cosmic ASMR videos from your text prompts
+                Now available to all tiers: Use reference images to guide your cosmic creations
               </p>
             </Card>
             
@@ -95,9 +95,9 @@ export default function Landing() {
                 <div className="absolute inset-0 blur-2xl bg-secondary/20 rounded-full group-hover:bg-secondary/30 transition-all" />
                 <Zap className="w-14 h-14 text-secondary mx-auto relative" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Lightning Fast</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Custom Styles</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                Generate professional-quality videos in seconds, not hours
+                Control the aesthetic with custom styles, from cinematic to crystalline textures
               </p>
             </Card>
             

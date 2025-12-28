@@ -46,7 +46,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Automatic fallback to simulation mode if Stripe unavailable
     - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
     - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
-- **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input.
+- **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic).
 
 ### Feature Specifications
 - **Video Generation:** Users input text prompts to generate 10-second cosmic ASMR videos with autoplay and looping.

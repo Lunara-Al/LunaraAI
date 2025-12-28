@@ -298,7 +298,7 @@ export default function Membership() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">Basic quality</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">Reference images & Styles</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
