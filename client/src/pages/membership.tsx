@@ -150,7 +150,7 @@ export default function Membership() {
     onSuccess: () => {
       toast({
         title: "Subscription Canceled",
-        description: "You've been downgraded to the Free plan.",
+        description: "You've been downgraded to the Basic plan.",
       });
       refetch();
     },
@@ -193,7 +193,7 @@ export default function Membership() {
   };
 
   const handleCancel = () => {
-    if (confirm("Are you sure you want to cancel your subscription and downgrade to Free?")) {
+    if (confirm("Are you sure you want to cancel your subscription and downgrade to Basic?")) {
       cancelMutation.mutate();
     }
   };
@@ -273,7 +273,7 @@ export default function Membership() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Free Tier */}
+            {/* Basic Tier */}
             <Card className={`p-8 space-y-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl bg-white/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '200ms' }} data-testid="card-plan-free">
               {currentTier === "free" && (
                 <Badge className="moon-glow" data-testid="badge-current-free">
@@ -283,7 +283,7 @@ export default function Membership() {
               )}
               
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Free</h2>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Basic</h2>
                 <p className="text-4xl font-bold text-slate-900 dark:text-white">$0<span className="text-base text-slate-600 dark:text-slate-400 font-normal">/month</span></p>
               </div>
               
@@ -325,7 +325,7 @@ export default function Membership() {
                   data-testid="button-downgrade-to-free"
                 >
                   {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TrendingDown className="w-4 h-4 mr-2" />}
-                  Downgrade to Free
+                  Downgrade to Basic
                 </Button>
               )}
             </Card>

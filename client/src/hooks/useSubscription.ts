@@ -115,7 +115,7 @@ export function useCancelMutation() {
     onSuccess: () => {
       toast({
         title: "Subscription Canceled",
-        description: "You've been downgraded to the Free plan.",
+        description: "You've been downgraded to the Basic plan.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
     },

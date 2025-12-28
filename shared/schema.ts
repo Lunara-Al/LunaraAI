@@ -15,7 +15,7 @@ export const QUALITY_LEVELS = ["basic", "hd", "4k"] as const;
 
 export const MEMBERSHIP_TIERS = {
   free: {
-    name: "Free",
+    name: "Basic",
     price: 0,
     monthlyVideos: 5,
     maxLength: 10,

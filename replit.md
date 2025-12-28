@@ -74,7 +74,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
   - Tracks all account deletion events
   - Immutable logs stored independently (persist after user deletion)
   - Includes userId, email, username, action type, auth provider, and timestamp
-- **Subscription Management:** Three membership tiers (Free, Pro, Premium) with varying video limits, lengths, quality, and features. Users can upgrade, downgrade, or cancel subscriptions. Monthly video limits are automatically reset.
+- **Subscription Management:** Three membership tiers (Basic, Pro, Premium) with varying video limits, lengths, quality, and features. Users can upgrade, downgrade, or cancel subscriptions. Monthly video limits are automatically reset.
 - **Video Gallery:** Displays generated videos in a grid, with hover-to-play functionality, pagination, and deletion capabilities.
 - **Video Sharing:** 
   - **Enhanced ShareModal** with cosmic glass bubble design:
