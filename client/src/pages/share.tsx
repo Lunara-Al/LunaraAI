@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import { Play, Download, Share2, Copy, Check, ExternalLink, Moon, AlertCircle, Eye, Clock, Ratio, Calendar, Sparkles, Star } from "lucide-react";
-import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiSnapchat } from "react-icons/si";
+import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -270,11 +270,11 @@ export default function SharePage() {
     }
   };
 
-  const openAppDeepLink = (app: "tiktok" | "instagram" | "snapchat") => {
+  const openAppDeepLink = (app: "tiktok" | "instagram" | "youtube") => {
     const deepLinks = {
       tiktok: { deep: "tiktok://", fallback: "https://www.tiktok.com/" },
       instagram: { deep: "instagram://camera", fallback: "https://www.instagram.com/" },
-      snapchat: { deep: "snapchat://camera", fallback: "https://www.snapchat.com/" },
+      youtube: { deep: "youtube://upload", fallback: "https://www.youtube.com/upload" },
     };
 
     const { deep, fallback } = deepLinks[app];
@@ -513,10 +513,10 @@ export default function SharePage() {
             {[
               { url: platformShareUrls.twitter, icon: SiX, label: "X", color: "from-gray-800 to-gray-900 dark:from-gray-200 dark:to-white", iconColor: "text-foreground", testId: "link-share-twitter" },
               { url: platformShareUrls.facebook, icon: SiFacebook, label: "Facebook", color: "from-blue-500 to-blue-700", iconColor: "text-blue-600", testId: "link-share-facebook" },
-              { url: platformShareUrls.linkedin, icon: SiLinkedin, label: "LinkedIn", color: "from-blue-600 to-blue-800", iconColor: "text-blue-700", testId: "link-share-linkedin" },
-              { url: platformShareUrls.reddit, icon: SiReddit, label: "Reddit", color: "from-orange-500 to-orange-700", iconColor: "text-orange-600", testId: "link-share-reddit" },
+              { url: `https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(window.location.href)}`, icon: SiSnapchat, label: "Snapchat", color: "from-yellow-400 to-yellow-500", iconColor: "text-yellow-400", testId: "link-share-snapchat" },
               { url: platformShareUrls.whatsapp, icon: SiWhatsapp, label: "WhatsApp", color: "from-green-500 to-green-700", iconColor: "text-green-500", testId: "link-share-whatsapp" },
               { url: platformShareUrls.telegram, icon: SiTelegram, label: "Telegram", color: "from-blue-400 to-blue-600", iconColor: "text-blue-500", testId: "link-share-telegram" },
+              { url: platformShareUrls.reddit, icon: SiReddit, label: "Reddit", color: "from-orange-500 to-orange-700", iconColor: "text-orange-600", testId: "link-share-reddit" },
             ].map((platform) => (
               <a
                 key={platform.label}
@@ -551,7 +551,7 @@ export default function SharePage() {
           <div>
             <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-secondary" />
-              TikTok, Instagram & Snapchat
+              TikTok, Instagram & YouTube
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
               These platforms require uploading the video in-app. Download first, then upload.
@@ -608,20 +608,20 @@ export default function SharePage() {
             <div 
               className="relative flex flex-col gap-3 p-5 rounded-xl overflow-hidden group"
               style={{
-                background: "linear-gradient(135deg, rgba(255,252,0,0.95) 0%, rgba(255,230,0,0.95) 100%)"
+                background: "linear-gradient(135deg, rgba(239,68,68,0.9) 0%, rgba(185,28,28,0.8) 100%)"
               }}
             >
-              <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="flex items-center gap-2 relative z-10">
-                <SiSnapchat className="w-5 h-5 text-black" />
-                <span className="font-medium text-black">Snapchat</span>
+                <SiYoutube className="w-5 h-5 text-white" />
+                <span className="font-medium text-white">YouTube</span>
               </div>
               <div className="flex gap-2 relative z-10">
-                <Button size="sm" variant="outline" onClick={handleDownload} className="flex-1 border-black/30 text-black hover:bg-black/10">
+                <Button size="sm" variant="outline" onClick={handleDownload} className="flex-1 border-white/30 text-white hover:bg-white/20">
                   <Download className="w-3 h-3 mr-1" />
                   Download
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => openAppDeepLink("snapchat")} className="flex-1 text-black hover:bg-black/10">
+                <Button size="sm" variant="ghost" onClick={() => openAppDeepLink("youtube")} className="flex-1 text-white hover:bg-white/20">
                   <ExternalLink className="w-3 h-3 mr-1" />
                   Open
                 </Button>

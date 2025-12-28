@@ -17,7 +17,7 @@ import {
   Sparkles,
   Link2
 } from "lucide-react";
-import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiSnapchat } from "react-icons/si";
+import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si";
 import type { VideoGeneration } from "@shared/schema";
 
 type ShareModalProps = {
@@ -197,11 +197,11 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }
   };
 
-  const openAppDeepLink = (app: "tiktok" | "instagram" | "snapchat") => {
+  const openAppDeepLink = (app: "tiktok" | "instagram" | "youtube") => {
     const deepLinks = {
       tiktok: { deep: "tiktok://", fallback: "https://www.tiktok.com/" },
       instagram: { deep: "instagram://camera", fallback: "https://www.instagram.com/" },
-      snapchat: { deep: "snapchat://camera", fallback: "https://www.snapchat.com/" },
+      youtube: { deep: "youtube://upload", fallback: "https://www.youtube.com/upload" },
     };
 
     const { deep, fallback } = deepLinks[app];
@@ -226,10 +226,10 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   const socialPlatforms = [
     { key: 'twitter', icon: SiX, label: 'X', color: 'hover:shadow-[0_0_20px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]' },
     { key: 'facebook', icon: SiFacebook, label: 'Facebook', iconColor: 'text-blue-600', color: 'hover:shadow-[0_0_20px_rgba(37,99,235,0.4)]' },
-    { key: 'linkedin', icon: SiLinkedin, label: 'LinkedIn', iconColor: 'text-blue-700', color: 'hover:shadow-[0_0_20px_rgba(29,78,216,0.4)]' },
-    { key: 'reddit', icon: SiReddit, label: 'Reddit', iconColor: 'text-orange-600', color: 'hover:shadow-[0_0_20px_rgba(234,88,12,0.4)]' },
     { key: 'whatsapp', icon: SiWhatsapp, label: 'WhatsApp', iconColor: 'text-green-500', color: 'hover:shadow-[0_0_20px_rgba(34,197,94,0.4)]' },
     { key: 'telegram', icon: SiTelegram, label: 'Telegram', iconColor: 'text-blue-500', color: 'hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]' },
+    { key: 'snapchat', icon: SiSnapchat, label: 'Snapchat', iconColor: 'text-yellow-400', color: 'hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]' },
+    { key: 'reddit', icon: SiReddit, label: 'Reddit', iconColor: 'text-orange-600', color: 'hover:shadow-[0_0_20px_rgba(234,88,12,0.4)]' },
   ];
 
   return (
@@ -406,12 +406,12 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                 </button>
                 
                 <button
-                  onClick={() => openAppDeepLink("snapchat")}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-yellow-400/10 to-yellow-500/5 dark:from-yellow-400/15 dark:to-yellow-500/10 border border-yellow-400/20 dark:border-yellow-400/25 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(250,204,21,0.4)]"
-                  data-testid="button-open-snapchat"
+                  onClick={() => openAppDeepLink("youtube")}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 dark:from-red-500/15 dark:to-red-600/10 border border-red-400/20 dark:border-red-400/25 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(239,68,68,0.4)]"
+                  data-testid="button-open-youtube"
                 >
-                  <SiSnapchat className="w-6 h-6 text-yellow-400 transition-transform duration-300 group-hover:scale-110" />
-                  <span className="text-xs text-muted-foreground font-medium">Snapchat</span>
+                  <SiYoutube className="w-6 h-6 text-red-600 transition-transform duration-300 group-hover:scale-110" />
+                  <span className="text-xs text-muted-foreground font-medium">YouTube</span>
                 </button>
               </div>
             </div>
