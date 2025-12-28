@@ -47,7 +47,8 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { VideoGeneration } from "@shared/schema";
+import type { VideoGeneration, MembershipTier } from "@shared/schema";
+import { MEMBERSHIP_TIERS } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -456,7 +457,8 @@ export default function Profile() {
     }
   }
   
-  const membershipLabel = `${user.membershipTier || "Free"} Member`;
+  const tierInfo = MEMBERSHIP_TIERS[user.membershipTier as MembershipTier] || MEMBERSHIP_TIERS.free;
+  const membershipLabel = `${tierInfo.name} Member`;
   const usernameLabel = user.username || "user";
 
   return (
