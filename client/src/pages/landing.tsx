@@ -17,6 +17,7 @@ export default function Landing() {
               src={logoImage} 
               alt="Lunara AI Logo" 
               className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover moon-glow"
+              loading="eager"
             />
           </div>
           <span className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
@@ -121,6 +122,7 @@ export default function Landing() {
             src={logoImage} 
             alt="Lunara AI" 
             className="w-5 h-5 rounded-md object-cover"
+            loading="lazy"
           />
           <span>Lunara AI - Cosmic Video Generation Platform</span>
         </div>

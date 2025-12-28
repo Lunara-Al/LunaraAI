@@ -235,7 +235,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent 
-        className="sm:max-w-lg glass-card border-purple-400/20 dark:border-purple-500/30 overflow-hidden max-h-[90vh] flex flex-col p-0" 
+        className="sm:max-w-lg glass-card border-purple-400/20 dark:border-purple-500/30 overflow-hidden max-h-[90vh] flex flex-col p-0 animate-fade-in-scale duration-300" 
         data-testid="share-modal"
       >
         <div className="p-6 pb-0">

@@ -18,7 +18,7 @@ export function LoadingSpinner({
   fullScreen = false 
 }: LoadingSpinnerProps) {
   const content = (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3 animate-in fade-in duration-300">
       <Loader2 className={`${sizeClasses[size]} animate-spin text-primary`} />
       {message && (
         <p className="text-muted-foreground text-sm">{message}</p>
