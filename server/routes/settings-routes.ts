@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS = {
   defaultLength: DEFAULT_VIDEO_LENGTH,
   defaultAspectRatio: "1:1",
   emailNotifications: 1,
-  galleryView: "grid",
+  galleryView: "list",
   theme: "dark",
   autoSave: 1,
 } as const;
