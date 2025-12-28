@@ -17,7 +17,7 @@ import {
   Sparkles,
   Link2
 } from "lucide-react";
-import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si";
+import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import type { VideoGeneration } from "@shared/schema";
 
 type ShareModalProps = {
