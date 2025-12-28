@@ -108,7 +108,7 @@ export function createSocialRouter(): Router {
 
       const success = await storage.deleteSocialAccount(accountId, userId);
       if (!success) {
-        return res.status(404).json({ error: "Account not found" });
+        return res.status(400).json({ error: "Unable to disconnect account" });
       }
 
       res.json({ success: true, message: "Account disconnected successfully" });

@@ -338,6 +338,17 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     enabled: isOpen,
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      setUploadStates({
+        tiktok: { platform: "tiktok", status: "idle", caption: "" },
+        instagram: { platform: "instagram", status: "idle", caption: "" },
+        youtube: { platform: "youtube", status: "idle", caption: "" },
+      });
+      setCopied(false);
+    }
+  }, [isOpen]);
+
   const createShareMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("POST", `/api/videos/${video.id}/share`);
