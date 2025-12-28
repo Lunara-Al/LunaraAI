@@ -7,7 +7,8 @@ import MoonMenu from "@/components/moon-menu";
 import { ShareModal } from "@/components/share-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { VideoGeneration } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import type { VideoGeneration, UserSettings } from "@shared/schema";
 
 const VIDEOS_PER_PAGE = 12;
 
@@ -17,7 +18,7 @@ export default function Gallery() {
   const [shareModalVideo, setShareModalVideo] = useState<VideoGeneration | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
-  const { data: settings } = useQuery({
+  const { data: settings } = useQuery<UserSettings>({
     queryKey: ["/api/settings"],
   });
 
