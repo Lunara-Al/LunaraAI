@@ -76,6 +76,16 @@ The application employs a "Glass Bubble Moon" design system characterized by:
   - Includes userId, email, username, action type, auth provider, and timestamp
 - **Subscription Management:** Three membership tiers (Free, Pro, Premium) with varying video limits, lengths, quality, and features. Users can upgrade, downgrade, or cancel subscriptions. Monthly video limits are automatically reset.
 - **Video Gallery:** Displays generated videos in a grid, with hover-to-play functionality, pagination, and deletion capabilities.
+- **Video Sharing:** 
+  - Share button on each video card opens a polished modal
+  - Generates unique public share URLs with tokens
+  - Social media sharing: X/Twitter, Facebook, LinkedIn, Reddit, WhatsApp, Telegram
+  - Deep links for TikTok, Instagram, Snapchat (opens app for upload)
+  - Native share API support for mobile devices
+  - Direct download option from share modal
+  - Public share landing page with cosmic theme and OG meta tags for rich social previews
+  - View count tracking for shared videos
+  - Token-based sharing with revocation capability
 - **Moon Navigation Menu:** A sliding navigation panel providing access to Home, Profile, Membership, Settings, and Contact pages.
 - **Advertisement Showcase:** A scrollable section featuring example AI ASMR videos.
 
