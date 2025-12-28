@@ -66,10 +66,11 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {creations.map((video) => (
+        {creations.map((video, index) => (
           <div
             key={video.id}
-            className="group relative bg-card rounded-3xl overflow-hidden border border-primary/20 hover-elevate transition-all duration-300"
+            className="group relative bg-card rounded-3xl overflow-hidden border border-primary/20 hover-elevate transition-all duration-300 animate-in fade-in duration-300"
+            style={{ animationDelay: `${index * 50}ms` }}
             data-testid={`creation-card-${video.id}`}
           >
             {/* Video Container */}
@@ -79,6 +80,7 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
                 className="w-full h-full object-cover"
                 loop
                 muted
+                preload="metadata"
                 onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
                 onMouseLeave={(e) => {
                   const vid = e.currentTarget as HTMLVideoElement;
