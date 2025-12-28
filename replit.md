@@ -77,13 +77,29 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 - **Subscription Management:** Three membership tiers (Free, Pro, Premium) with varying video limits, lengths, quality, and features. Users can upgrade, downgrade, or cancel subscriptions. Monthly video limits are automatically reset.
 - **Video Gallery:** Displays generated videos in a grid, with hover-to-play functionality, pagination, and deletion capabilities.
 - **Video Sharing:** 
-  - Share button on each video card opens a polished modal
+  - **Enhanced ShareModal** with cosmic glass bubble design:
+    - DialogDescription for accessibility compliance
+    - CosmicLoader with animated floating orbs and stars during share link generation
+    - Video preview with dramatic glow effects and animated shimmer overlay
+    - Copy button with success animation (checkmark + confetti-like feedback)
+    - Social media buttons with platform-specific colors and glow hover effects
+    - TikTok/Instagram/Snapchat section with gradient backgrounds and "Open App" deep links
+    - Direct download button
+  - **Stunning Share Landing Page** (/share/:token):
+    - Animated cosmic background with floating orbs, stars, and gradient mesh
+    - Custom MoonStarsLogo SVG component matching brand identity
+    - Video player card with dramatic glow and shimmer effects
+    - View count badge with glass styling
+    - Metadata tags (ASMR, Cosmic, AI Generated)
+    - Action buttons with gradient backgrounds and hover glow
+    - Social media cards with platform-specific colors and descriptions
+    - TikTok/Instagram/Snapchat cards with gradient backgrounds and dual buttons (Download + Open App)
+    - "Create Your Own" CTA with floating stars animation
   - Generates unique public share URLs with tokens
   - Social media sharing: X/Twitter, Facebook, LinkedIn, Reddit, WhatsApp, Telegram
   - Deep links for TikTok, Instagram, Snapchat (opens app for upload)
   - Native share API support for mobile devices
-  - Direct download option from share modal
-  - Public share landing page with cosmic theme and OG meta tags for rich social previews
+  - OG meta tags for rich social previews
   - View count tracking for shared videos
   - Token-based sharing with revocation capability
 - **Moon Navigation Menu:** A sliding navigation panel providing access to Home, Profile, Membership, Settings, and Contact pages.
