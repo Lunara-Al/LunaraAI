@@ -382,24 +382,120 @@ export default function Gallery() {
         {/* My Creations Section */}
         {!isLoading && !error && creations.length > 0 && (
           <div className="space-y-8" data-testid="creations-section">
-            <div className="flex items-start gap-4 pb-6 border-b border-gradient-to-r from-primary/40 via-primary/20 to-transparent group">
-              <div className="p-3 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                <Star className="w-6 h-6 md:w-7 md:h-7 text-primary fill-primary" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  My Creations
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
-                  {creations.length} {creations.length === 1 ? 'video' : 'videos'} showcased
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gradient-to-r from-primary/40 via-primary/20 to-transparent group">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                  <Star className="w-6 h-6 md:w-7 md:h-7 text-primary fill-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    My Creations
+                  </h2>
+                  <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
+                    {creations.length} {creations.length === 1 ? 'video' : 'videos'} showcased
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4" data-testid="creations-grid">
-              {creations.map((video, index) => (
-                <VideoCard key={video.id} video={video} isCreation index={index} />
-              ))}
-            </div>
+
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4" data-testid="creations-grid">
+                {creations.map((video, index) => (
+                  <VideoCard key={video.id} video={video} isCreation index={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4" data-testid="creations-list">
+                {creations.map((video, index) => (
+                  <div
+                    key={video.id}
+                    className="group relative flex gap-3 p-2 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 shadow-md hover:shadow-lg transition-all duration-300"
+                    style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
+                  >
+                    <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
+                      <video
+                        src={video.videoUrl}
+                        className="w-full h-full object-cover"
+                        loop
+                        muted
+                        onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
+                        onMouseLeave={(e) => {
+                          const vid = e.currentTarget as HTMLVideoElement;
+                          vid.pause();
+                          vid.currentTime = 0;
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
+                        <Play className="w-6 h-6 text-white fill-white" />
+                      </div>
+                      <div className="absolute top-1.5 right-1.5 z-20">
+                        <Star className="w-3 h-3 text-primary fill-primary shadow-sm" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between py-0.5">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-primary/30">
+                            {video.length}s
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-secondary/30">
+                            {video.aspectRatio}
+                          </Badge>
+                          <span className="text-[9px] text-muted-foreground">
+                            {new Date(video.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-foreground text-xs font-medium line-clamp-1">
+                          {video.prompt}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          onClick={() => handleDownload(video.videoUrl, video.prompt)}
+                          className="h-7 w-7"
+                          title="Download"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="default"
+                          onClick={() => toggleCreationMutation.mutate({ id: video.id, display: !video.displayOnProfile })}
+                          disabled={toggleCreationMutation.isPending}
+                          className="h-7 w-7"
+                          title="Remove from Creations"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => setShareModalVideo(video)}
+                          className="h-7 w-7"
+                          title="Share"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => deleteVideoMutation.mutate(video.id)}
+                          disabled={deleteVideoMutation.isPending}
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
