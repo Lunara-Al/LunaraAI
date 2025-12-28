@@ -235,25 +235,28 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent 
-        className="sm:max-w-lg glass-card border-purple-400/20 dark:border-purple-500/30 overflow-hidden" 
+        className="sm:max-w-lg glass-card border-purple-400/20 dark:border-purple-500/30 overflow-hidden max-h-[90vh] flex flex-col p-0" 
         data-testid="share-modal"
       >
-        <DialogHeader className="relative">
-          <DialogTitle className="flex items-center gap-3 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
-              <Share2 className="w-5 h-5 text-purple-500 dark:text-purple-400" />
-            </div>
-            Share Your Creation
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Share your cosmic video with the world or download it for later
-          </DialogDescription>
-        </DialogHeader>
+        <div className="p-6 pb-0">
+          <DialogHeader className="relative">
+            <DialogTitle className="flex items-center gap-3 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-400/30">
+                <Share2 className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+              </div>
+              Share Your Creation
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Share your cosmic video with the world or download it for later
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        {createShareMutation.isPending ? (
-          <CosmicLoader />
-        ) : shareData ? (
-          <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+        <div className="flex-1 overflow-y-auto p-6 pt-4 custom-scrollbar">
+          {createShareMutation.isPending ? (
+            <CosmicLoader />
+          ) : shareData ? (
+            <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 pb-2">
             <div className="relative rounded-xl overflow-hidden group">
               <div 
                 className="absolute -inset-1 rounded-xl opacity-75 blur-sm transition-opacity duration-300 group-hover:opacity-100"
@@ -427,8 +430,22 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
             </Button>
           </div>
         ) : null}
+        </div>
         
         <style>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.4);
+          }
           @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
