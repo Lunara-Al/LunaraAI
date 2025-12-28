@@ -302,8 +302,8 @@ html {
   /* Glass Bubble Moon Effects - Light Mode Enhanced */
   .glass {
     background: rgba(255, 255, 255, 0.78);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(107, 91, 255, 0.22);
     box-shadow: 
       var(--shadow-sm),
@@ -312,8 +312,8 @@ html {
 
   .dark .glass {
     background: rgba(8, 5, 25, 0.75);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(107, 91, 255, 0.35);
     box-shadow: 
       var(--shadow-md),
@@ -322,8 +322,8 @@ html {
 
   .glass-card {
     background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(107, 91, 255, 0.22);
     box-shadow:
       var(--shadow),
@@ -333,8 +333,8 @@ html {
 
   .dark .glass-card {
     background: rgba(25, 18, 60, 0.72);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(107, 91, 255, 0.3);
     box-shadow:
       var(--shadow-lg),

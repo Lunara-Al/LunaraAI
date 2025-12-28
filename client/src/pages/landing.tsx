@@ -10,7 +10,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-white dark:bg-black">
       {/* Glass header with blur */}
-      <header className="glass sticky top-0 z-50 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center backdrop-blur-xl">
+      <header className="glass sticky top-0 z-50 px-4 py-4 md:px-8 md:py-6 flex justify-between items-center backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="relative">
             <img 
@@ -115,7 +115,7 @@ export default function Landing() {
         </div>
       </main>
 
-      <footer className="glass px-4 py-8 text-center backdrop-blur-xl bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-black/80 dark:to-slate-950/80">
+      <footer className="glass px-4 py-8 text-center backdrop-blur-md bg-gradient-to-r from-white/80 to-slate-50/80 dark:from-black/80 dark:to-slate-950/80">
         <div className="flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400">
           <img 
             src={logoImage} 
