@@ -219,9 +219,9 @@ export default function Gallery() {
             onClick={() => setShareModalVideo(video)}
             data-testid={isCreation ? `button-share-creation-${video.id}` : `button-share-${video.id}`}
             title="Share video"
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-200 hover:scale-105 hover:border-primary/50 hover:bg-primary/10 hover:text-primary group/share"
           >
-            <Share2 className="w-3 h-3 md:w-4 md:h-4" />
+            <Share2 className="w-3 h-3 md:w-4 md:h-4 group-hover/share:animate-pulse" />
           </Button>
 
           <Button
@@ -290,16 +290,6 @@ export default function Gallery() {
               <Sparkles className="w-4 h-4 text-primary/60 dark:text-primary/50 animate-pulse-glow" />
               {videos?.length || 0} videos • {creations.length} creations
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addTestVideoMutation.mutate()}
-              disabled={addTestVideoMutation.isPending}
-              className="mt-2"
-              data-testid="button-add-test-video"
-            >
-              {addTestVideoMutation.isPending ? "Adding..." : "Add Test Video"}
-            </Button>
           </div>
           <Link href="/">
             <Button 
@@ -376,12 +366,34 @@ export default function Gallery() {
                 Start creating your first cosmic ASMR video to build your gallery and showcase your creations to the world
               </p>
             </div>
-            <Link href="/">
-              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" data-testid="button-start-creating">
-                <Sparkles className="w-5 h-5 mr-2" />
-                Start Creating
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" data-testid="button-start-creating">
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Start Creating
+                </Button>
+              </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => addTestVideoMutation.mutate()}
+                disabled={addTestVideoMutation.isPending}
+                className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-300"
+                data-testid="button-add-test-video"
+              >
+                {addTestVideoMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 mr-2" />
+                    Add Test Video
+                  </>
+                )}
               </Button>
-            </Link>
+            </div>
           </div>
         )}
 
