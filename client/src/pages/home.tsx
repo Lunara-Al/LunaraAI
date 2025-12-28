@@ -837,53 +837,59 @@ export default function Home() {
                 return (
                   <div
                     key={example.id}
-                    className="group relative h-64 overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 cursor-pointer"
+                    className="group relative h-64 overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 cursor-pointer border border-white/20 dark:border-white/10"
                     style={{
                       animation: `fadeInUp 0.6s ease-out ${index * 120}ms both`,
                     }}
                     data-testid={`example-video-${example.id}`}
                   >
-                    {/* Background Gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${example.gradient} opacity-60 group-hover:opacity-80 transition-opacity duration-300`} />
-                    
-                    {/* Animated Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent group-hover:from-black/95 transition-all duration-300" />
-
-                    {/* Shine Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-700 opacity-0 group-hover:opacity-100" />
-
-                    {/* Icon Glow */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-50 transition-opacity duration-300">
-                      <div className={`absolute inset-1/4 bg-gradient-to-br ${example.accentGradient} rounded-full blur-3xl`} />
+                    {/* Video Background */}
+                    <div className="absolute inset-0 z-0">
+                      <video
+                        src={example.videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
+                    {/* Background Overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${example.gradient} opacity-40 group-hover:opacity-30 transition-opacity duration-300 z-10`} />
+                    
+                    {/* Animated Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent group-hover:from-black/95 transition-all duration-300 z-20" />
+
+                    {/* Shine Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-700 opacity-0 group-hover:opacity-100 z-30" />
+
                     {/* Content */}
-                    <div className="relative h-full flex flex-col justify-between p-5 md:p-6">
+                    <div className="relative h-full flex flex-col justify-between p-5 md:p-6 z-40">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="p-3 rounded-xl bg-white/15 backdrop-blur-xl border border-white/30 group-hover:bg-white/25 transition-all duration-300 shadow-xl flex-shrink-0">
-                          <IconComponent className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-lg" />
+                        <div className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 group-hover:bg-white/20 transition-all duration-300 shadow-xl flex-shrink-0">
+                          <IconComponent className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-lg" />
                         </div>
-                        <div className={`px-3 py-1.5 rounded-full bg-gradient-to-r ${example.accentGradient} text-white text-xs font-bold shadow-lg flex-shrink-0 whitespace-nowrap`}>
+                        <div className={`px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg flex-shrink-0`}>
                           Featured
                         </div>
                       </div>
 
-                      <div className="space-y-2.5">
-                        <h3 className="text-lg md:text-xl font-bold text-white drop-shadow-lg leading-tight line-clamp-2">
+                      <div className="space-y-1.5">
+                        <h3 className="text-lg md:text-xl font-bold text-white drop-shadow-lg leading-tight line-clamp-1">
                           {example.title}
                         </h3>
-                        <p className="text-xs md:text-sm text-white/90 line-clamp-2 drop-shadow-md leading-relaxed">
+                        <p className="text-[10px] md:text-xs text-white/80 line-clamp-2 drop-shadow-md leading-relaxed font-medium">
                           {example.description}
                         </p>
                       </div>
 
-                      {/* Play Button */}
-                      <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="flex-1 h-1 bg-white/40 rounded-full group-hover:bg-white/60 transition-all duration-300" />
-                        <div className="relative flex items-center justify-center">
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          <Play className="w-5 h-5 text-white fill-white drop-shadow-lg relative z-10" />
+                      {/* Play Indicator */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-0.5 bg-white/20 rounded-full overflow-hidden">
+                          <div className="h-full bg-white/60 w-1/3 animate-shimmer" />
                         </div>
+                        <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
                       </div>
                     </div>
                   </div>
