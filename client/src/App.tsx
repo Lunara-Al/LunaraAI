@@ -17,6 +17,7 @@ import Profile from "@/pages/profile";
 import Membership from "@/pages/membership";
 import Contact from "@/pages/contact";
 import UserProfile from "@/pages/user-profile";
+import SharePage from "@/pages/share";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/register">{isAuthenticated ? <Home /> : <Register />}</Route>
       <Route path="/login">{isAuthenticated ? <Home /> : <Login />}</Route>
       <Route path="/contact" component={Contact} />
+      <Route path="/s/:token" component={SharePage} />
       <Route path="/gallery">{isAuthenticated ? <Gallery /> : <Landing />}</Route>
       <Route path="/settings">{isAuthenticated ? <Settings /> : <Landing />}</Route>
       <Route path="/profile">{isAuthenticated ? <Profile /> : <Landing />}</Route>

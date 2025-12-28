@@ -137,6 +137,35 @@ export type InsertVideoGeneration = typeof videoGenerations.$inferInsert;
 export type VideoGeneration = typeof videoGenerations.$inferSelect;
 
 // ============================================================================
+// DATABASE TABLES - Video Share Links
+// ============================================================================
+
+export const videoShareLinks = pgTable("video_share_links", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  videoId: integer("video_id").references(() => videoGenerations.id).notNull(),
+  ownerUserId: varchar("owner_user_id").references(() => users.id).notNull(),
+  token: varchar("token", { length: 64 }).unique().notNull(),
+  title: text("title"),
+  description: text("description"),
+  isRevoked: integer("is_revoked").default(0).notNull(),
+  viewCount: integer("view_count").default(0).notNull(),
+  lastViewedAt: timestamp("last_viewed_at"),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertVideoShareLinkSchema = createInsertSchema(videoShareLinks).pick({
+  videoId: true,
+  ownerUserId: true,
+  token: true,
+  title: true,
+  description: true,
+});
+
+export type InsertVideoShareLink = z.infer<typeof insertVideoShareLinkSchema>;
+export type VideoShareLink = typeof videoShareLinks.$inferSelect;
+
+// ============================================================================
 // DATABASE TABLES - User Settings
 // ============================================================================
 

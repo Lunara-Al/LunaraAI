@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
+import { ShareModal } from "@/components/share-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { VideoGeneration } from "@shared/schema";
@@ -13,6 +14,7 @@ const VIDEOS_PER_PAGE = 12;
 export default function Gallery() {
   const { toast } = useToast();
   const [limit, setLimit] = useState(VIDEOS_PER_PAGE);
+  const [shareModalVideo, setShareModalVideo] = useState<VideoGeneration | null>(null);
 
   const { data: videos, isLoading, error, isFetching } = useQuery<VideoGeneration[]>({
     queryKey: ["/api/history", limit],
@@ -209,6 +211,17 @@ export default function Gallery() {
             ) : (
               <Star className="w-3 h-3 md:w-4 md:h-4" />
             )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShareModalVideo(video)}
+            data-testid={isCreation ? `button-share-creation-${video.id}` : `button-share-${video.id}`}
+            title="Share video"
+            className="transition-all duration-200 hover:scale-105"
+          >
+            <Share2 className="w-3 h-3 md:w-4 md:h-4" />
           </Button>
 
           <Button
@@ -419,6 +432,15 @@ export default function Gallery() {
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {shareModalVideo && (
+        <ShareModal
+          video={shareModalVideo}
+          isOpen={!!shareModalVideo}
+          onClose={() => setShareModalVideo(null)}
+        />
+      )}
 
       {/* Add fadeInUp animation */}
       <style>{`

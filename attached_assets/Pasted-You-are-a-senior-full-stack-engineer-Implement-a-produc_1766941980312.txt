@@ -1,0 +1,128 @@
+You are a senior full-stack engineer. Implement a production-ready “Share Generated Video” feature in my existing app.
+
+GOAL
+Create a visually appealing Share modal + backend support so users can share a generated video via:
+- Public share link (with rich preview)
+- Copy link
+- Download MP4
+- Mobile native share sheet (Web Share API)
+- One-click “share link” buttons (X, Facebook, LinkedIn, Reddit, WhatsApp, Telegram)
+- For TikTok/Instagram/Snapchat: provide “Download then upload” guidance and best-effort deep links to open the app.
+
+HARD CONSTRAINTS / REALITY CHECK
+Do NOT claim we can directly upload/post to every platform from the browser. Only implement:
+- share link endpoints where supported
+- Web Share API for mobile
+- download + instructions for platforms that require manual upload
+If “direct upload” requires OAuth + platform API + app review, stub it behind an adapter with TODO notes and clear doc comments.
+
+ASSUMED STACK (ADAPT IF DIFFERENT)
+Backend: Python FastAPI
+Frontend: React + TypeScript + Tailwind (use existing component library if present; if shadcn/ui exists, use it)
+Storage: S3-compatible bucket (AWS S3 / Cloudflare R2 / etc.) OR existing storage solution in repo
+DB: Use existing DB layer (SQLAlchemy/Prisma/etc.). If none exists, implement minimal SQLAlchemy + SQLite for dev but keep it clean.
+
+FEATURE REQUIREMENTS (END TO END)
+
+1) Backend data model
+Create a ShareLink entity/table:
+- id (uuid)
+- video_id (foreign key to generated videos)
+- owner_user_id
+- token (random, unguessable, at least 32 bytes base64url)
+- created_at
+- expires_at (nullable)
+- is_revoked (bool)
+- view_count (int)
+- last_viewed_at (nullable)
+
+2) Backend endpoints
+A) POST /api/videos/{video_id}/share
+- Auth required
+- Verify the current user owns the video
+- Create or rotate a ShareLink token (your choice; prefer rotate if user requests)
+- Return:
+  - shareUrl: https://<your-domain>/s/<token>
+  - platformShareUrls: object with prebuilt share URLs for X, Facebook, LinkedIn, Reddit, WhatsApp, Telegram
+  - downloadUrl: a secure signed URL (short-lived) OR a stable file route if safe
+
+B) GET /s/{token}
+- Public route
+- Validate token, not revoked, not expired
+- Render a simple share landing page with:
+  - video player (stream or signed URL)
+  - download button
+  - “Open share modal” style buttons
+  - attribution (optional)
+- IMPORTANT: Add Open Graph + Twitter card meta tags so the link previews nicely in chats:
+  - og:title, og:description, og:video (if supported), og:image (thumbnail), twitter:card
+- Generate/serve a thumbnail image for og:image (see step 3)
+
+C) POST /api/shares/{token}/revoke
+- Auth required
+- Only owner can revoke
+- Sets is_revoked=true
+
+D) (Optional but recommended) GET /api/videos/{video_id}/thumbnail
+- If thumbnails don’t exist, generate one using ffmpeg (take a frame ~1s in)
+- Store alongside the video in storage
+- Return thumbnail URL
+
+3) Storage + serving
+- Ensure videos are stored in S3-compatible storage or existing solution.
+- Use presigned URLs for download/stream if the bucket is private.
+- For the public share page /s/{token}, either:
+  - generate a short-lived signed URL on request, or
+  - proxy stream through backend if needed (but avoid heavy server load).
+Choose the simplest stable approach for Replit hosting.
+
+4) Frontend UI (must look good)
+A) Add a “Share” button wherever generated videos are displayed (video card/detail page).
+B) Clicking it opens a polished ShareModal with:
+- Video thumbnail preview
+- Share link field + “Copy” button
+- Primary button: “Share…” that triggers Web Share API on supported browsers
+- Secondary buttons (icons ok): X, Facebook, LinkedIn, Reddit, WhatsApp, Telegram
+- Download button
+- Section: “TikTok / Instagram / Snapchat”
+  - text: “These platforms require uploading the video in-app. Download first, then upload.”
+  - buttons: “Download for TikTok”, “Open TikTok”, “Open Instagram”, “Open Snapchat”
+  - “Open app” uses best-effort deep links:
+    - TikTok: tiktok:// (fallback to https://www.tiktok.com/)
+    - Instagram: instagram://camera (fallback to https://www.instagram.com/)
+    - Snapchat: snapchat://camera (fallback to https://www.snapchat.com/)
+C) Use graceful fallback if Web Share API unsupported:
+- Hide “Share…” or show tooltip “Available on mobile browsers”
+
+5) Platform share link generation
+Implement helper that produces share URLs that share the shareUrl (not the file):
+- X: https://twitter.com/intent/tweet?url=...&text=...
+- Facebook: https://www.facebook.com/sharer/sharer.php?u=...
+- LinkedIn: https://www.linkedin.com/sharing/share-offsite/?url=...
+- Reddit: https://www.reddit.com/submit?url=...&title=...
+- WhatsApp: https://wa.me/?text=...
+- Telegram: https://t.me/share/url?url=...&text=...
+Return these from the backend (or compute in frontend, but keep it consistent).
+
+6) Security + abuse controls
+- Token must be unguessable
+- Add basic rate limiting on public GET /s/{token} (IP-based) if you already have middleware; if not, keep it simple but structured
+- Ensure revoked/expired links return a friendly page
+- CORS configured correctly for your frontend origin
+
+7) Developer experience
+- Add .env.example with required vars (S3 keys, bucket, base URL)
+- Add concise README section: “Sharing feature”
+- Add minimal tests:
+  - share creation requires ownership
+  - revoked token returns 404 or 410
+  - expired token blocked
+
+DELIVERABLES
+- Working backend endpoints
+- Working frontend modal integrated into existing video UI
+- Share landing page with OG tags (link previews)
+- Clean code, typed TS, and clear comments where platform limitations exist
+
+IMPORTANT
+Before coding: scan the repo to identify existing auth, video model/storage, and UI patterns, then integrate instead of inventing parallel systems. If something is missing, implement the minimum needed in a clean, modular way.

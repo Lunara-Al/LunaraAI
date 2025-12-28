@@ -4,6 +4,7 @@ import {
   userSettings,
   accountAuditLog,
   contactMessages,
+  videoShareLinks,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
@@ -14,7 +15,9 @@ import {
   type UpdateUserSettings,
   type InsertAccountAuditLog,
   type InsertContactMessage,
-  type ContactMessage
+  type ContactMessage,
+  type VideoShareLink,
+  type InsertVideoShareLink
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -53,6 +56,14 @@ export interface IStorage {
 
   // Contact messages operations
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+
+  // Video share link operations
+  createShareLink(data: InsertVideoShareLink): Promise<VideoShareLink>;
+  getShareLinkByToken(token: string): Promise<VideoShareLink | undefined>;
+  getShareLinkByVideoId(videoId: number, userId: string): Promise<VideoShareLink | undefined>;
+  revokeShareLink(token: string, userId: string): Promise<boolean>;
+  incrementShareLinkViews(token: string): Promise<void>;
+  getVideoById(videoId: number): Promise<VideoGeneration | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -368,9 +379,9 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserAccount(userId: string): Promise<void> {
     await db.transaction(async (tx) => {
+      await tx.delete(videoShareLinks).where(eq(videoShareLinks.ownerUserId, userId));
       await tx.delete(videoGenerations).where(eq(videoGenerations.userId, userId));
       await tx.delete(userSettings).where(eq(userSettings.userId, userId));
-      // Note: DO NOT delete accountAuditLog - it's a permanent record
       await tx.delete(users).where(eq(users.id, userId));
     });
   }
@@ -381,6 +392,65 @@ export class DatabaseStorage implements IStorage {
       .values(message)
       .returning();
     return newMessage;
+  }
+
+  // Video share link operations
+  async createShareLink(data: InsertVideoShareLink): Promise<VideoShareLink> {
+    const [shareLink] = await db
+      .insert(videoShareLinks)
+      .values(data)
+      .returning();
+    return shareLink;
+  }
+
+  async getShareLinkByToken(token: string): Promise<VideoShareLink | undefined> {
+    const [shareLink] = await db
+      .select()
+      .from(videoShareLinks)
+      .where(eq(videoShareLinks.token, token));
+    return shareLink;
+  }
+
+  async getShareLinkByVideoId(videoId: number, userId: string): Promise<VideoShareLink | undefined> {
+    const [shareLink] = await db
+      .select()
+      .from(videoShareLinks)
+      .where(and(
+        eq(videoShareLinks.videoId, videoId),
+        eq(videoShareLinks.ownerUserId, userId),
+        eq(videoShareLinks.isRevoked, 0)
+      ));
+    return shareLink;
+  }
+
+  async revokeShareLink(token: string, userId: string): Promise<boolean> {
+    const result = await db
+      .update(videoShareLinks)
+      .set({ isRevoked: 1 })
+      .where(and(
+        eq(videoShareLinks.token, token),
+        eq(videoShareLinks.ownerUserId, userId)
+      ))
+      .returning({ id: videoShareLinks.id });
+    return result.length > 0;
+  }
+
+  async incrementShareLinkViews(token: string): Promise<void> {
+    await db
+      .update(videoShareLinks)
+      .set({ 
+        viewCount: sql`${videoShareLinks.viewCount} + 1`,
+        lastViewedAt: new Date()
+      })
+      .where(eq(videoShareLinks.token, token));
+  }
+
+  async getVideoById(videoId: number): Promise<VideoGeneration | undefined> {
+    const [video] = await db
+      .select()
+      .from(videoGenerations)
+      .where(eq(videoGenerations.id, videoId));
+    return video;
   }
 }
 
