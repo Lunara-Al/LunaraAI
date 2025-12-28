@@ -5,6 +5,8 @@ import {
   accountAuditLog,
   contactMessages,
   videoShareLinks,
+  socialAccounts,
+  socialUploadJobs,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
@@ -17,7 +19,13 @@ import {
   type InsertContactMessage,
   type ContactMessage,
   type VideoShareLink,
-  type InsertVideoShareLink
+  type InsertVideoShareLink,
+  type SocialAccount,
+  type InsertSocialAccount,
+  type SocialPlatform,
+  type SocialUploadJob,
+  type InsertSocialUploadJob,
+  type UploadJobStatus
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -64,6 +72,19 @@ export interface IStorage {
   revokeShareLink(token: string, userId: string): Promise<boolean>;
   incrementShareLinkViews(token: string): Promise<void>;
   getVideoById(videoId: number): Promise<VideoGeneration | undefined>;
+
+  // Social account operations
+  getSocialAccounts(userId: string): Promise<SocialAccount[]>;
+  getSocialAccountByPlatform(userId: string, platform: SocialPlatform): Promise<SocialAccount | undefined>;
+  createSocialAccount(data: InsertSocialAccount): Promise<SocialAccount>;
+  updateSocialAccount(id: number, updates: Partial<InsertSocialAccount>): Promise<SocialAccount>;
+  deleteSocialAccount(id: number, userId: string): Promise<boolean>;
+
+  // Social upload job operations
+  createUploadJob(data: InsertSocialUploadJob): Promise<SocialUploadJob>;
+  getUploadJobs(userId: string, limit?: number): Promise<SocialUploadJob[]>;
+  getUploadJob(id: number): Promise<SocialUploadJob | undefined>;
+  updateUploadJobStatus(id: number, status: UploadJobStatus, externalPostId?: string, externalPostUrl?: string, errorMessage?: string): Promise<SocialUploadJob>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -451,6 +472,102 @@ export class DatabaseStorage implements IStorage {
       .from(videoGenerations)
       .where(eq(videoGenerations.id, videoId));
     return video;
+  }
+
+  // Social account operations
+  async getSocialAccounts(userId: string): Promise<SocialAccount[]> {
+    return await db
+      .select()
+      .from(socialAccounts)
+      .where(and(eq(socialAccounts.userId, userId), eq(socialAccounts.isActive, 1)))
+      .orderBy(desc(socialAccounts.createdAt));
+  }
+
+  async getSocialAccountByPlatform(userId: string, platform: SocialPlatform): Promise<SocialAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(socialAccounts)
+      .where(and(
+        eq(socialAccounts.userId, userId),
+        eq(socialAccounts.platform, platform),
+        eq(socialAccounts.isActive, 1)
+      ));
+    return account;
+  }
+
+  async createSocialAccount(data: InsertSocialAccount): Promise<SocialAccount> {
+    const [account] = await db
+      .insert(socialAccounts)
+      .values(data)
+      .returning();
+    return account;
+  }
+
+  async updateSocialAccount(id: number, updates: Partial<InsertSocialAccount>): Promise<SocialAccount> {
+    const [account] = await db
+      .update(socialAccounts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(socialAccounts.id, id))
+      .returning();
+    return account;
+  }
+
+  async deleteSocialAccount(id: number, userId: string): Promise<boolean> {
+    const result = await db
+      .update(socialAccounts)
+      .set({ isActive: 0, updatedAt: new Date() })
+      .where(and(eq(socialAccounts.id, id), eq(socialAccounts.userId, userId)))
+      .returning({ id: socialAccounts.id });
+    return result.length > 0;
+  }
+
+  // Social upload job operations
+  async createUploadJob(data: InsertSocialUploadJob): Promise<SocialUploadJob> {
+    const [job] = await db
+      .insert(socialUploadJobs)
+      .values(data)
+      .returning();
+    return job;
+  }
+
+  async getUploadJobs(userId: string, limit: number = 50): Promise<SocialUploadJob[]> {
+    return await db
+      .select()
+      .from(socialUploadJobs)
+      .where(eq(socialUploadJobs.userId, userId))
+      .orderBy(desc(socialUploadJobs.createdAt))
+      .limit(limit);
+  }
+
+  async getUploadJob(id: number): Promise<SocialUploadJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(socialUploadJobs)
+      .where(eq(socialUploadJobs.id, id));
+    return job;
+  }
+
+  async updateUploadJobStatus(
+    id: number, 
+    status: UploadJobStatus, 
+    externalPostId?: string, 
+    externalPostUrl?: string, 
+    errorMessage?: string
+  ): Promise<SocialUploadJob> {
+    const updateData: Partial<SocialUploadJob> = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    if (externalPostId) updateData.externalPostId = externalPostId;
+    if (externalPostUrl) updateData.externalPostUrl = externalPostUrl;
+    if (errorMessage) updateData.errorMessage = errorMessage;
+
+    const [job] = await db
+      .update(socialUploadJobs)
+      .set(updateData)
+      .where(eq(socialUploadJobs.id, id))
+      .returning();
+    return job;
   }
 }
 

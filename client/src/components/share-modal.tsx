@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -15,10 +16,14 @@ import {
   Eye,
   X,
   Sparkles,
-  Link2
+  Link2,
+  Upload,
+  Unlink,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
-import type { VideoGeneration } from "@shared/schema";
+import type { VideoGeneration, SocialPlatform } from "@shared/schema";
 
 type ShareModalProps = {
   video: VideoGeneration;
@@ -41,6 +46,24 @@ type ShareResponse = {
   };
   viewCount: number;
   createdAt: string;
+};
+
+type SocialAccount = {
+  id: number;
+  platform: string;
+  displayName: string | null;
+  profileImageUrl: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+type UploadState = {
+  platform: SocialPlatform;
+  status: "idle" | "connecting" | "uploading" | "success" | "error";
+  caption: string;
+  jobId?: number;
+  postUrl?: string;
+  error?: string;
 };
 
 function CosmicLoader() {
@@ -104,10 +127,198 @@ function CosmicDivider() {
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
       <div className="flex items-center gap-2">
         <Sparkles className="w-3 h-3 text-purple-400/60" />
-        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">In-App Upload</span>
+        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Direct Upload</span>
         <Sparkles className="w-3 h-3 text-pink-400/60" />
       </div>
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-pink-400/30 to-transparent" />
+    </div>
+  );
+}
+
+type PlatformCardProps = {
+  platform: SocialPlatform;
+  icon: typeof SiTiktok;
+  label: string;
+  isConnected: boolean;
+  account?: SocialAccount;
+  uploadState: UploadState;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onUpload: () => void;
+  onCaptionChange: (caption: string) => void;
+  gradientFrom: string;
+  gradientTo: string;
+  iconColor: string;
+  glowColor: string;
+};
+
+function PlatformCard({
+  platform,
+  icon: Icon,
+  label,
+  isConnected,
+  account,
+  uploadState,
+  onConnect,
+  onDisconnect,
+  onUpload,
+  onCaptionChange,
+  gradientFrom,
+  gradientTo,
+  iconColor,
+  glowColor,
+}: PlatformCardProps) {
+  const [showCaption, setShowCaption] = useState(false);
+  const isLoading = uploadState.status === "connecting" || uploadState.status === "uploading";
+  const isSuccess = uploadState.status === "success";
+  const isError = uploadState.status === "error";
+
+  return (
+    <div 
+      className={`relative p-4 rounded-xl border transition-all duration-300 ${
+        isConnected 
+          ? `bg-gradient-to-br ${gradientFrom} ${gradientTo} border-primary/30 dark:border-primary/40` 
+          : 'bg-muted/30 border-muted-foreground/20'
+      }`}
+      style={isConnected ? { boxShadow: `0 0 20px ${glowColor}` } : undefined}
+    >
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${isConnected ? 'bg-white/20' : 'bg-muted'}`}>
+            <Icon className={`w-5 h-5 ${isConnected ? iconColor : 'text-muted-foreground'}`} />
+          </div>
+          <div>
+            <p className={`font-semibold text-sm ${isConnected ? 'text-foreground' : 'text-muted-foreground'}`}>
+              {label}
+            </p>
+            {isConnected && account?.displayName && (
+              <p className="text-xs text-muted-foreground truncate max-w-[120px]">
+                {account.displayName}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {isConnected ? (
+          <Badge 
+            variant="secondary" 
+            className="gap-1 text-xs bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30"
+          >
+            <CheckCircle2 className="w-3 h-3" />
+            Connected
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            Not connected
+          </Badge>
+        )}
+      </div>
+
+      {isConnected ? (
+        <div className="space-y-3">
+          {showCaption && (
+            <Textarea
+              placeholder="Add a caption for your post..."
+              value={uploadState.caption}
+              onChange={(e) => onCaptionChange(e.target.value)}
+              className="min-h-[60px] text-sm resize-none bg-white/50 dark:bg-slate-800/50 border-white/30 dark:border-slate-700/50"
+              disabled={isLoading || isSuccess}
+              data-testid={`textarea-caption-${platform}`}
+            />
+          )}
+
+          {isSuccess && uploadState.postUrl && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <span className="text-xs text-green-600 dark:text-green-400 flex-1">Posted successfully!</span>
+              <a 
+                href={uploadState.postUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                View
+              </a>
+            </div>
+          )}
+
+          {isError && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/10 border border-red-500/30">
+              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+              <span className="text-xs text-red-600 dark:text-red-400">{uploadState.error || "Upload failed"}</span>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {!isSuccess && (
+              <>
+                {!showCaption ? (
+                  <Button
+                    onClick={() => setShowCaption(true)}
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 text-xs"
+                    disabled={isLoading}
+                    data-testid={`button-add-caption-${platform}`}
+                  >
+                    Add Caption
+                  </Button>
+                ) : null}
+                <Button
+                  onClick={onUpload}
+                  size="sm"
+                  className={`flex-1 text-xs bg-gradient-to-r ${gradientFrom.replace('/10', '')} ${gradientTo.replace('/10', '')} text-white`}
+                  disabled={isLoading}
+                  data-testid={`button-upload-${platform}`}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                      {uploadState.status === "connecting" ? "Connecting..." : "Uploading..."}
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3 h-3 mr-1.5" />
+                      Upload
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={onDisconnect}
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-destructive"
+              disabled={isLoading}
+              data-testid={`button-disconnect-${platform}`}
+            >
+              <Unlink className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          onClick={onConnect}
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
+          disabled={isLoading}
+          data-testid={`button-connect-${platform}`}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+              Connecting...
+            </>
+          ) : (
+            <>
+              <Link2 className="w-3 h-3 mr-1.5" />
+              Connect {label}
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 }
@@ -116,6 +327,16 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   const { toast } = useToast();
   const [shareData, setShareData] = useState<ShareResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [uploadStates, setUploadStates] = useState<Record<SocialPlatform, UploadState>>({
+    tiktok: { platform: "tiktok", status: "idle", caption: "" },
+    instagram: { platform: "instagram", status: "idle", caption: "" },
+    youtube: { platform: "youtube", status: "idle", caption: "" },
+  });
+
+  const { data: socialAccounts, refetch: refetchAccounts } = useQuery<{ accounts: SocialAccount[] }>({
+    queryKey: ["/api/social/accounts"],
+    enabled: isOpen,
+  });
 
   const createShareMutation = useMutation({
     mutationFn: async () => {
@@ -138,15 +359,173 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     },
   });
 
+  const connectMutation = useMutation({
+    mutationFn: async (platform: SocialPlatform) => {
+      const response = await apiRequest("POST", `/api/social/connect/${platform}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to connect");
+      }
+      return response.json();
+    },
+    onSuccess: (data, platform) => {
+      setUploadStates(prev => ({
+        ...prev,
+        [platform]: { ...prev[platform], status: "idle" }
+      }));
+      refetchAccounts();
+      toast({
+        title: "Account Connected",
+        description: data.message,
+      });
+    },
+    onError: (error: Error, platform) => {
+      setUploadStates(prev => ({
+        ...prev,
+        [platform]: { ...prev[platform], status: "error", error: error.message }
+      }));
+      toast({
+        variant: "destructive",
+        title: "Connection Failed",
+        description: error.message,
+      });
+    },
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async (accountId: number) => {
+      const response = await apiRequest("DELETE", `/api/social/accounts/${accountId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to disconnect");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchAccounts();
+      toast({
+        title: "Account Disconnected",
+        description: "Social account has been disconnected",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Disconnect Failed",
+        description: error.message,
+      });
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({ platform, caption }: { platform: SocialPlatform; caption?: string }) => {
+      const response = await apiRequest("POST", "/api/social/upload", {
+        videoId: video.id,
+        platform,
+        caption,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload");
+      }
+      return response.json();
+    },
+    onSuccess: (data, { platform }) => {
+      setUploadStates(prev => ({
+        ...prev,
+        [platform]: { ...prev[platform], status: "uploading", jobId: data.jobId }
+      }));
+      pollUploadStatus(data.jobId, platform);
+    },
+    onError: (error: Error, { platform }) => {
+      setUploadStates(prev => ({
+        ...prev,
+        [platform]: { ...prev[platform], status: "error", error: error.message }
+      }));
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message,
+      });
+    },
+  });
+
+  const pollUploadStatus = async (jobId: number, platform: SocialPlatform) => {
+    let attempts = 0;
+    const maxAttempts = 30;
+    
+    const poll = async () => {
+      try {
+        const response = await apiRequest("GET", `/api/social/upload/${jobId}/status`);
+        if (!response.ok) throw new Error("Failed to fetch status");
+        
+        const data = await response.json();
+        
+        if (data.status === "completed") {
+          setUploadStates(prev => ({
+            ...prev,
+            [platform]: { 
+              ...prev[platform], 
+              status: "success", 
+              postUrl: data.externalPostUrl 
+            }
+          }));
+          toast({
+            title: "Upload Complete",
+            description: `Video posted to ${platform} successfully!`,
+          });
+          return;
+        } else if (data.status === "failed") {
+          setUploadStates(prev => ({
+            ...prev,
+            [platform]: { 
+              ...prev[platform], 
+              status: "error", 
+              error: data.errorMessage || "Upload failed"
+            }
+          }));
+          return;
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 1000);
+        } else {
+          setUploadStates(prev => ({
+            ...prev,
+            [platform]: { 
+              ...prev[platform], 
+              status: "error", 
+              error: "Upload timed out" 
+            }
+          }));
+        }
+      } catch (error) {
+        setUploadStates(prev => ({
+          ...prev,
+          [platform]: { 
+            ...prev[platform], 
+            status: "error", 
+            error: "Failed to check upload status" 
+          }
+        }));
+      }
+    };
+    
+    setTimeout(poll, 1000);
+  };
+
   const handleOpen = () => {
     if (!shareData && !createShareMutation.isPending) {
       createShareMutation.mutate();
     }
   };
 
-  if (isOpen && !shareData && !createShareMutation.isPending && !createShareMutation.isError) {
-    handleOpen();
-  }
+  useEffect(() => {
+    if (isOpen && !shareData && !createShareMutation.isPending && !createShareMutation.isError) {
+      handleOpen();
+    }
+  }, [isOpen]);
 
   const handleCopyLink = async () => {
     if (shareData?.shareUrl) {
@@ -197,32 +576,52 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }
   };
 
-  const openAppDeepLink = (app: "tiktok" | "instagram" | "youtube") => {
-    const deepLinks = {
-      tiktok: { deep: "tiktok://", fallback: "https://www.tiktok.com/" },
-      instagram: { deep: "instagram://camera", fallback: "https://www.instagram.com/" },
-      youtube: { deep: "youtube://upload", fallback: "https://www.youtube.com/upload" },
-    };
+  const handleConnect = (platform: SocialPlatform) => {
+    setUploadStates(prev => ({
+      ...prev,
+      [platform]: { ...prev[platform], status: "connecting" }
+    }));
+    connectMutation.mutate(platform);
+  };
 
-    const { deep, fallback } = deepLinks[app];
-    
-    const timeout = setTimeout(() => {
-      window.location.href = fallback;
-    }, 1500);
+  const handleDisconnect = (platform: SocialPlatform) => {
+    const account = socialAccounts?.accounts.find(a => a.platform === platform);
+    if (account) {
+      disconnectMutation.mutate(account.id);
+    }
+  };
 
-    window.location.href = deep;
-    
-    const blurHandler = () => {
-      clearTimeout(timeout);
-    };
-    
-    window.addEventListener("blur", blurHandler, { once: true });
+  const handleUpload = (platform: SocialPlatform) => {
+    setUploadStates(prev => ({
+      ...prev,
+      [platform]: { ...prev[platform], status: "uploading" }
+    }));
+    uploadMutation.mutate({ 
+      platform, 
+      caption: uploadStates[platform].caption || undefined 
+    });
+  };
+
+  const handleCaptionChange = (platform: SocialPlatform, caption: string) => {
+    setUploadStates(prev => ({
+      ...prev,
+      [platform]: { ...prev[platform], caption }
+    }));
   };
 
   const handleClose = () => {
     onClose();
     setShareData(null);
     setCopied(false);
+    setUploadStates({
+      tiktok: { platform: "tiktok", status: "idle", caption: "" },
+      instagram: { platform: "instagram", status: "idle", caption: "" },
+      youtube: { platform: "youtube", status: "idle", caption: "" },
+    });
+  };
+
+  const getAccountByPlatform = (platform: SocialPlatform) => {
+    return socialAccounts?.accounts.find(a => a.platform === platform);
   };
 
   const socialPlatforms = [
@@ -249,7 +648,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
               Share Your Creation
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Share your cosmic video with the world or download it for later
+              Share your cosmic video with the world or upload directly to social platforms
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -259,179 +658,203 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
             <CosmicLoader />
           ) : shareData ? (
             <div className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 pb-2">
-            <div className="relative rounded-xl overflow-hidden group">
-              <div 
-                className="absolute -inset-1 rounded-xl opacity-75 blur-sm transition-opacity duration-300 group-hover:opacity-100"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(107, 91, 255, 0.5) 0%, rgba(255, 107, 204, 0.5) 100%)'
-                }}
-              />
-              <div className="relative aspect-video rounded-xl overflow-hidden bg-black/10 dark:bg-black/30">
-                <video
-                  src={video.videoUrl}
-                  className="w-full h-full object-cover"
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                />
-                
+              <div className="relative rounded-xl overflow-hidden group">
                 <div 
-                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                  className="absolute -inset-1 rounded-xl opacity-75 blur-sm transition-opacity duration-300 group-hover:opacity-100"
                   style={{
-                    background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)',
-                    animation: 'shimmer 3s ease-in-out infinite',
-                    backgroundSize: '200% 100%'
+                    background: 'linear-gradient(135deg, rgba(107, 91, 255, 0.5) 0%, rgba(255, 107, 204, 0.5) 100%)'
                   }}
                 />
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-black/10 dark:bg-black/30">
+                  <video
+                    src={video.videoUrl}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                  />
+                  
+                  <div 
+                    className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                    style={{
+                      background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)',
+                      animation: 'shimmer 3s ease-in-out infinite',
+                      backgroundSize: '200% 100%'
+                    }}
+                  />
+                  
+                  {shareData.viewCount > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute top-3 right-3 gap-1.5 bg-black/50 dark:bg-black/60 backdrop-blur-md border-white/20 text-white shadow-lg"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {shareData.viewCount} {shareData.viewCount === 1 ? 'view' : 'views'}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-foreground line-clamp-2">
+                  {video.prompt}
+                </p>
                 
-                {shareData.viewCount > 0 && (
-                  <Badge 
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    <Link2 className="w-3.5 h-3.5" />
+                    Share Link
+                  </label>
+                  <div className="flex gap-2 p-1.5 rounded-lg bg-purple-500/5 dark:bg-purple-500/10 border border-purple-400/20">
+                    <Input
+                      value={shareData.shareUrl}
+                      readOnly
+                      className="flex-1 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                      data-testid="input-share-url"
+                    />
+                    <Button
+                      onClick={handleCopyLink}
+                      variant={copied ? "default" : "secondary"}
+                      size="sm"
+                      className={`min-w-[80px] transition-all duration-300 ${copied ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
+                      data-testid="button-copy-share-link"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4 mr-1.5" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-1.5" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleDownload} 
+                  variant="default" 
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700"
+                  data-testid="button-modal-download"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                
+                {typeof navigator !== "undefined" && typeof navigator.share !== "undefined" && (
+                  <Button 
+                    onClick={handleNativeShare} 
                     variant="secondary" 
-                    className="absolute top-3 right-3 gap-1.5 bg-black/50 dark:bg-black/60 backdrop-blur-md border-white/20 text-white shadow-lg"
+                    className="flex-1"
+                    data-testid="button-modal-share"
                   >
-                    <Eye className="w-3.5 h-3.5" />
-                    {shareData.viewCount} {shareData.viewCount === 1 ? 'view' : 'views'}
-                  </Badge>
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
                 )}
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground line-clamp-2">
-                {video.prompt}
-              </p>
-              
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  <Link2 className="w-3.5 h-3.5" />
-                  Share Link
+              <div className="space-y-3">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Share on Social Media
                 </label>
-                <div className="flex gap-2 p-1.5 rounded-lg bg-purple-500/5 dark:bg-purple-500/10 border border-purple-400/20">
-                  <Input
-                    value={shareData.shareUrl}
-                    readOnly
-                    className="flex-1 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    data-testid="input-share-url"
+                <div className="grid grid-cols-6 gap-3">
+                  {socialPlatforms.map((platform) => (
+                    <a
+                      key={platform.key}
+                      href={shareData.platformShareUrls[platform.key as keyof typeof shareData.platformShareUrls]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl bg-purple-500/5 dark:bg-purple-500/10 border border-purple-400/15 dark:border-purple-400/20 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 ${platform.color}`}
+                      data-testid={`link-modal-share-${platform.key}`}
+                    >
+                      <platform.icon className={`w-6 h-6 ${platform.iconColor || 'text-foreground'} transition-transform duration-300 group-hover:scale-110`} />
+                      <span className="text-[10px] text-muted-foreground font-medium">{platform.label}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              <CosmicDivider />
+
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Connect your accounts to upload videos directly from Lunara
+                </p>
+                <div className="grid grid-cols-1 gap-3">
+                  <PlatformCard
+                    platform="tiktok"
+                    icon={SiTiktok}
+                    label="TikTok"
+                    isConnected={!!getAccountByPlatform("tiktok")}
+                    account={getAccountByPlatform("tiktok")}
+                    uploadState={uploadStates.tiktok}
+                    onConnect={() => handleConnect("tiktok")}
+                    onDisconnect={() => handleDisconnect("tiktok")}
+                    onUpload={() => handleUpload("tiktok")}
+                    onCaptionChange={(caption) => handleCaptionChange("tiktok", caption)}
+                    gradientFrom="from-gray-900/10"
+                    gradientTo="to-gray-800/5"
+                    iconColor="text-foreground"
+                    glowColor="rgba(0,0,0,0.2)"
                   />
-                  <Button
-                    onClick={handleCopyLink}
-                    variant={copied ? "default" : "secondary"}
-                    size="sm"
-                    className={`min-w-[80px] transition-all duration-300 ${copied ? 'bg-green-500 hover:bg-green-600 text-white' : ''}`}
-                    data-testid="button-copy-share-link"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 mr-1.5" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-1.5" />
-                        Copy
-                      </>
-                    )}
-                  </Button>
+                  
+                  <PlatformCard
+                    platform="instagram"
+                    icon={SiInstagram}
+                    label="Instagram"
+                    isConnected={!!getAccountByPlatform("instagram")}
+                    account={getAccountByPlatform("instagram")}
+                    uploadState={uploadStates.instagram}
+                    onConnect={() => handleConnect("instagram")}
+                    onDisconnect={() => handleDisconnect("instagram")}
+                    onUpload={() => handleUpload("instagram")}
+                    onCaptionChange={(caption) => handleCaptionChange("instagram", caption)}
+                    gradientFrom="from-pink-500/10"
+                    gradientTo="to-purple-500/10"
+                    iconColor="text-pink-500"
+                    glowColor="rgba(236,72,153,0.3)"
+                  />
+                  
+                  <PlatformCard
+                    platform="youtube"
+                    icon={SiYoutube}
+                    label="YouTube"
+                    isConnected={!!getAccountByPlatform("youtube")}
+                    account={getAccountByPlatform("youtube")}
+                    uploadState={uploadStates.youtube}
+                    onConnect={() => handleConnect("youtube")}
+                    onDisconnect={() => handleDisconnect("youtube")}
+                    onUpload={() => handleUpload("youtube")}
+                    onCaptionChange={(caption) => handleCaptionChange("youtube", caption)}
+                    gradientFrom="from-red-500/10"
+                    gradientTo="to-red-600/5"
+                    iconColor="text-red-600"
+                    glowColor="rgba(239,68,68,0.3)"
+                  />
                 </div>
               </div>
             </div>
-
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleDownload} 
-                variant="default" 
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700"
-                data-testid="button-modal-download"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download
+          ) : createShareMutation.isError ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="p-4 rounded-full bg-destructive/10 border border-destructive/20">
+                <X className="w-8 h-8 text-destructive" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-medium text-foreground">Failed to create share link</p>
+                <p className="text-sm text-muted-foreground">Please try again</p>
+              </div>
+              <Button onClick={() => createShareMutation.mutate()} variant="outline" className="mt-2">
+                Try Again
               </Button>
-              
-              {typeof navigator !== "undefined" && typeof navigator.share !== "undefined" && (
-                <Button 
-                  onClick={handleNativeShare} 
-                  variant="secondary" 
-                  className="flex-1"
-                  data-testid="button-modal-share"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-              )}
             </div>
-
-            <div className="space-y-3">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Share on Social Media
-              </label>
-              <div className="grid grid-cols-6 gap-3">
-                {socialPlatforms.map((platform) => (
-                  <a
-                    key={platform.key}
-                    href={shareData.platformShareUrls[platform.key as keyof typeof shareData.platformShareUrls]}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl bg-purple-500/5 dark:bg-purple-500/10 border border-purple-400/15 dark:border-purple-400/20 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 ${platform.color}`}
-                    data-testid={`link-modal-share-${platform.key}`}
-                  >
-                    <platform.icon className={`w-6 h-6 ${platform.iconColor || 'text-foreground'} transition-transform duration-300 group-hover:scale-110`} />
-                    <span className="text-[10px] text-muted-foreground font-medium">{platform.label}</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <CosmicDivider />
-
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Download first, then upload directly in these apps
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  onClick={() => openAppDeepLink("tiktok")}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-gray-900/10 to-gray-800/5 dark:from-white/10 dark:to-white/5 border border-gray-500/20 dark:border-white/15 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.15)]"
-                  data-testid="button-open-tiktok"
-                >
-                  <SiTiktok className="w-6 h-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
-                  <span className="text-xs text-muted-foreground font-medium">TikTok</span>
-                </button>
-                
-                <button
-                  onClick={() => openAppDeepLink("instagram")}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 dark:from-pink-500/15 dark:to-purple-500/15 border border-pink-400/20 dark:border-pink-400/25 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(236,72,153,0.4)]"
-                  data-testid="button-open-instagram"
-                >
-                  <SiInstagram className="w-6 h-6 text-pink-500 transition-transform duration-300 group-hover:scale-110" />
-                  <span className="text-xs text-muted-foreground font-medium">Instagram</span>
-                </button>
-                
-                <button
-                  onClick={() => openAppDeepLink("youtube")}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 dark:from-red-500/15 dark:to-red-600/10 border border-red-400/20 dark:border-red-400/25 transition-all duration-300 group hover:scale-105 hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(239,68,68,0.4)]"
-                  data-testid="button-open-youtube"
-                >
-                  <SiYoutube className="w-6 h-6 text-red-600 transition-transform duration-300 group-hover:scale-110" />
-                  <span className="text-xs text-muted-foreground font-medium">YouTube</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : createShareMutation.isError ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-4">
-            <div className="p-4 rounded-full bg-destructive/10 border border-destructive/20">
-              <X className="w-8 h-8 text-destructive" />
-            </div>
-            <div className="text-center space-y-1">
-              <p className="font-medium text-foreground">Failed to create share link</p>
-              <p className="text-sm text-muted-foreground">Please try again</p>
-            </div>
-            <Button onClick={() => createShareMutation.mutate()} variant="outline" className="mt-2">
-              Try Again
-            </Button>
-          </div>
-        ) : null}
+          ) : null}
         </div>
         
         <style>{`

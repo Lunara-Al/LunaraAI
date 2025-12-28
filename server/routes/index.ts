@@ -6,3 +6,4 @@ export { createSettingsRouter } from "./settings-routes";
 export { createContactRouter } from "./contact-routes";
 export { createUsersRouter } from "./users-routes";
 export { createShareRouter } from "./share-routes";
+export { createSocialRouter } from "./social-routes";

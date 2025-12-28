@@ -306,3 +306,66 @@ export const updateProfileSchema = z.object({
 export type RegisterRequest = z.infer<typeof registerSchema>;
 export type LoginRequest = z.infer<typeof loginSchema>;
 export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
+
+// ============================================================================
+// DATABASE TABLES - Social Accounts (Connected Platforms)
+// ============================================================================
+
+export const SOCIAL_PLATFORMS = ["tiktok", "instagram", "youtube"] as const;
+export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
+
+export const socialAccounts = pgTable("social_accounts", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  platform: varchar("platform", { length: 20 }).notNull(),
+  externalAccountId: varchar("external_account_id"),
+  displayName: varchar("display_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  accessTokenEncrypted: text("access_token_encrypted"),
+  refreshTokenEncrypted: text("refresh_token_encrypted"),
+  tokenExpiresAt: timestamp("token_expires_at"),
+  scopes: jsonb("scopes"),
+  metadata: jsonb("metadata"),
+  isActive: integer("is_active").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SocialAccount = typeof socialAccounts.$inferSelect;
+export type InsertSocialAccount = typeof socialAccounts.$inferInsert;
+
+// ============================================================================
+// DATABASE TABLES - Social Upload Jobs
+// ============================================================================
+
+export const UPLOAD_JOB_STATUSES = ["pending", "uploading", "completed", "failed"] as const;
+export type UploadJobStatus = (typeof UPLOAD_JOB_STATUSES)[number];
+
+export const socialUploadJobs = pgTable("social_upload_jobs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  videoId: integer("video_id").references(() => videoGenerations.id).notNull(),
+  socialAccountId: integer("social_account_id").references(() => socialAccounts.id).notNull(),
+  platform: varchar("platform", { length: 20 }).notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  caption: text("caption"),
+  hashtags: text("hashtags"),
+  externalPostId: varchar("external_post_id"),
+  externalPostUrl: varchar("external_post_url"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SocialUploadJob = typeof socialUploadJobs.$inferSelect;
+export type InsertSocialUploadJob = typeof socialUploadJobs.$inferInsert;
+
+// Validation schema for creating upload jobs
+export const createUploadJobSchema = z.object({
+  videoId: z.number(),
+  platform: z.enum(SOCIAL_PLATFORMS),
+  caption: z.string().max(2200).optional(),
+  hashtags: z.string().max(500).optional(),
+});
+
+export type CreateUploadJobRequest = z.infer<typeof createUploadJobSchema>;
