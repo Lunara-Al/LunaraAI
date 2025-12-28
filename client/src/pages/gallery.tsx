@@ -382,19 +382,17 @@ export default function Gallery() {
         {/* My Creations Section */}
         {!isLoading && !error && creations.length > 0 && (
           <div className="space-y-8" data-testid="creations-section">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gradient-to-r from-primary/40 via-primary/20 to-transparent group">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <Star className="w-6 h-6 md:w-7 md:h-7 text-primary fill-primary" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    My Creations
-                  </h2>
-                  <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
-                    {creations.length} {creations.length === 1 ? 'video' : 'videos'} showcased
-                  </p>
-                </div>
+            <div className="flex items-start gap-4 pb-6 border-b border-gradient-to-r from-primary/40 via-primary/20 to-transparent group">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <Star className="w-6 h-6 md:w-7 md:h-7 text-primary fill-primary" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  My Creations
+                </h2>
+                <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
+                  {creations.length} {creations.length === 1 ? 'video' : 'videos'} showcased
+                </p>
               </div>
             </div>
 
@@ -502,42 +500,17 @@ export default function Gallery() {
         {/* View Mode Toggle & All Videos Section */}
         {!isLoading && !error && videos && videos.length > 0 && (
           <div className="space-y-8" data-testid="all-videos-section">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gradient-to-r from-secondary/40 via-secondary/20 to-transparent group">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-gradient-to-br from-secondary/30 to-primary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-secondary fill-secondary/50" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
-                    All Videos
-                  </h2>
-                  <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
-                    {videos.length} {videos.length === 1 ? 'video' : 'videos'} in total
-                  </p>
-                </div>
+            <div className="flex items-start gap-4 pb-6 border-b border-gradient-to-r from-secondary/40 via-secondary/20 to-transparent group">
+              <div className="p-3 rounded-lg bg-gradient-to-br from-secondary/30 to-primary/20 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-secondary fill-secondary/50" />
               </div>
-
-              <div className="flex items-center gap-2 bg-background/40 backdrop-blur-md p-1.5 rounded-xl border border-primary/10 self-end sm:self-auto">
-                <Button
-                  size="sm"
-                  variant={viewMode === "grid" ? "default" : "ghost"}
-                  onClick={() => setViewMode("grid")}
-                  className={`px-3 ${viewMode === "grid" ? "bg-gradient-to-r from-primary to-secondary" : ""}`}
-                  data-testid="button-view-grid"
-                >
-                  <Grid3x3 className="w-4 h-4 mr-2" />
-                  Grid
-                </Button>
-                <Button
-                  size="sm"
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  onClick={() => setViewMode("list")}
-                  className={`px-3 ${viewMode === "list" ? "bg-gradient-to-r from-primary to-secondary" : ""}`}
-                  data-testid="button-view-list"
-                >
-                  <List className="w-4 h-4 mr-2" />
-                  List
-                </Button>
+              <div className="flex-1">
+                <h2 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent">
+                  All Videos
+                </h2>
+                <p className="text-sm md:text-base text-muted-foreground mt-2 font-medium">
+                  {videos.length} {videos.length === 1 ? 'video' : 'videos'} in total
+                </p>
               </div>
             </div>
 
