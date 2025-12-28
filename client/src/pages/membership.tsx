@@ -52,7 +52,7 @@ export default function Membership() {
   // Upgrade/Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: async (tier: string) => {
-      if (tier !== "free") {
+      if (tier !== "basic") {
         try {
           const response = await apiRequest("POST", "/api/subscription/create", { tier });
           const data = await response.json();
@@ -174,7 +174,7 @@ export default function Membership() {
     },
   });
 
-  const currentTier = subscription?.tier || "free";
+  const currentTier = subscription?.tier || "basic";
   const isLoading = authLoading || subLoading;
 
   const handleUpgrade = (tier: string) => {
@@ -274,9 +274,9 @@ export default function Membership() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Basic Tier */}
-            <Card className={`p-8 space-y-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl bg-white/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "free" ? "ring-2 ring-primary moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '200ms' }} data-testid="card-plan-free">
-              {currentTier === "free" && (
-                <Badge className="moon-glow" data-testid="badge-current-free">
+            <Card className={`p-8 space-y-6 transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl bg-white/90 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${currentTier === "basic" ? "ring-2 ring-primary moon-glow" : ""} animate-fade-in-up`} style={{ animationDelay: '200ms' }} data-testid="card-plan-basic">
+              {currentTier === "basic" && (
+                <Badge className="moon-glow" data-testid="badge-current-basic">
                   <Sparkles className="w-3 h-3 mr-1" />
                   Current Plan
                 </Badge>
@@ -314,15 +314,15 @@ export default function Membership() {
                 </div>
               </div>
               
-              {currentTier === "free" ? (
-                <Button variant="outline" className="w-full" disabled data-testid="button-current-free">Current Plan</Button>
+              {currentTier === "basic" ? (
+                <Button variant="outline" className="w-full" disabled data-testid="button-current-basic">Current Plan</Button>
               ) : (
                 <Button 
                   variant="secondary" 
                   className="w-full" 
-                  onClick={() => handleUpgrade("free")}
+                  onClick={() => handleUpgrade("basic")}
                   disabled={subscribeMutation.isPending}
-                  data-testid="button-downgrade-to-free"
+                  data-testid="button-downgrade-to-basic"
                 >
                   {subscribeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TrendingDown className="w-4 h-4 mr-2" />}
                   Downgrade to Basic
@@ -394,7 +394,7 @@ export default function Membership() {
                     Cancel & Downgrade
                   </Button>
                 </div>
-              ) : currentTier === "free" ? (
+              ) : currentTier === "basic" ? (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-secondary moon-glow" 
                   onClick={() => handleUpgrade("pro")}
