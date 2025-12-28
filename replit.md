@@ -85,6 +85,16 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Social media buttons with platform-specific colors and glow hover effects
     - TikTok/Instagram/Snapchat section with gradient backgrounds and "Open App" deep links
     - Direct download button
+  - **Direct Social Media Upload:**
+    - Connect TikTok, Instagram, and YouTube accounts
+    - Upload videos directly from Lunara to connected platforms
+    - PlatformCard components showing connection status with badges
+    - Caption input for customizing posts
+    - Real-time upload progress with status polling
+    - Simulated OAuth flow for MVP (ready for real OAuth integration)
+    - Account management: connect/disconnect from Share Modal
+    - Database tables: social_accounts, social_upload_jobs
+    - Status tracking: pending → uploading → completed/failed
   - **Stunning Share Landing Page** (/share/:token):
     - Animated cosmic background with floating orbs, stars, and gradient mesh
     - Custom MoonStarsLogo SVG component matching brand identity
