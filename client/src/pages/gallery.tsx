@@ -243,6 +243,23 @@ export default function Gallery() {
     </div>
   );
 
+  const addTestVideoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/history", {
+        prompt: "Cosmic ASMR Test Video",
+        videoUrl: "https://cdn.pixabay.com/video/2023/10/20/185834-876678680_large.mp4"
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/history", limit] });
+      toast({
+        title: "Test video added",
+        description: "A test video has been added to your gallery.",
+      });
+    },
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900/50 relative overflow-hidden px-4 py-6 md:p-8 transition-colors duration-300">
       {/* Animated Background Elements */}
@@ -273,6 +290,16 @@ export default function Gallery() {
               <Sparkles className="w-4 h-4 text-primary/60 dark:text-primary/50 animate-pulse-glow" />
               {videos?.length || 0} videos • {creations.length} creations
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => addTestVideoMutation.mutate()}
+              disabled={addTestVideoMutation.isPending}
+              className="mt-2"
+              data-testid="button-add-test-video"
+            >
+              {addTestVideoMutation.isPending ? "Adding..." : "Add Test Video"}
+            </Button>
           </div>
           <Link href="/">
             <Button 

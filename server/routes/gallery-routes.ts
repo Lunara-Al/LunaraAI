@@ -141,9 +141,13 @@ export function createGalleryRouter(): Router {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    const userId = await getAuthenticatedUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const { videoUrl, prompt, length, aspectRatio } = req.body;
     const newVideo = await storage.createVideoGeneration({
-      userId: req.user.id,
+      userId: userId,
       videoUrl: videoUrl || "https://cdn.pixabay.com/video/2023/10/20/185834-876678680_large.mp4",
       prompt: prompt || "Cosmic ASMR Test Video",
       length: length || 10,
