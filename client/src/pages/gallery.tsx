@@ -123,13 +123,13 @@ export default function Gallery() {
   const VideoCard = ({ video, isCreation, index }: { video: VideoGeneration; isCreation?: boolean; index: number }) => (
     <div
       key={video.id}
-      className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.03] ${
+      className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] ${
         isCreation
-          ? "bg-gradient-to-br from-primary/8 to-secondary/8 dark:from-primary/10 dark:to-secondary/10 border border-primary/25 dark:border-primary/30 shadow-md dark:shadow-[0_8px_32px_rgba(107,91,255,0.15)]"
-          : "bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/8 dark:border-primary/10 shadow-sm dark:shadow-[0_4px_20px_rgba(107,91,255,0.08)]"
-      } hover:shadow-lg dark:hover:shadow-xl`}
+          ? "bg-gradient-to-br from-primary/8 to-secondary/8 dark:from-primary/10 dark:to-secondary/10 border border-primary/25 dark:border-primary/30 shadow-md"
+          : "bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/8 dark:border-primary/10 shadow-sm"
+      }`}
       style={{
-        animation: `fadeInUp 0.5s ease-out ${index * 60}ms both`,
+        animation: `fadeInUp 0.5s ease-out ${index * 40}ms both`,
       }}
       data-testid={isCreation ? `creation-item-${video.id}` : `gallery-item-${video.id}`}
     >
@@ -142,7 +142,7 @@ export default function Gallery() {
       <div className="relative aspect-square overflow-hidden bg-black/40 backdrop-blur-sm">
         <video
           src={video.videoUrl}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+          className="w-full h-full object-cover"
           loop
           muted
           onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
@@ -154,101 +154,71 @@ export default function Gallery() {
           data-testid={isCreation ? `creation-video-${video.id}` : `video-${video.id}`}
         />
 
-        {/* Enhanced Play Icon Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-gradient-to-t from-black/60 via-black/30 to-transparent">
-          <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-full opacity-20 blur-xl scale-0 group-hover:scale-100 transition-transform duration-500" />
-            <Play className="w-14 h-14 text-white fill-white drop-shadow-lg relative z-10" />
-          </div>
+        {/* Enhanced Play Icon Overlay - Slimmed down */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40">
+          <Play className="w-8 h-8 text-white fill-white drop-shadow-md" />
         </div>
 
-        {/* Shine Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-0 group-hover:opacity-100" />
+        {/* Metadata Badge - Slimmed down */}
+        <div className="absolute top-2 left-2 z-20 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-white/10">
+          <span className="text-[10px] font-medium text-white">
+            {video.length}s
+          </span>
+        </div>
 
         {/* Star Badge for Creations */}
         {isCreation && (
-          <div className="absolute top-3 right-3 z-20">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-full blur-lg opacity-60 scale-150" />
-              <div className="relative bg-gradient-to-br from-primary to-secondary text-white rounded-full p-2 shadow-2xl backdrop-blur-md border border-white/20">
-                <Star className="w-4 h-4 fill-white" />
-              </div>
+          <div className="absolute top-2 right-2 z-20">
+            <div className="bg-gradient-to-br from-primary to-secondary text-white rounded-full p-1.5 shadow-lg border border-white/20">
+              <Star className="w-3 h-3 fill-white" />
             </div>
           </div>
         )}
-
-        {/* Metadata Badge */}
-        <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/20">
-          <span className="text-xs font-semibold text-white">
-            {video.length}s • {video.aspectRatio}
-          </span>
-        </div>
       </div>
 
-      {/* Enhanced Hover Overlay with Actions */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4 md:p-5 space-y-3 z-30 backdrop-blur-sm">
-        {/* Prompt */}
-        <div className="space-y-2">
-          <p className="text-white text-sm md:text-base line-clamp-2 font-semibold leading-tight" data-testid={isCreation ? `creation-prompt-${video.id}` : `prompt-${video.id}`}>
-            {video.prompt}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-1">
+      {/* Action Overlay - Slimmed down */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col justify-end p-2 z-30 backdrop-blur-[2px]">
+        <div className="flex items-center justify-center gap-1.5 bg-black/40 p-1.5 rounded-lg border border-white/10 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
           <Button
-            size="sm"
-            variant="secondary"
+            size="icon"
+            variant="ghost"
             onClick={() => handleDownload(video.videoUrl, video.prompt)}
-            className="flex-1 text-xs md:text-sm font-medium transition-all duration-200 hover:scale-105"
+            className="h-8 w-8 text-white hover:bg-white/20"
             data-testid={isCreation ? `button-download-creation-${video.id}` : `button-download-${video.id}`}
           >
-            <Download className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-            Download
+            <Download className="w-4 h-4" />
           </Button>
 
           <Button
-            size="sm"
-            variant={video.displayOnProfile ? "default" : "outline"}
+            size="icon"
+            variant="ghost"
             onClick={() => toggleCreationMutation.mutate({ id: video.id, display: !video.displayOnProfile })}
             disabled={toggleCreationMutation.isPending}
+            className={`h-8 w-8 ${video.displayOnProfile ? "text-primary" : "text-white"} hover:bg-white/20`}
             data-testid={`button-toggle-creation-${video.id}`}
-            title={video.displayOnProfile ? "Remove from creations" : "Add to creations"}
-            className="transition-all duration-200 hover:scale-105"
           >
-            {toggleCreationMutation.isPending ? (
-              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
-            ) : video.displayOnProfile ? (
-              <Star className="w-3 h-3 md:w-4 md:h-4 fill-current" />
-            ) : (
-              <Star className="w-3 h-3 md:w-4 md:h-4" />
-            )}
+            <Star className={`w-4 h-4 ${video.displayOnProfile ? "fill-current" : ""}`} />
           </Button>
 
           <Button
-            size="sm"
-            variant="outline"
+            size="icon"
+            variant="ghost"
             onClick={() => setShareModalVideo(video)}
+            className="h-8 w-8 text-white hover:bg-white/20"
             data-testid={isCreation ? `button-share-creation-${video.id}` : `button-share-${video.id}`}
-            title="Share video"
-            className="transition-all duration-200 hover:scale-105 hover:border-primary/50 hover:bg-primary/10 hover:text-primary group/share"
           >
-            <Share2 className="w-3 h-3 md:w-4 md:h-4 group-hover/share:animate-pulse" />
+            <Share2 className="w-4 h-4" />
           </Button>
 
           <Button
-            size="sm"
-            variant="destructive"
+            size="icon"
+            variant="ghost"
             onClick={() => deleteVideoMutation.mutate(video.id)}
             disabled={deleteVideoMutation.isPending}
+            className="h-8 w-8 text-destructive hover:bg-destructive/20"
             data-testid={isCreation ? `button-delete-creation-${video.id}` : `button-delete-${video.id}`}
-            className="transition-all duration-200 hover:scale-105"
           >
-            {deleteVideoMutation.isPending ? (
-              <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
-            )}
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -425,7 +395,7 @@ export default function Gallery() {
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" data-testid="creations-grid">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4" data-testid="creations-grid">
               {creations.map((video, index) => (
                 <VideoCard key={video.id} video={video} isCreation index={index} />
               ))}
@@ -476,20 +446,20 @@ export default function Gallery() {
             </div>
 
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" data-testid="gallery-grid">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4" data-testid="gallery-grid">
                 {videos.map((video, index) => (
                   <VideoCard key={video.id} video={video} isCreation={false} index={index} />
                 ))}
               </div>
             ) : (
-              <div className="space-y-4" data-testid="gallery-list">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4" data-testid="gallery-list">
                 {videos.map((video, index) => (
                   <div
                     key={video.id}
-                    className="group relative flex flex-col md:flex-row gap-6 p-4 rounded-2xl bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/10 shadow-sm hover:shadow-lg transition-all duration-300"
-                    style={{ animation: `fadeInUp 0.5s ease-out ${index * 60}ms both` }}
+                    className="group relative flex gap-3 p-2 rounded-xl bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/10 shadow-sm hover:shadow-md transition-all duration-300"
+                    style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
                   >
-                    <div className="relative w-full md:w-48 aspect-video md:aspect-square overflow-hidden rounded-xl bg-black/40">
+                    <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
                       <video
                         src={video.videoUrl}
                         className="w-full h-full object-cover"
@@ -503,63 +473,64 @@ export default function Gallery() {
                         }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
-                        <Play className="w-10 h-10 text-white fill-white" />
+                        <Play className="w-6 h-6 text-white fill-white" />
                       </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col justify-center space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] border-primary/30">
+                    <div className="flex-1 flex flex-col justify-between py-0.5">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-primary/30">
                             {video.length}s
                           </Badge>
-                          <Badge variant="outline" className="text-[10px] border-secondary/30">
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-secondary/30">
                             {video.aspectRatio}
                           </Badge>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[9px] text-muted-foreground">
                             {new Date(video.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-foreground font-medium line-clamp-2 leading-relaxed">
+                        <p className="text-foreground text-xs font-medium line-clamp-1">
                           {video.prompt}
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="secondary"
                           onClick={() => handleDownload(video.videoUrl, video.prompt)}
-                          className="h-8 text-xs"
+                          className="h-7 w-7"
+                          title="Download"
                         >
-                          <Download className="w-3.5 h-3.5 mr-1.5" />
-                          Download
+                          <Download className="w-3.5 h-3.5" />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant={video.displayOnProfile ? "default" : "outline"}
                           onClick={() => toggleCreationMutation.mutate({ id: video.id, display: !video.displayOnProfile })}
                           disabled={toggleCreationMutation.isPending}
-                          className="h-8 text-xs"
+                          className="h-7 w-7"
+                          title="Creations"
                         >
-                          <Star className={`w-3.5 h-3.5 mr-1.5 ${video.displayOnProfile ? "fill-current" : ""}`} />
-                          {video.displayOnProfile ? "Creation" : "Add to Creations"}
+                          <Star className={`w-3.5 h-3.5 ${video.displayOnProfile ? "fill-current" : ""}`} />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="outline"
                           onClick={() => setShareModalVideo(video)}
-                          className="h-8 text-xs"
+                          className="h-7 w-7"
+                          title="Share"
                         >
-                          <Share2 className="w-3.5 h-3.5 mr-1.5" />
-                          Share
+                          <Share2 className="w-3.5 h-3.5" />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
                           onClick={() => deleteVideoMutation.mutate(video.id)}
                           disabled={deleteVideoMutation.isPending}
-                          className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
+                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
