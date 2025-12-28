@@ -285,9 +285,11 @@ export default function SharePage() {
 
     window.location.href = deep;
     
-    window.addEventListener("blur", () => {
+    const blurHandler = () => {
       clearTimeout(timeout);
-    }, { once: true });
+    };
+    
+    window.addEventListener("blur", blurHandler, { once: true });
   };
 
   if (loading) {

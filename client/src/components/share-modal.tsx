@@ -212,9 +212,11 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
 
     window.location.href = deep;
     
-    window.addEventListener("blur", () => {
+    const blurHandler = () => {
       clearTimeout(timeout);
-    }, { once: true });
+    };
+    
+    window.addEventListener("blur", blurHandler, { once: true });
   };
 
   const handleClose = () => {
