@@ -103,7 +103,7 @@ export default function Settings() {
     defaultLength: 10,
     defaultAspectRatio: "1:1",
     emailNotifications: 1,
-    galleryView: "grid",
+    galleryView: "list",
     theme: "dark",
     autoSave: 1,
   });
@@ -195,7 +195,7 @@ export default function Settings() {
       defaultLength: 10,
       defaultAspectRatio: "1:1",
       emailNotifications: 1,
-      galleryView: "grid",
+      galleryView: "list",
       theme: "dark",
       autoSave: 1,
     };
