@@ -137,5 +137,21 @@ export function createGalleryRouter(): Router {
     }
   });
 
+  router.post("/", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const { videoUrl, prompt, length, aspectRatio } = req.body;
+    const newVideo = await storage.createVideoGeneration({
+      userId: req.user.id,
+      videoUrl: videoUrl || "https://cdn.pixabay.com/video/2023/10/20/185834-876678680_large.mp4",
+      prompt: prompt || "Cosmic ASMR Test Video",
+      length: length || 10,
+      aspectRatio: aspectRatio || "16:9",
+      displayOnProfile: 0,
+    });
+    res.json(newVideo);
+  });
+
   return router;
 }
