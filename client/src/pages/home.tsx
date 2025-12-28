@@ -24,29 +24,35 @@ const PRESET_PROMPTS = [
   "Holographic aurora borealis over digital mountains",
 ];
 
-// Example ASMR Videos Data
+import video1 from "@assets/2025-11-07_07:40:28_1766940615530.mp4";
+import video2 from "@assets/2025-11-04_21:45:47_1766940615530.mp4";
+import video3 from "@assets/2025-11-01_11:16:38_1766940615530.mp4";
+
 const EXAMPLE_VIDEOS = [
   {
     id: "example-1",
-    title: "Cosmic Ocean Waves",
-    description: "Gentle waves crashing on a distant cosmic shore with ethereal ambient sounds",
+    title: "Celestial Petals",
+    description: "Ethereal flowers blooming in a zero-gravity cosmic garden with crystalline textures",
     icon: Cloud,
+    videoUrl: video1,
     gradient: "from-blue-600 via-purple-600 to-blue-700",
     accentGradient: "from-blue-500 to-cyan-500",
   },
   {
     id: "example-2",
-    title: "Lunar Meditation",
-    description: "Serene moonlight meditation with soft celestial chimes and ambient whispers",
+    title: "Nebula Flow",
+    description: "Swirling violet mists and star-dusted clouds forming mystical patterns in the void",
     icon: Moon,
+    videoUrl: video2,
     gradient: "from-purple-600 via-pink-600 to-purple-700",
     accentGradient: "from-purple-500 to-pink-500",
   },
   {
     id: "example-3",
-    title: "Stellar Winds",
-    description: "Mystical cosmic winds with twinkling stars and calming atmospheric soundscapes",
+    title: "Cosmic Ripples",
+    description: "Golden energy waves undulating across a liquid space-time surface",
     icon: Wind,
+    videoUrl: video3,
     gradient: "from-indigo-600 via-purple-600 to-pink-600",
     accentGradient: "from-indigo-500 to-purple-500",
   },
