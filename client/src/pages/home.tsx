@@ -90,7 +90,7 @@ export default function Home() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [showPresets, setShowPresets] = useState(true);
+  const [showPresets, setShowPresets] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [creationResults, setCreationResults] = useState<CreationSearchResult[]>([]);
