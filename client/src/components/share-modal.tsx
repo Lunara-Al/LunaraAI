@@ -20,10 +20,22 @@ import {
   Upload,
   Unlink,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Crown,
+  Hash,
+  Plus
 } from "lucide-react";
 import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import type { VideoGeneration, SocialPlatform } from "@shared/schema";
+import { Link } from "wouter";
+
+type FrontendUser = {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  membershipTier: string;
+};
 
 type ShareModalProps = {
   video: VideoGeneration;
@@ -61,10 +73,16 @@ type UploadState = {
   platform: SocialPlatform;
   status: "idle" | "connecting" | "uploading" | "success" | "error";
   caption: string;
+  hashtags: string[];
   jobId?: number;
   postUrl?: string;
   error?: string;
 };
+
+const SUGGESTED_HASHTAGS = [
+  "ASMR", "CosmicASMR", "LunaraAI", "AIGenerated", "Relaxation",
+  "SleepSounds", "Satisfying", "Meditation", "Calming", "Soothing"
+];
 
 function CosmicLoader() {
   return (
@@ -140,12 +158,14 @@ type PlatformCardProps = {
   icon: typeof SiTiktok;
   label: string;
   isConnected: boolean;
+  isPro: boolean;
   account?: SocialAccount;
   uploadState: UploadState;
   onConnect: () => void;
   onDisconnect: () => void;
   onUpload: () => void;
   onCaptionChange: (caption: string) => void;
+  onHashtagsChange: (hashtags: string[]) => void;
   gradientFrom: string;
   gradientTo: string;
   iconColor: string;
@@ -157,21 +177,78 @@ function PlatformCard({
   icon: Icon,
   label,
   isConnected,
+  isPro,
   account,
   uploadState,
   onConnect,
   onDisconnect,
   onUpload,
   onCaptionChange,
+  onHashtagsChange,
   gradientFrom,
   gradientTo,
   iconColor,
   glowColor,
 }: PlatformCardProps) {
   const [showCaption, setShowCaption] = useState(false);
+  const [showHashtags, setShowHashtags] = useState(false);
+  const [newHashtag, setNewHashtag] = useState("");
   const isLoading = uploadState.status === "connecting" || uploadState.status === "uploading";
   const isSuccess = uploadState.status === "success";
   const isError = uploadState.status === "error";
+
+  const handleAddHashtag = () => {
+    const tag = newHashtag.trim().replace(/^#/, "");
+    if (tag && !uploadState.hashtags.includes(tag)) {
+      onHashtagsChange([...uploadState.hashtags, tag]);
+      setNewHashtag("");
+    }
+  };
+
+  const handleRemoveHashtag = (tag: string) => {
+    onHashtagsChange(uploadState.hashtags.filter(t => t !== tag));
+  };
+
+  const handleAddSuggested = (tag: string) => {
+    if (!uploadState.hashtags.includes(tag)) {
+      onHashtagsChange([...uploadState.hashtags, tag]);
+    }
+  };
+
+  if (!isPro) {
+    return (
+      <div 
+        className="relative p-4 rounded-xl border bg-muted/20 border-muted-foreground/10"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-muted">
+              <Icon className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-muted-foreground">{label}</p>
+              <p className="text-xs text-muted-foreground/70">Pro feature</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="gap-1 text-xs bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-400/30">
+            <Crown className="w-3 h-3 text-purple-500" />
+            Pro
+          </Badge>
+        </div>
+        <Link href="/membership">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-3 text-xs border-purple-400/30 hover:bg-purple-500/10"
+            data-testid={`button-upgrade-${platform}`}
+          >
+            <Crown className="w-3 h-3 mr-1.5 text-purple-500" />
+            Upgrade to Pro
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -226,6 +303,66 @@ function PlatformCard({
               data-testid={`textarea-caption-${platform}`}
             />
           )}
+          
+          {showHashtags && (
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {uploadState.hashtags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    className="gap-1 text-xs bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                  >
+                    #{tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHashtag(tag)}
+                      className="ml-0.5 hover:text-red-500 transition-colors"
+                      disabled={isLoading || isSuccess}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              
+              <div className="flex gap-1.5">
+                <Input
+                  placeholder="Add hashtag..."
+                  value={newHashtag}
+                  onChange={(e) => setNewHashtag(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddHashtag())}
+                  className="flex-1 h-8 text-xs bg-white/50 dark:bg-slate-800/50 border-white/30 dark:border-slate-700/50"
+                  disabled={isLoading || isSuccess}
+                  data-testid={`input-hashtag-${platform}`}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleAddHashtag}
+                  disabled={!newHashtag.trim() || isLoading || isSuccess}
+                  className="h-8 px-2"
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
+              
+              <div className="flex flex-wrap gap-1">
+                {SUGGESTED_HASHTAGS.filter(tag => !uploadState.hashtags.includes(tag)).slice(0, 5).map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleAddSuggested(tag)}
+                    disabled={isLoading || isSuccess}
+                    className="px-2 py-0.5 text-[10px] rounded-full bg-muted/50 text-muted-foreground hover:bg-purple-500/20 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                  >
+                    +{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isSuccess && uploadState.postUrl && (
             <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/30">
@@ -249,21 +386,34 @@ function PlatformCard({
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {!isSuccess && (
               <>
-                {!showCaption ? (
+                {!showCaption && (
                   <Button
                     onClick={() => setShowCaption(true)}
                     variant="secondary"
                     size="sm"
-                    className="flex-1 text-xs"
+                    className="flex-1 min-w-[80px] text-xs"
                     disabled={isLoading}
                     data-testid={`button-add-caption-${platform}`}
                   >
-                    Add Caption
+                    Caption
                   </Button>
-                ) : null}
+                )}
+                {!showHashtags && (
+                  <Button
+                    onClick={() => setShowHashtags(true)}
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 min-w-[80px] text-xs"
+                    disabled={isLoading}
+                    data-testid={`button-add-hashtags-${platform}`}
+                  >
+                    <Hash className="w-3 h-3 mr-1" />
+                    Hashtags
+                  </Button>
+                )}
                 <Button
                   onClick={onUpload}
                   size="sm"
@@ -328,22 +478,28 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   const [shareData, setShareData] = useState<ShareResponse | null>(null);
   const [copied, setCopied] = useState(false);
   const [uploadStates, setUploadStates] = useState<Record<SocialPlatform, UploadState>>({
-    tiktok: { platform: "tiktok", status: "idle", caption: "" },
-    instagram: { platform: "instagram", status: "idle", caption: "" },
-    youtube: { platform: "youtube", status: "idle", caption: "" },
+    tiktok: { platform: "tiktok", status: "idle", caption: "", hashtags: [] },
+    instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
+    youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
   });
+
+  const { data: user } = useQuery<FrontendUser>({
+    queryKey: ["/api/auth/me"],
+  });
+
+  const isPro = user?.membershipTier === "pro" || user?.membershipTier === "premium";
 
   const { data: socialAccounts, refetch: refetchAccounts } = useQuery<{ accounts: SocialAccount[] }>({
     queryKey: ["/api/social/accounts"],
-    enabled: isOpen,
+    enabled: isOpen && isPro,
   });
 
   useEffect(() => {
     if (isOpen) {
       setUploadStates({
-        tiktok: { platform: "tiktok", status: "idle", caption: "" },
-        instagram: { platform: "instagram", status: "idle", caption: "" },
-        youtube: { platform: "youtube", status: "idle", caption: "" },
+        tiktok: { platform: "tiktok", status: "idle", caption: "", hashtags: [] },
+        instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
+        youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
       });
       setCopied(false);
     }
@@ -429,11 +585,12 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async ({ platform, caption }: { platform: SocialPlatform; caption?: string }) => {
+    mutationFn: async ({ platform, caption, hashtags }: { platform: SocialPlatform; caption?: string; hashtags?: string[] }) => {
       const response = await apiRequest("POST", "/api/social/upload", {
         videoId: video.id,
         platform,
         caption,
+        hashtags: hashtags?.join(","),
       });
       if (!response.ok) {
         const error = await response.json();
@@ -609,7 +766,8 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }));
     uploadMutation.mutate({ 
       platform, 
-      caption: uploadStates[platform].caption || undefined 
+      caption: uploadStates[platform].caption || undefined,
+      hashtags: uploadStates[platform].hashtags.length > 0 ? uploadStates[platform].hashtags : undefined,
     });
   };
 
@@ -620,14 +778,21 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }));
   };
 
+  const handleHashtagsChange = (platform: SocialPlatform, hashtags: string[]) => {
+    setUploadStates(prev => ({
+      ...prev,
+      [platform]: { ...prev[platform], hashtags }
+    }));
+  };
+
   const handleClose = () => {
     onClose();
     setShareData(null);
     setCopied(false);
     setUploadStates({
-      tiktok: { platform: "tiktok", status: "idle", caption: "" },
-      instagram: { platform: "instagram", status: "idle", caption: "" },
-      youtube: { platform: "youtube", status: "idle", caption: "" },
+      tiktok: { platform: "tiktok", status: "idle", caption: "", hashtags: [] },
+      instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
+      youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
     });
   };
 
@@ -804,12 +969,14 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     icon={SiTiktok}
                     label="TikTok"
                     isConnected={!!getAccountByPlatform("tiktok")}
+                    isPro={isPro}
                     account={getAccountByPlatform("tiktok")}
                     uploadState={uploadStates.tiktok}
                     onConnect={() => handleConnect("tiktok")}
                     onDisconnect={() => handleDisconnect("tiktok")}
                     onUpload={() => handleUpload("tiktok")}
                     onCaptionChange={(caption) => handleCaptionChange("tiktok", caption)}
+                    onHashtagsChange={(hashtags) => handleHashtagsChange("tiktok", hashtags)}
                     gradientFrom="from-gray-900/10"
                     gradientTo="to-gray-800/5"
                     iconColor="text-foreground"
@@ -821,12 +988,14 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     icon={SiInstagram}
                     label="Instagram"
                     isConnected={!!getAccountByPlatform("instagram")}
+                    isPro={isPro}
                     account={getAccountByPlatform("instagram")}
                     uploadState={uploadStates.instagram}
                     onConnect={() => handleConnect("instagram")}
                     onDisconnect={() => handleDisconnect("instagram")}
                     onUpload={() => handleUpload("instagram")}
                     onCaptionChange={(caption) => handleCaptionChange("instagram", caption)}
+                    onHashtagsChange={(hashtags) => handleHashtagsChange("instagram", hashtags)}
                     gradientFrom="from-pink-500/10"
                     gradientTo="to-purple-500/10"
                     iconColor="text-pink-500"
@@ -838,12 +1007,14 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     icon={SiYoutube}
                     label="YouTube"
                     isConnected={!!getAccountByPlatform("youtube")}
+                    isPro={isPro}
                     account={getAccountByPlatform("youtube")}
                     uploadState={uploadStates.youtube}
                     onConnect={() => handleConnect("youtube")}
                     onDisconnect={() => handleDisconnect("youtube")}
                     onUpload={() => handleUpload("youtube")}
                     onCaptionChange={(caption) => handleCaptionChange("youtube", caption)}
+                    onHashtagsChange={(hashtags) => handleHashtagsChange("youtube", hashtags)}
                     gradientFrom="from-red-500/10"
                     gradientTo="to-red-600/5"
                     iconColor="text-red-600"

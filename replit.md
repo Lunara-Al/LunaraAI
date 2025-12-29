@@ -85,16 +85,31 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Social media buttons with platform-specific colors and glow hover effects
     - TikTok/Instagram/Snapchat section with gradient backgrounds and "Open App" deep links
     - Direct download button
-  - **Direct Social Media Upload:**
-    - Connect TikTok, Instagram, and YouTube accounts
-    - Upload videos directly from Lunara to connected platforms
-    - PlatformCard components showing connection status with badges
-    - Caption input for customizing posts
+  - **Direct Social Media Upload (Pro/Premium Feature):**
+    - **Real OAuth Integration** with TikTok, Instagram, and YouTube
+    - Pro-tier restriction: Only Pro and Premium users can connect accounts and upload
+    - AES-256-GCM token encryption for secure credential storage
+    - CSRF protection with session-based state validation (timing-safe comparison)
+    - Automatic token refresh on expiry for uninterrupted access
+    - **Platform-Specific APIs:**
+      - TikTok: Content Posting API v2 with publish status polling
+      - Instagram: Graph API with Reels support and container status checking
+      - YouTube: Data API v3 for video uploads with progress tracking
+    - **Hashtag Editor:**
+      - Add/remove hashtags with validation (auto-prefix with #)
+      - Platform-specific suggested hashtags (ASMR, Relaxing, AI, Cosmic, etc.)
+      - Hashtags combined with caption for rich social posts
+    - Caption input for customizing posts per platform
     - Real-time upload progress with status polling
-    - Simulated OAuth flow for MVP (ready for real OAuth integration)
+    - Graceful fallback to simulated uploads if OAuth not configured
+    - PlatformCard components showing connection status with badges
     - Account management: connect/disconnect from Share Modal
     - Database tables: social_accounts, social_upload_jobs
     - Status tracking: pending → uploading → completed/failed
+    - **Required Environment Variables for Real OAuth:**
+      - TikTok: TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET
+      - Instagram: INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET
+      - YouTube: YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET
   - **Stunning Share Landing Page** (/share/:token):
     - Animated cosmic background with floating orbs, stars, and gradient mesh
     - Custom MoonStarsLogo SVG component matching brand identity

@@ -76,8 +76,10 @@ export interface IStorage {
   // Social account operations
   getSocialAccounts(userId: string): Promise<SocialAccount[]>;
   getSocialAccountByPlatform(userId: string, platform: SocialPlatform): Promise<SocialAccount | undefined>;
+  getSocialAccountById(id: number): Promise<SocialAccount | undefined>;
   createSocialAccount(data: InsertSocialAccount): Promise<SocialAccount>;
   updateSocialAccount(id: number, updates: Partial<InsertSocialAccount>): Promise<SocialAccount>;
+  updateSocialAccountTokens(id: number, accessTokenEncrypted: string, refreshTokenEncrypted: string | null, tokenExpiresAt: Date): Promise<SocialAccount>;
   deleteSocialAccount(id: number, userId: string): Promise<boolean>;
 
   // Social upload job operations
@@ -495,6 +497,14 @@ export class DatabaseStorage implements IStorage {
     return account;
   }
 
+  async getSocialAccountById(id: number): Promise<SocialAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(socialAccounts)
+      .where(eq(socialAccounts.id, id));
+    return account;
+  }
+
   async createSocialAccount(data: InsertSocialAccount): Promise<SocialAccount> {
     const [account] = await db
       .insert(socialAccounts)
@@ -507,6 +517,28 @@ export class DatabaseStorage implements IStorage {
     const [account] = await db
       .update(socialAccounts)
       .set({ ...updates, updatedAt: new Date() })
+      .where(eq(socialAccounts.id, id))
+      .returning();
+    return account;
+  }
+
+  async updateSocialAccountTokens(
+    id: number,
+    accessTokenEncrypted: string,
+    refreshTokenEncrypted: string | null,
+    tokenExpiresAt: Date
+  ): Promise<SocialAccount> {
+    const updateData: Partial<SocialAccount> = {
+      accessTokenEncrypted,
+      tokenExpiresAt,
+      updatedAt: new Date(),
+    };
+    if (refreshTokenEncrypted) {
+      updateData.refreshTokenEncrypted = refreshTokenEncrypted;
+    }
+    const [account] = await db
+      .update(socialAccounts)
+      .set(updateData)
       .where(eq(socialAccounts.id, id))
       .returning();
     return account;
