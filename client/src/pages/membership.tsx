@@ -233,9 +233,7 @@ export default function Membership() {
         <div className="absolute top-20 right-1/4 w-72 h-72 bg-primary/20 dark:bg-primary/15 rounded-full blur-3xl animate-float-slow" />
         <div className="absolute bottom-20 left-1/4 w-64 h-64 bg-secondary/20 dark:bg-secondary/15 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
       </div>
-
       <MoonMenu />
-      
       <div className="max-w-6xl mx-auto space-y-8 relative z-10 animate-fade-in-up">
         <div className="text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient" style={{ backgroundSize: '200% 200%' }}>
@@ -290,7 +288,7 @@ export default function Membership() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">5 videos per month</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">3 videos per month</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -767,7 +765,6 @@ export default function Membership() {
           )}
         </Card>
       </div>
-
       {/* Downgrade Confirmation Dialog */}
       <Dialog open={downgradeDialogOpen} onOpenChange={setDowngradeDialogOpen}>
         <DialogContent className="sm:max-w-[425px]" data-testid="dialog-downgrade">
