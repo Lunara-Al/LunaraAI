@@ -364,6 +364,10 @@ export default function Membership() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Social Media Auto-Post</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-slate-900 dark:text-slate-100">300 monthly credits</span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -464,6 +468,10 @@ export default function Membership() {
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Content Calendar</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Advanced Social Tools</span>
+                </li>
               </ul>
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
@@ -558,6 +566,12 @@ export default function Membership() {
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Social Posting</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">Basic</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">Full</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">Full</td>
+                </tr>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Priority Support</td>
                   <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
                   <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
@@ -567,6 +581,12 @@ export default function Membership() {
                   <td className="py-3 px-4 font-semibold text-primary">Content Calendar</td>
                   <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
                   <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
+                </tr>
+                <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 bg-primary/5 dark:bg-primary/10">
+                  <td className="py-3 px-4 font-semibold text-primary">Smart Hashtag Editor</td>
+                  <td className="text-center"><X className="w-4 h-4 mx-auto text-slate-400 dark:text-slate-600" /></td>
+                  <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                   <td className="text-center"><Check className="w-4 h-4 mx-auto text-primary" /></td>
                 </tr>
               </tbody>
@@ -615,6 +635,31 @@ export default function Membership() {
             {/* Features Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               {/* Feature 1 */}
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/40 dark:hover:border-purple-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
+                <div className="flex items-start gap-3">
+                  <Zap className="w-6 h-6 text-purple-500 dark:text-purple-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Direct Social Uploads</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Available for Pro & Premium - Post instantly to TikTok, Instagram, and YouTube
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/40 dark:hover:border-purple-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="w-6 h-6 text-purple-500 dark:text-purple-400 flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Smart Hashtag Editor</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Auto-generate platform-specific hashtags to maximize your video's cosmic reach
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 3 */}
               <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-purple-500/20 dark:border-purple-500/30 hover:border-purple-500/40 dark:hover:border-purple-500/50 hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all">
                 <div className="flex items-start gap-3">
                   <Calendar className="w-6 h-6 text-purple-500 dark:text-purple-400 flex-shrink-0 mt-1" />
