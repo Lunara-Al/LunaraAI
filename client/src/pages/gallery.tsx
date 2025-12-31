@@ -389,9 +389,6 @@ export default function Gallery() {
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>
-                      <div className="absolute top-1.5 right-1.5 z-20">
-                        <Star className="w-3 h-3 text-primary fill-primary shadow-sm" />
-                      </div>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between py-0.5">

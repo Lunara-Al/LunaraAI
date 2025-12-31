@@ -8,6 +8,13 @@ Lunara AI is a web application designed to generate 10-second cosmic ASMR videos
 - **Color Scheme:** Cosmic purple-pink gradients with dark space background
 - **Typography:** Poppins font family throughout
 
+## Recent Changes
+- Removed test video generation feature from Gallery to ensure production readiness.
+- Enhanced Pika Labs API integration with more robust video URL extraction and logging.
+- Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
+- Added smart hashtag editor and expanded membership comparison table.
+- Verified and tidied up UI for "Glass Bubble Moon" design consistency.
+
 ## System Architecture
 
 ### UI/UX Decisions
@@ -38,7 +45,8 @@ The application employs a "Glass Bubble Moon" design system characterized by:
   - Account deletion with dual verification methods:
     - Local auth: Password verification
     - OIDC: Type "DELETE" to confirm
-  - Comprehensive audit logging for account creation and deletion
+  - All user data (videos, settings, account) removed on deletion
+  - Audit logs preserved for compliance
 - **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows, with a fallback to simulation mode if Stripe API keys are not configured.
   - **Stripe Integration Status:** 
     - Environment variables configured: STRIPE_SECRET_KEY, VITE_STRIPE_PUBLIC_KEY, STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_PREMIUM
