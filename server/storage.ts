@@ -72,6 +72,7 @@ export interface IStorage {
   revokeShareLink(token: string, userId: string): Promise<boolean>;
   incrementShareLinkViews(token: string): Promise<void>;
   getVideoById(videoId: number): Promise<VideoGeneration | undefined>;
+  deleteShareLinksByVideoId(videoId: number, userId: string): Promise<void>;
 
   // Social account operations
   getSocialAccounts(userId: string): Promise<SocialAccount[]>;
@@ -474,6 +475,15 @@ export class DatabaseStorage implements IStorage {
       .from(videoGenerations)
       .where(eq(videoGenerations.id, videoId));
     return video;
+  }
+
+  async deleteShareLinksByVideoId(videoId: number, userId: string): Promise<void> {
+    await db
+      .delete(videoShareLinks)
+      .where(and(
+        eq(videoShareLinks.videoId, videoId),
+        eq(videoShareLinks.ownerUserId, userId)
+      ));
   }
 
   // Social account operations

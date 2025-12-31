@@ -44,6 +44,9 @@ export function createGalleryRouter(): Router {
         return res.status(400).json(errorResponse);
       }
 
+      // First check if the video has share links and delete them
+      await storage.deleteShareLinksByVideoId(id, userId);
+
       const deleted = await storage.deleteVideoGeneration(id, userId);
       
       if (!deleted) {
