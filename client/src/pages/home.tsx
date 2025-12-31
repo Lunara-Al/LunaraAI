@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -276,6 +276,11 @@ export default function Home() {
   };
 
 
+  const isVideo = (url: string) => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+    return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+  };
+
   return (
     <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900 transition-colors duration-300">
       <MoonMenu />
@@ -319,7 +324,7 @@ export default function Home() {
                 }`}
                 data-testid="button-search-tab-creations"
               >
-                <Star className="w-3 h-3" />
+                <Search className="w-3 h-3" />
                 Creations
               </button>
             </div>
@@ -401,7 +406,7 @@ export default function Home() {
                         </p>
                       </div>
 
-                      <X className="w-4 h-4 text-slate-300 dark:text-slate-600" />
+                      <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                     </button>
                   );
                 })}
@@ -425,11 +430,19 @@ export default function Home() {
                       className="group relative aspect-square overflow-hidden hover:opacity-80 transition-opacity"
                       data-testid={`button-creation-result-${creation.id}`}
                     >
-                      <video
-                        src={creation.videoUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
+                      {isVideo(creation.videoUrl) ? (
+                        <video
+                          src={creation.videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                        />
+                      ) : (
+                        <img
+                          src={creation.videoUrl}
+                          className="w-full h-full object-cover"
+                          alt={creation.prompt}
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-xs line-clamp-1 font-semibold">

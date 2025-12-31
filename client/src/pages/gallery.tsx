@@ -151,19 +151,36 @@ export default function Gallery() {
 
       {/* Video Container */}
       <div className="relative aspect-square overflow-hidden bg-black/40 backdrop-blur-sm">
-        <video
-          src={video.videoUrl}
-          className="w-full h-full object-cover"
-          loop
-          muted
-          onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
-          onMouseLeave={(e) => {
-            const vid = e.currentTarget as HTMLVideoElement;
-            vid.pause();
-            vid.currentTime = 0;
-          }}
-          data-testid={isCreation ? `creation-video-${video.id}` : `video-${video.id}`}
-        />
+        {(() => {
+          const isVideo = (url: string) => {
+            const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+            return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+          };
+          const isActuallyVideo = isVideo(video.videoUrl);
+          
+          return isActuallyVideo ? (
+            <video
+              src={video.videoUrl}
+              className="w-full h-full object-cover"
+              loop
+              muted
+              onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
+              onMouseLeave={(e) => {
+                const vid = e.currentTarget as HTMLVideoElement;
+                vid.pause();
+                vid.currentTime = 0;
+              }}
+              data-testid={isCreation ? `creation-video-${video.id}` : `video-${video.id}`}
+            />
+          ) : (
+            <img
+              src={video.videoUrl}
+              className="w-full h-full object-cover"
+              alt={video.prompt}
+              data-testid={isCreation ? `creation-image-${video.id}` : `image-${video.id}`}
+            />
+          );
+        })()}
 
         {/* Enhanced Play Icon Overlay - Slimmed down */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40">
@@ -408,18 +425,32 @@ export default function Gallery() {
                     style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
                   >
                     <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
-                      <video
-                        src={video.videoUrl}
-                        className="w-full h-full object-cover"
-                        loop
-                        muted
-                        onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
-                        onMouseLeave={(e) => {
-                          const vid = e.currentTarget as HTMLVideoElement;
-                          vid.pause();
-                          vid.currentTime = 0;
-                        }}
-                      />
+                      {(() => {
+                        const isVideo = (url: string) => {
+                          const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                          return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                        };
+                        return isVideo(video.videoUrl) ? (
+                          <video
+                            src={video.videoUrl}
+                            className="w-full h-full object-cover"
+                            loop
+                            muted
+                            onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
+                            onMouseLeave={(e) => {
+                              const vid = e.currentTarget as HTMLVideoElement;
+                              vid.pause();
+                              vid.currentTime = 0;
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={video.videoUrl}
+                            className="w-full h-full object-cover"
+                            alt={video.prompt}
+                          />
+                        );
+                      })()}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>
@@ -545,18 +576,32 @@ export default function Gallery() {
                     style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
                   >
                     <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
-                      <video
-                        src={video.videoUrl}
-                        className="w-full h-full object-cover"
-                        loop
-                        muted
-                        onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
-                        onMouseLeave={(e) => {
-                          const vid = e.currentTarget as HTMLVideoElement;
-                          vid.pause();
-                          vid.currentTime = 0;
-                        }}
-                      />
+                      {(() => {
+                        const isVideo = (url: string) => {
+                          const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                          return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                        };
+                        return isVideo(video.videoUrl) ? (
+                          <video
+                            src={video.videoUrl}
+                            className="w-full h-full object-cover"
+                            loop
+                            muted
+                            onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
+                            onMouseLeave={(e) => {
+                              const vid = e.currentTarget as HTMLVideoElement;
+                              vid.pause();
+                              vid.currentTime = 0;
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={video.videoUrl}
+                            className="w-full h-full object-cover"
+                            alt={video.prompt}
+                          />
+                        );
+                      })()}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>

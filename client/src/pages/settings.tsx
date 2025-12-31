@@ -111,8 +111,17 @@ export default function Settings() {
   const [hasChanges, setHasChanges] = useState(false);
   const [toastNotificationsEnabled, setToastNotificationsEnabled] = useState(() => {
     const saved = localStorage.getItem("lunara-toast-notifications");
-    return saved ? JSON.parse(saved) : true;
+    return saved !== "false";
   });
+
+  const toggleToastNotifications = (enabled: boolean) => {
+    setToastNotificationsEnabled(enabled);
+    localStorage.setItem("lunara-toast-notifications", String(enabled));
+    toast({
+      title: enabled ? "Notifications Enabled" : "Notifications Disabled",
+      description: enabled ? "You will now see cosmic alerts." : "Alerts will be suppressed.",
+    });
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {

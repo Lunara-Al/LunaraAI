@@ -66,47 +66,64 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {creations.map((video, index) => (
-          <div
-            key={video.id}
-            className="group relative bg-card rounded-3xl overflow-hidden border border-primary/20 hover-elevate transition-all duration-300 animate-in fade-in duration-300"
-            style={{ animationDelay: `${index * 50}ms` }}
-            data-testid={`creation-card-${video.id}`}
-          >
-            {/* Video Container */}
-            <div className="aspect-square relative">
-              <video
-                src={video.videoUrl}
-                className="w-full h-full object-cover"
-                loop
-                muted
-                preload="metadata"
-                onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
-                onMouseLeave={(e) => {
-                  const vid = e.currentTarget as HTMLVideoElement;
-                  vid.pause();
-                  vid.currentTime = 0;
-                }}
-                data-testid={`creation-video-${video.id}`}
-              />
+        {creations.map((video, index) => {
+          const isVideo = (url: string) => {
+            const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+            return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+          };
+          const isActuallyVideo = isVideo(video.videoUrl);
 
-              {/* Star Badge - Always visible */}
-              <div className="absolute top-3 right-3 bg-gradient-to-br from-primary to-secondary text-white rounded-full p-2 shadow-lg backdrop-blur-md">
-                <Star className="w-4 h-4 fill-white" />
-              </div>
+          return (
+            <div
+              key={video.id}
+              className="group relative bg-card rounded-3xl overflow-hidden border border-primary/20 hover-elevate transition-all duration-300 animate-in fade-in duration-300"
+              style={{ animationDelay: `${index * 50}ms` }}
+              data-testid={`creation-card-${video.id}`}
+            >
+              {/* Media Container */}
+              <div className="aspect-square relative">
+                {isActuallyVideo ? (
+                  <video
+                    src={video.videoUrl}
+                    className="w-full h-full object-cover"
+                    loop
+                    muted
+                    preload="metadata"
+                    onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
+                    onMouseLeave={(e) => {
+                      const vid = e.currentTarget as HTMLVideoElement;
+                      vid.pause();
+                      vid.currentTime = 0;
+                    }}
+                    data-testid={`creation-video-${video.id}`}
+                  />
+                ) : (
+                  <img
+                    src={video.videoUrl}
+                    className="w-full h-full object-cover"
+                    alt={video.prompt}
+                    data-testid={`creation-image-${video.id}`}
+                  />
+                )}
 
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4">
-                <p className="text-white text-xs md:text-sm line-clamp-2 font-medium" data-testid={`creation-prompt-${video.id}`}>
-                  {video.prompt}
-                </p>
-                <div className="text-[10px] md:text-xs text-white/70 mt-2">
-                  {video.length}s • {video.aspectRatio}
+                {/* Star Badge - Always visible */}
+                <div className="absolute top-3 right-3 bg-gradient-to-br from-primary to-secondary text-white rounded-full p-2 shadow-lg backdrop-blur-md">
+                  <Star className="w-4 h-4 fill-white" />
+                </div>
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4">
+                  <p className="text-white text-xs md:text-sm line-clamp-2 font-medium" data-testid={`creation-prompt-${video.id}`}>
+                    {video.prompt}
+                  </p>
+                  <div className="text-[10px] md:text-xs text-white/70 mt-2">
+                    {video.length}s • {video.aspectRatio}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
