@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
 import Stripe from "stripe";
 import {
   createAuthRouter,
@@ -42,10 +44,9 @@ function initializeStripe(): Stripe | null {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const stripe = initializeStripe();
-  
-  if (!process.env.PIKA_API_KEY) {
-    console.error("PIKA_API_KEY is not set in environment variables");
-  }
+
+  // Serve generated images from the public/generated folder
+  app.use("/generated", express.static(path.join(process.cwd(), "public", "generated")));
 
   // Mount feature routers
   app.use("/api/auth", createAuthRouter());
