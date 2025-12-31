@@ -225,23 +225,6 @@ export default function Gallery() {
     </div>
   );
 
-  const addTestVideoMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/history", {
-        prompt: "Cosmic ASMR Test Video",
-        videoUrl: "https://cdn.pixabay.com/video/2023/10/20/185834-876678680_large.mp4"
-      });
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/history", limit] });
-      toast({
-        title: "Test video added",
-        description: "A test video has been added to your gallery.",
-      });
-    },
-  });
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900/50 relative overflow-hidden px-4 py-6 md:p-8 transition-colors duration-300">
       {/* Animated Background Elements */}
@@ -355,26 +338,6 @@ export default function Gallery() {
                   Start Creating
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => addTestVideoMutation.mutate()}
-                disabled={addTestVideoMutation.isPending}
-                className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-300"
-                data-testid="button-add-test-video"
-              >
-                {addTestVideoMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-5 h-5 mr-2" />
-                    Add Test Video
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         )}

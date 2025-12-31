@@ -87,12 +87,16 @@ export function createGeneratorRouter(): Router {
       }
 
       const data = await response.json();
-      const videoUrl = data.video_url || data.url || data.videoUrl;
+      console.log("Pika API response data:", JSON.stringify(data));
+      
+      // Handle various response formats from Pika
+      const videoUrl = data.video_url || data.url || data.videoUrl || (data.data && (data.data.video_url || data.data.url));
       
       if (!videoUrl) {
+        console.error("Video URL missing in Pika response:", data);
         const errorResponse: ErrorResponse = {
           error: "Invalid response",
-          message: "Video URL not found in response",
+          message: "Video URL not found in Pika API response. Please check API configuration.",
         };
         return res.status(500).json(errorResponse);
       }
