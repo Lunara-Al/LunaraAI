@@ -729,18 +729,50 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }
   };
 
-  const handleDownload = () => {
-    if (shareData?.downloadUrl || video.videoUrl) {
-      const link = document.createElement("a");
-      link.href = shareData?.downloadUrl || video.videoUrl;
-      link.download = `lunara-cosmic-asmr-${video.id}.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (isDownloading) return;
+    
+    setIsDownloading(true);
+    try {
+      const response = await fetch(video.videoUrl);
+      if (!response.ok) throw new Error("Failed to fetch video");
+      
+      const reader = response.body?.getReader();
+      const chunks = [];
+      
+      if (reader) {
+        while(true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+      }
+
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `lunara-${video.prompt.slice(0, 20).replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
       toast({
-        title: "Download Started",
-        description: "Your video is downloading...",
+        title: "Download complete",
+        description: "Your video has been saved",
       });
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: "Please try again later",
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -930,11 +962,19 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                 <Button 
                   onClick={handleDownload} 
                   variant="default" 
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700"
+                  disabled={isDownloading}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 relative overflow-hidden group"
                   data-testid="button-modal-download"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
+                  <div className={`flex items-center justify-center transition-all duration-300 ${isDownloading ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+                    <Download className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    Download
+                  </div>
+                  {isDownloading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    </div>
+                  )}
                 </Button>
                 
                 {typeof navigator !== "undefined" && typeof navigator.share !== "undefined" && (

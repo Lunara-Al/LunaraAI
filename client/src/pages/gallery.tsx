@@ -104,21 +104,44 @@ export default function Gallery() {
     },
   });
 
-  const handleDownload = async (videoUrl: string, prompt: string) => {
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleDownload = async (id: number, videoUrl: string, prompt: string) => {
+    if (downloadingId) return;
+    
+    setDownloadingId(id);
     try {
       const response = await fetch(videoUrl);
-      const blob = await response.blob();
+      if (!response.ok) throw new Error("Failed to fetch video");
+      
+      const reader = response.body?.getReader();
+      const contentLength = +(response.headers.get("Content-Length") ?? 0);
+      
+      let receivedLength = 0;
+      const chunks = [];
+      
+      if (reader) {
+        while(true) {
+          const {done, value} = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          receivedLength += value.length;
+        }
+      }
+
+      const blob = new Blob(chunks, { type: 'video/mp4' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `lunara-${prompt.slice(0, 20)}-${Date.now()}.mp4`;
+      a.download = `lunara-${prompt.slice(0, 20).replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.mp4`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
       toast({
-        title: "Download started",
-        description: "Your video is being downloaded",
+        title: "Download complete",
+        description: "Your cosmic video is ready",
       });
     } catch (error) {
       console.error("Download failed:", error);
@@ -127,6 +150,8 @@ export default function Gallery() {
         title: "Download Error",
         description: "Failed to download video. Please try again.",
       });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -210,11 +235,19 @@ export default function Gallery() {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => handleDownload(video.videoUrl, video.prompt)}
-            className="h-8 w-8 text-white hover:bg-white/20"
+            onClick={() => handleDownload(video.id, video.videoUrl, video.prompt)}
+            disabled={downloadingId === video.id}
+            className="h-8 w-8 text-white hover:bg-white/20 relative"
             data-testid={isCreation ? `button-download-creation-${video.id}` : `button-download-${video.id}`}
           >
-            <Download className="w-4 h-4" />
+            {downloadingId === video.id ? (
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            ) : (
+              <Download className="w-4 h-4 transition-transform group-active:scale-95" />
+            )}
+            {downloadingId === video.id && (
+              <span className="absolute -inset-1 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            )}
           </Button>
 
           <Button
@@ -475,15 +508,20 @@ export default function Gallery() {
                       </div>
 
                       <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          onClick={() => handleDownload(video.videoUrl, video.prompt)}
-                          className="h-7 w-7"
-                          title="Download"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </Button>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={() => handleDownload(video.id, video.videoUrl, video.prompt)}
+                            disabled={downloadingId === video.id}
+                            className="h-7 w-7 relative"
+                            title="Download"
+                          >
+                            {downloadingId === video.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
                         <Button
                           size="icon"
                           variant="default"
@@ -626,15 +664,20 @@ export default function Gallery() {
                       </div>
 
                       <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          onClick={() => handleDownload(video.videoUrl, video.prompt)}
-                          className="h-7 w-7"
-                          title="Download"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </Button>
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={() => handleDownload(video.id, video.videoUrl, video.prompt)}
+                            disabled={downloadingId === video.id}
+                            className="h-7 w-7 relative"
+                            title="Download"
+                          >
+                            {downloadingId === video.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Download className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
                         <Button
                           size="icon"
                           variant={video.displayOnProfile ? "default" : "outline"}
