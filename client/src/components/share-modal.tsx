@@ -751,6 +751,22 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
       }
 
       const blob = new Blob(chunks, { type: 'video/mp4' });
+      
+      // Support for mobile "Save to Camera Roll" via Native Share API
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'video.mp4', { type: 'video/mp4' })] })) {
+        const file = new File([blob], `lunara-${video.prompt.slice(0, 20).replace(/\s+/g, '-').toLowerCase()}.mp4`, { type: 'video/mp4' });
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Save Cosmic Video',
+            text: 'Save this cosmic video to your camera roll',
+          });
+          return;
+        } catch (shareError) {
+          console.log("Share failed, falling back to download", shareError);
+        }
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
