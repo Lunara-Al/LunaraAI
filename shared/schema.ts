@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export const CREDIT_RESET_DAYS = 30;
 export const DEFAULT_VIDEO_LENGTH = 10;
-export const VIDEO_LENGTHS = [5, 10, 15] as const;
+export const VIDEO_LENGTHS = [5, 10] as const;
 export const ASPECT_RATIOS = ["1:1", "16:9", "9:16"] as const;
 export const QUALITY_LEVELS = ["basic", "hd", "4k"] as const;
 
@@ -26,7 +26,7 @@ export const MEMBERSHIP_TIERS = {
     name: "Pro",
     price: 19,
     monthlyVideos: 100,
-    maxLength: 15,
+    maxLength: 10,
     quality: "hd" as const,
     monthlyCredits: 300,
     get stripePriceId() {
@@ -37,7 +37,7 @@ export const MEMBERSHIP_TIERS = {
     name: "Premium",
     price: 49,
     monthlyVideos: -1,
-    maxLength: 15,
+    maxLength: 10,
     quality: "4k" as const,
     monthlyCredits: 1000,
     get stripePriceId() {
@@ -235,7 +235,7 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 
 export const videoGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(500, "Prompt must be less than 500 characters"),
-  length: z.number().refine((val) => VIDEO_LENGTHS.includes(val as VideoLength), "Length must be 5, 10, or 15 seconds").default(DEFAULT_VIDEO_LENGTH),
+  length: z.number().refine((val) => VIDEO_LENGTHS.includes(val as VideoLength), "Length must be 5 or 10 seconds").default(DEFAULT_VIDEO_LENGTH),
   aspectRatio: z.enum(ASPECT_RATIOS).default("1:1"),
   style: z.string().optional(),
   imageBase64: z.string().optional(),
