@@ -9,39 +9,72 @@ import {
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
 import { getWebSocketManager } from "../websocket";
-import { fal } from "@fal-ai/client";
+import OpenAI from "openai";
 import * as fs from "fs";
 import * as path from "path";
 import { randomBytes } from "crypto";
 
-// Get API key - check both FAL_KEY (preferred) and PIKA_API_KEY (legacy)
-function getFalApiKey(): string | null {
-  return process.env.FAL_KEY || process.env.PIKA_API_KEY || null;
-}
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// Configure fal.ai client
-const falApiKey = getFalApiKey();
-if (falApiKey) {
-  fal.config({
-    credentials: falApiKey
-  });
-}
-
-// Map aspect ratios to fal.ai format
-function mapAspectRatio(aspectRatio: string): string {
-  const mapping: Record<string, string> = {
-    "1:1": "1:1",
-    "16:9": "16:9",
-    "9:16": "9:16",
-    "4:3": "4:3",
-    "3:4": "3:4",
+// Map aspect ratios to Sora size strings
+// Sora supports: 720x1280, 1280x720, 1024x1792, 1792x1024
+function mapAspectRatioToSize(aspectRatio: string): "720x1280" | "1280x720" | "1024x1792" | "1792x1024" {
+  const mapping: Record<string, "720x1280" | "1280x720" | "1024x1792" | "1792x1024"> = {
+    "1:1": "1024x1792", // No true 1:1, use portrait as default
+    "16:9": "1280x720",
+    "9:16": "720x1280",
   };
-  return mapping[aspectRatio] || "16:9";
+  return mapping[aspectRatio] || "1280x720";
 }
 
-// Map video length to supported duration (Pika API supports 5 or 10 seconds)
-function mapDuration(length: number): 5 | 10 {
-  return length <= 5 ? 5 : 10;
+// Map UI video lengths to Sora-supported durations (as strings)
+// Sora supports: "4", "8", "12"
+function mapDuration(length: number): "4" | "8" | "12" {
+  if (length <= 4) return "4";
+  if (length <= 8) return "8";
+  return "12";
+}
+
+// Poll for video completion with exponential backoff
+async function pollForVideoCompletion(
+  videoId: string,
+  maxWaitMs: number = 300000 // 5 minutes max
+): Promise<{ status: string; progress?: number; error?: string }> {
+  const startTime = Date.now();
+  let pollInterval = 5000; // Start with 5 seconds
+  const maxPollInterval = 15000; // Max 15 seconds between polls
+
+  while (Date.now() - startTime < maxWaitMs) {
+    try {
+      const video = await openai.videos.retrieve(videoId);
+      console.log(`Video ${videoId} status: ${video.status}, progress: ${(video as any).progress || 0}%`);
+
+      if (video.status === "completed") {
+        return { status: "completed" };
+      }
+
+      if (video.status === "failed") {
+        return { 
+          status: "failed", 
+          error: (video as any).error?.message || "Video generation failed" 
+        };
+      }
+
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      
+      // Increase poll interval with exponential backoff (capped)
+      pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
+    } catch (error: any) {
+      console.error("Error polling video status:", error);
+      return { status: "error", error: error.message };
+    }
+  }
+
+  return { status: "timeout", error: "Video generation timed out after 5 minutes" };
 }
 
 export function createGeneratorRouter(): Router {
@@ -72,7 +105,7 @@ export function createGeneratorRouter(): Router {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt, length = 5, aspectRatio = "16:9", style, imageBase64 } = validation.data;
+      const { prompt, length = 4, aspectRatio = "16:9", style } = validation.data;
 
       if (length > tierConfig.maxLength) {
         const errorResponse: ErrorResponse = {
@@ -82,11 +115,10 @@ export function createGeneratorRouter(): Router {
         return res.status(403).json(errorResponse);
       }
 
-      const apiKey = getFalApiKey();
-      if (!apiKey) {
+      if (!process.env.OPENAI_API_KEY) {
         const errorResponse: ErrorResponse = {
           error: "Configuration error",
-          message: "Video generation API key is not configured. Please add FAL_KEY or PIKA_API_KEY.",
+          message: "OpenAI API key is not configured. Please add OPENAI_API_KEY.",
         };
         return res.status(500).json(errorResponse);
       }
@@ -96,61 +128,45 @@ export function createGeneratorRouter(): Router {
       if (style) {
         enhancedPrompt = `${prompt}, ${style} style`;
       }
-      enhancedPrompt = `${enhancedPrompt}, cosmic ASMR aesthetic, high quality, cinematic`;
+      enhancedPrompt = `${enhancedPrompt}, cosmic ASMR aesthetic, high quality, cinematic, smooth motion`;
 
-      console.log("Generating video via Pika Labs API for prompt:", enhancedPrompt);
-      console.log("Options - Length:", mapDuration(length), "s, Aspect Ratio:", mapAspectRatio(aspectRatio));
+      const durationStr = mapDuration(length);
+      const size = mapAspectRatioToSize(aspectRatio);
+
+      console.log("Generating video via OpenAI Sora API for prompt:", enhancedPrompt);
+      console.log("Options - Duration:", durationStr, "s, Size:", size);
       
       let videoUrl: string;
       try {
-        // Use Pika text-to-video API via fal.ai
-        const result = await fal.subscribe("fal-ai/pika/v2.2/text-to-video", {
-          input: {
-            prompt: enhancedPrompt,
-            aspect_ratio: mapAspectRatio(aspectRatio) as "1:1" | "16:9" | "9:16" | "4:5" | "5:4" | "3:2" | "2:3",
-            duration: mapDuration(length),
-            resolution: "720p" as const,
-          },
-          logs: true,
-          onQueueUpdate: (update) => {
-            if (update.status === "IN_PROGRESS") {
-              console.log("Video generation in progress...");
-            }
-            if (update.status === "IN_QUEUE") {
-              console.log("Video generation queued...");
-            }
-          },
+        // Create video generation job with Sora
+        // API: POST /videos with prompt at top level
+        const videoJob = await openai.videos.create({
+          model: "sora-2",
+          prompt: enhancedPrompt,
+          seconds: durationStr,
+          size: size,
         });
 
-        // Extract video URL from result - handle different response shapes
-        const data = result.data as Record<string, unknown>;
-        let tempVideoUrl: string | undefined;
+        console.log("Video job created:", videoJob.id, "Status:", videoJob.status);
+
+        // Poll for completion
+        const result = await pollForVideoCompletion(videoJob.id);
         
-        // Try different possible response structures
-        if (typeof data?.video === 'object' && data?.video !== null) {
-          tempVideoUrl = (data.video as { url?: string })?.url;
-        } else if (typeof data?.output === 'string') {
-          tempVideoUrl = data.output;
-        } else if (typeof data?.url === 'string') {
-          tempVideoUrl = data.url;
-        } else if (Array.isArray(data?.videos) && data.videos.length > 0) {
-          tempVideoUrl = (data.videos[0] as { url?: string })?.url;
+        if (result.status !== "completed") {
+          throw new Error(result.error || `Video generation ${result.status}`);
         }
+
+        console.log("Video generation completed, downloading...");
+
+        // Download the video content using downloadContent method
+        const videoResponse = await openai.videos.downloadContent(videoJob.id);
         
-        if (!tempVideoUrl) {
-          console.error("Pika API response structure:", JSON.stringify(result.data, null, 2));
-          throw new Error("Could not extract video URL from API response. Please check API configuration.");
-        }
-
-        console.log("Video generated successfully, downloading...");
-
-        // Download and save the video locally
-        const videoResponse = await fetch(tempVideoUrl);
-        if (!videoResponse.ok) {
-          throw new Error(`Failed to download video: ${videoResponse.statusText}`);
-        }
-
-        const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+        // Get the video data as a blob then convert to buffer
+        const blob = await videoResponse.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const videoBuffer = Buffer.from(arrayBuffer);
+        
+        // Save video locally
         const uniqueId = randomBytes(8).toString("hex");
         const fileName = `video_${uniqueId}.mp4`;
         const publicDir = path.join(process.cwd(), "public", "generated");
@@ -170,14 +186,17 @@ export function createGeneratorRouter(): Router {
         console.error("Video generation failed:", err);
         
         // Provide more specific error messages
-        if (err.message?.includes("authentication") || err.message?.includes("credentials")) {
-          throw new Error("Invalid API key. Please check your Pika/fal.ai API key configuration.");
+        if (err.status === 401 || err.message?.includes("authentication") || err.message?.includes("API key")) {
+          throw new Error("Invalid OpenAI API key. Please check your OPENAI_API_KEY configuration.");
         }
-        if (err.message?.includes("rate limit")) {
+        if (err.status === 429 || err.message?.includes("rate limit")) {
           throw new Error("Rate limit exceeded. Please try again in a few minutes.");
         }
-        if (err.message?.includes("quota")) {
-          throw new Error("API quota exceeded. Please check your fal.ai account.");
+        if (err.message?.includes("quota") || err.message?.includes("billing")) {
+          throw new Error("OpenAI API quota exceeded. Please check your billing settings.");
+        }
+        if (err.message?.includes("not available") || err.message?.includes("access")) {
+          throw new Error("Sora API access not available. Please ensure your OpenAI account has Sora API access.");
         }
         
         throw new Error(`Video generation failed: ${err.message}`);
@@ -195,7 +214,7 @@ export function createGeneratorRouter(): Router {
         userId,
         prompt,
         videoUrl,
-        length: mapDuration(length),
+        length: parseInt(durationStr),
         aspectRatio,
         style: style || null,
       });

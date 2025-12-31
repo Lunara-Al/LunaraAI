@@ -50,6 +50,7 @@ import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { VIDEO_LENGTHS } from "@shared/schema";
 
 type UserSettings = {
   id: number;
@@ -382,7 +383,7 @@ export default function Settings() {
                     gradient="from-violet-500 to-purple-600"
                   >
                     <div className="flex gap-2 flex-wrap">
-                      {[5, 10, 15].map((length) => (
+                      {VIDEO_LENGTHS.map((length) => (
                         <Button
                           key={length}
                           type="button"
@@ -396,7 +397,7 @@ export default function Settings() {
                         >
                           <Film className="w-3 h-3 mr-1.5" />
                           {length}s
-                          {length === 15 && <Zap className="w-3 h-3 ml-1 text-amber-400" />}
+                          {length === 12 && <Zap className="w-3 h-3 ml-1 text-amber-400" />}
                         </Button>
                       ))}
                     </div>

@@ -541,9 +541,9 @@ export default function Membership() {
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Max Length</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">10s</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">15s</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">15s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">4s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">8s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">12s</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Quality</td>

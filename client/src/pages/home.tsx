@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
-import type { VideoGenerationResponse, ErrorResponse, FrontendUser } from "@shared/schema";
+import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoGenerationResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
 
 
@@ -82,7 +82,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [length, setLength] = useState(10);
+  const [length, setLength] = useState(DEFAULT_VIDEO_LENGTH);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [style, setStyle] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -571,22 +571,28 @@ export default function Home() {
                   Video Length
                 </Label>
                 <div className="flex gap-2">
-                  {[5, 10, 15].map((len) => (
-                    <Button
-                      key={len}
-                      type="button"
-                      size="sm"
-                      variant={length === len ? "default" : "outline"}
-                      onClick={() => setLength(len)}
-                      disabled={generateVideoMutation.isPending || (len === 15 && user?.membershipTier === 'free')}
-                      className={`flex-1 ${length === len ? "moon-glow" : ""}`}
-                      data-testid={`button-length-${len}`}
-                      title={len === 15 && user?.membershipTier === 'free' ? "Upgrade to Pro or Premium for 15s videos" : ""}
-                    >
-                      {len}s
-                      {len === 15 && <Zap className="w-3 h-3 ml-1" />}
-                    </Button>
-                  ))}
+                  {VIDEO_LENGTHS.map((len) => {
+                    const tierMaxLength = user?.membershipTier 
+                      ? MEMBERSHIP_TIERS[user.membershipTier as MembershipTier].maxLength 
+                      : MEMBERSHIP_TIERS.free.maxLength;
+                    const isLocked = len > tierMaxLength;
+                    return (
+                      <Button
+                        key={len}
+                        type="button"
+                        size="sm"
+                        variant={length === len ? "default" : "outline"}
+                        onClick={() => setLength(len)}
+                        disabled={generateVideoMutation.isPending || isLocked}
+                        className={`flex-1 ${length === len ? "moon-glow" : ""}`}
+                        data-testid={`button-length-${len}`}
+                        title={isLocked ? `Upgrade to unlock ${len}s videos` : ""}
+                      >
+                        {len}s
+                        {isLocked && <Zap className="w-3 h-3 ml-1" />}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
