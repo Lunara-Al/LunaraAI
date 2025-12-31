@@ -130,28 +130,6 @@ export default function Gallery() {
       }
 
       const blob = new Blob(chunks, { type: 'video/mp4' });
-      
-      // Mobile-first: Try Native Share API for "Save to Camera Roll"
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile && navigator.share && navigator.canShare) {
-        try {
-          const file = new File([blob], `lunara-${prompt.slice(0, 20).replace(/\s+/g, '-').toLowerCase()}.mp4`, { type: 'video/mp4' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'Save Cosmic Video',
-              text: 'Save this cosmic video to your camera roll',
-            });
-            toast({
-              title: "Save successful",
-              description: "The video has been shared to your device",
-            });
-            return;
-          }
-        } catch (shareError) {
-          console.log("Native share failed or cancelled", shareError);
-        }
-      }
 
       // Desktop & Fallback: Traditional Download
       const url = window.URL.createObjectURL(blob);
