@@ -9,11 +9,13 @@ Lunara AI is a web application designed to generate 10-second cosmic ASMR videos
 - **Typography:** Poppins font family throughout
 
 ## Recent Changes
+- Updated video generation to use Pika Labs v2.2 API via @fal-ai/client for real text-to-video generation.
+- Videos now saved locally to public/generated/ as .mp4 files to prevent URL expiration.
+- Aligned video length options to 5s and 10s (matching Pika API constraints).
+- Updated membership tier max lengths to 10 seconds across all tiers.
 - Removed test video generation feature from Gallery to ensure production readiness.
-- Enhanced Pika Labs API integration with more robust video URL extraction and logging.
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.
-- Verified and tidied up UI for "Glass Bubble Moon" design consistency.
 
 ## System Architecture
 
@@ -54,7 +56,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Automatic fallback to simulation mode if Stripe unavailable
     - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
     - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
-- **Video Generation Parameters:** Supports customizable video length (5s, 10s, 15s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic).
+- **Video Generation Parameters:** Supports customizable video length (5s, 10s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via Pika Labs v2.2 API through @fal-ai/client and saved locally to public/generated/ to prevent URL expiration.
 
 ### Feature Specifications
 - **Video Generation:** Users input text prompts to generate 10-second cosmic ASMR videos with autoplay and looping.
