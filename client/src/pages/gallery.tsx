@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Share2, List, Grid3x3 } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Share2, List, Grid3x3, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
@@ -8,6 +8,17 @@ import { ShareModal } from "@/components/share-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { VideoGeneration, UserSettings } from "@shared/schema";
 
 const VIDEOS_PER_PAGE = 12;
@@ -210,16 +221,39 @@ export default function Gallery() {
             <Share2 className="w-4 h-4" />
           </Button>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => deleteVideoMutation.mutate(video.id)}
-            disabled={deleteVideoMutation.isPending}
-            className="h-8 w-8 text-destructive hover:bg-destructive/20"
-            data-testid={isCreation ? `button-delete-creation-${video.id}` : `button-delete-${video.id}`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-destructive hover:bg-destructive/20"
+                data-testid={isCreation ? `button-delete-creation-${video.id}` : `button-delete-${video.id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="glass-card border-destructive/20">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="w-5 h-5" />
+                  Delete Video?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  This action cannot be undone. This will permanently delete your cosmic video
+                  and any associated share links.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-white/10 hover:bg-white/20 border-white/10">Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => deleteVideoMutation.mutate(video.id)}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
+                  {deleteVideoMutation.isPending ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     </div>
@@ -438,16 +472,38 @@ export default function Gallery() {
                         >
                           <Share2 className="w-3.5 h-3.5" />
                         </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => deleteVideoMutation.mutate(video.id)}
-                          disabled={deleteVideoMutation.isPending}
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="glass-card border-destructive/20">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2 text-destructive text-base">
+                                <AlertTriangle className="w-4 h-4" />
+                                Delete Video?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-xs text-muted-foreground">
+                                Permanently remove this video and all associated share links.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="gap-2">
+                              <AlertDialogCancel className="h-8 text-xs bg-white/10 hover:bg-white/20 border-white/10">Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteVideoMutation.mutate(video.id)}
+                                className="h-8 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                              >
+                                {deleteVideoMutation.isPending ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </div>
@@ -553,16 +609,38 @@ export default function Gallery() {
                         >
                           <Share2 className="w-3.5 h-3.5" />
                         </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => deleteVideoMutation.mutate(video.id)}
-                          disabled={deleteVideoMutation.isPending}
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-destructive hover:bg-destructive/10 ml-auto"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="glass-card border-destructive/20">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2 text-destructive text-base">
+                                <AlertTriangle className="w-4 h-4" />
+                                Delete Video?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-xs text-muted-foreground">
+                                Permanently remove this video and all associated share links.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="gap-2">
+                              <AlertDialogCancel className="h-8 text-xs bg-white/10 hover:bg-white/20 border-white/10">Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteVideoMutation.mutate(video.id)}
+                                className="h-8 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                              >
+                                {deleteVideoMutation.isPending ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </div>
