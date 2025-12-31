@@ -10,7 +10,8 @@ import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
 import { getWebSocketManager } from "../websocket";
 
-const PIKA_URL = "https://api.pika.art/v1/videos";
+// Pika API via fal.ai
+const PIKA_URL = "https://fal.run/fal-ai/pika/v2.2/text-to-video";
 
 export function createGeneratorRouter(): Router {
   const router = Router();
@@ -60,17 +61,19 @@ export function createGeneratorRouter(): Router {
       }
 
       const pikaRequestBody: any = {
-        prompt,
-        length,
-        aspect_ratio: aspectRatio,
-        ...(style && { style }),
-        ...(imageBase64 && { image_base64: imageBase64 }),
+        input: {
+          prompt,
+          duration: Math.min(length, 10), // fal.ai pika v2.2 typically supports 5-10s
+          aspect_ratio: aspectRatio,
+          ...(style && { style }),
+          ...(imageBase64 && { image_url: imageBase64 }), // fal.ai uses image_url for base64 as well
+        }
       };
 
       const response = await fetch(PIKA_URL, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${PIKA_API_KEY}`,
+          Authorization: `Key ${PIKA_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(pikaRequestBody),
@@ -78,7 +81,7 @@ export function createGeneratorRouter(): Router {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Pika API error:", response.status, errorText);
+        console.error("Pika API (fal.ai) error:", response.status, errorText);
         const errorResponse: ErrorResponse = {
           error: "Video generation failed",
           message: `Failed to generate video. Status: ${response.status}`,
@@ -89,8 +92,8 @@ export function createGeneratorRouter(): Router {
       const data = await response.json();
       console.log("Pika API response data:", JSON.stringify(data));
       
-      // Handle various response formats from Pika
-      const videoUrl = data.video_url || data.url || data.videoUrl || (data.data && (data.data.video_url || data.data.url));
+      // fal.ai structure is usually { video: { url: "..." } }
+      const videoUrl = data.video?.url || data.url || data.video_url;
       
       if (!videoUrl) {
         console.error("Video URL missing in Pika response:", data);
