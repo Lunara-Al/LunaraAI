@@ -842,14 +842,28 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                   }}
                 />
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-black/10 dark:bg-black/30">
-                  <video
-                    src={video.videoUrl}
-                    className="w-full h-full object-cover"
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                  />
+                  {(() => {
+                    const isVideo = (url: string) => {
+                      const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                      return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                    };
+                    return isVideo(video.videoUrl) ? (
+                      <video
+                        src={video.videoUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                        loop
+                        autoPlay
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src={video.videoUrl}
+                        className="w-full h-full object-cover"
+                        alt={video.prompt}
+                      />
+                    );
+                  })()}
                   
                   <div 
                     className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"

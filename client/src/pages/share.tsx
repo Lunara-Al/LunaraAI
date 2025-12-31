@@ -414,17 +414,32 @@ export default function SharePage() {
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/40 via-secondary/30 to-primary/40 rounded-t-xl blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 z-0" />
               <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-secondary/10 z-10 pointer-events-none" />
               <ShimmerOverlay />
-              <video
-                src={video.videoUrl}
-                controls
-                autoPlay
-                loop
-                playsInline
-                className="w-full aspect-video object-cover relative z-10"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                data-testid="share-video-player"
-              />
+              {(() => {
+                const isVideo = (url: string) => {
+                  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                  return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                };
+                return isVideo(video.videoUrl) ? (
+                  <video
+                    src={video.videoUrl}
+                    controls
+                    autoPlay
+                    loop
+                    playsInline
+                    className="w-full aspect-video object-cover relative z-10"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    data-testid="share-video-player"
+                  />
+                ) : (
+                  <img
+                    src={video.videoUrl}
+                    className="w-full aspect-video object-cover relative z-10"
+                    alt={video.prompt}
+                    data-testid="share-image-preview"
+                  />
+                );
+              })()}
             </div>
 
             <div className="p-6 md:p-8 space-y-5">

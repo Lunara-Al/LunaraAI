@@ -112,7 +112,7 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
                 </div>
 
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none">
                   <p className="text-white text-xs md:text-sm line-clamp-2 font-medium" data-testid={`creation-prompt-${video.id}`}>
                     {video.prompt}
                   </p>

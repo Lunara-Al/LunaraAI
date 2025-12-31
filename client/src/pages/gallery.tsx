@@ -183,7 +183,7 @@ export default function Gallery() {
         })()}
 
         {/* Enhanced Play Icon Overlay - Slimmed down */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 pointer-events-none">
           <Play className="w-8 h-8 text-white fill-white drop-shadow-md" />
         </div>
 
