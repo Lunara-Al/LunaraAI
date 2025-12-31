@@ -1,7 +1,7 @@
 # Lunara AI - Cosmic ASMR Video Generation
 
 ## Overview
-Lunara AI is a web application designed to generate 10-second cosmic ASMR videos from text prompts using the Pika Labs API. It features a unique "Glass Bubble Moon" design system with purple-pink gradients, smooth animations, and a polished user experience. The project aims to provide an immersive platform for creating short, aesthetically pleasing, AI-generated video content.
+Lunara AI is a web application designed to generate cosmic ASMR videos from text prompts using the OpenAI Sora API (sora-2 model). It features a unique "Glass Bubble Moon" design system with purple-pink gradients, smooth animations, and a polished user experience. The project aims to provide an immersive platform for creating short, aesthetically pleasing, AI-generated video content.
 
 ## User Preferences
 - **Design Philosophy:** Focused, immersive single-purpose interface optimized for video generation
@@ -9,11 +9,11 @@ Lunara AI is a web application designed to generate 10-second cosmic ASMR videos
 - **Typography:** Poppins font family throughout
 
 ## Recent Changes
-- Updated video generation to use Pika Labs v2.2 API via @fal-ai/client for real text-to-video generation.
-- Videos now saved locally to public/generated/ as .mp4 files to prevent URL expiration.
-- Aligned video length options to 5s and 10s (matching Pika API constraints).
-- Updated membership tier max lengths to 10 seconds across all tiers.
-- Removed test video generation feature from Gallery to ensure production readiness.
+- **Migrated to OpenAI Sora API (sora-2 model)** for video generation, replacing Pika Labs API.
+- **Video lengths updated to 4s, 8s, 12s** to match Sora API constraints.
+- **Membership tier max lengths updated:** Basic (free) = 4s, Pro = 8s, Premium = 12s.
+- Implemented polling-based video generation with exponential backoff (5-10s intervals, max 5min timeout).
+- Videos saved locally to public/generated/ as .mp4 files to prevent URL expiration.
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.
 
@@ -32,7 +32,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
 
 ### Technical Implementations
 - **Frontend:** Built with React and TypeScript, styled using Tailwind CSS with a custom cosmic theme. State management is handled by TanStack Query for API mutations, and Wouter is used for client-side routing.
-- **Backend:** Developed with Express.js and TypeScript. Zod schemas are utilized for request validation, and the Pika Labs API is integrated via fetch requests.
+- **Backend:** Developed with Express.js and TypeScript. Zod schemas are utilized for request validation, and the OpenAI Sora API is integrated via the official openai npm package.
 - **Database:** PostgreSQL is used for data persistence, managed with Drizzle ORM, storing user, session, subscription, and video generation data.
 - **Authentication:** Implements dual authentication system supporting both Replit OIDC and local password-based authentication. Features include:
   - User registration with email/username/password
@@ -56,10 +56,10 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Automatic fallback to simulation mode if Stripe unavailable
     - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
     - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
-- **Video Generation Parameters:** Supports customizable video length (5s, 10s), aspect ratio (1:1, 16:9, 9:16 with platform labels), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via Pika Labs v2.2 API through @fal-ai/client and saved locally to public/generated/ to prevent URL expiration.
+- **Video Generation Parameters:** Supports customizable video length (4s, 8s, 12s matching Sora API), aspect ratio (720x1280, 1280x720, 1024x1792, 1792x1024), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via OpenAI Sora API (sora-2 model) with polling-based status checks and saved locally to public/generated/ to prevent URL expiration.
 
 ### Feature Specifications
-- **Video Generation:** Users input text prompts to generate 10-second cosmic ASMR videos with autoplay and looping.
+- **Video Generation:** Users input text prompts to generate cosmic ASMR videos (4s, 8s, or 12s based on membership tier) with autoplay and looping.
 - **User Authentication & Authorization:** Secure login/logout, protected routes, and role-based access control tied to subscription tiers.
 - **Account Management:** 
   - User profile displaying account information
