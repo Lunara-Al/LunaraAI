@@ -23,11 +23,10 @@ function mapAspectRatio(aspectRatio: string): "16:9" | "9:16" {
   return "16:9"; // Default to landscape
 }
 
-// Map UI video lengths to Gemini Veo durations (5-8 seconds typical)
+// Map UI video lengths to Gemini Veo durations (5-8 seconds)
 function mapDuration(length: number): number {
-  // Veo supports approximately 5-8 second videos
-  if (length <= 4) return 5;
-  if (length <= 8) return 8;
+  // Veo supports 5-8 second videos
+  if (length <= 5) return 5;
   return 8; // Max 8 seconds for Veo
 }
 
@@ -94,7 +93,7 @@ export function createGeneratorRouter(): Router {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt, length = 4, aspectRatio = "16:9", style } = validation.data;
+      const { prompt, length = 5, aspectRatio = "16:9", style } = validation.data;
 
       if (length > tierConfig.maxLength) {
         const errorResponse: ErrorResponse = {
@@ -141,20 +140,34 @@ export function createGeneratorRouter(): Router {
 
         console.log("Video generation initiated, waiting for completion...");
 
-        // Poll for completion
+        // Poll for completion with exponential backoff
         let operation = response;
-        while (!operation.done) {
+        let pollInterval = 5000; // Start with 5 seconds
+        const maxPollInterval = 15000; // Max 15 seconds between polls
+        const maxWaitMs = 300000; // 5 minutes max
+        const startTime = Date.now();
+
+        while (!operation.done && (Date.now() - startTime) < maxWaitMs) {
           console.log("Video generation in progress...");
-          await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
-          operation = await genAI.operations.get({ 
-            operation: operation 
-          });
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
+          
+          // Refresh operation status using the operation name
+          if (operation.name) {
+            operation = await genAI.operations.get({ 
+              name: operation.name 
+            });
+          }
+        }
+
+        if (!operation.done) {
+          throw new Error("Video generation timed out after 5 minutes");
         }
 
         console.log("Video generation completed!");
 
-        // Get the generated video
-        const generatedVideos = operation.response?.generatedVideos;
+        // Get the generated video from result (not response)
+        const generatedVideos = operation.result?.generatedVideos;
         if (!generatedVideos || generatedVideos.length === 0) {
           throw new Error("No video was generated");
         }
