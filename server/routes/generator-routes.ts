@@ -142,37 +142,38 @@ export function createGeneratorRouter(): Router {
 
         // Poll for completion with exponential backoff
         let operation: any = generationResponse;
-        let pollInterval = 5000; // Start with 5 seconds
-        const maxPollInterval = 15000; // Max 15 seconds between polls
-        const maxWaitMs = 300000; // 5 minutes max
+        let pollInterval = 10000; // Start with 10 seconds for video (it takes time)
+        const maxPollInterval = 20000; // Max 20 seconds between polls
+        const maxWaitMs = 600000; // 10 minutes max for video generation
         const startTime = Date.now();
 
-        // Use any to avoid complex type issues with operation names in experimental SDK
+        // The @google/genai SDK response might already have the name or be the operation
         const opName = (operation as any).name || (operation as any).operation?.name;
         
         if (!opName && !operation.done) {
-          console.error("No operation name found in response:", JSON.stringify(operation));
-          throw new Error("Failed to initiate video generation: No operation ID returned");
+          console.log("No operation name found, but checking if already done...");
         }
 
         while (!operation.done && (Date.now() - startTime) < maxWaitMs) {
-          console.log("Video generation in progress...");
+          console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
           await new Promise(resolve => setTimeout(resolve, pollInterval));
-          pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
+          pollInterval = Math.min(pollInterval * 1.2, maxPollInterval); // Slower backoff
           
-          // Refresh operation status using the operation name
           if (opName) {
             try {
-              operation = await (genAI as any).operations.get({ 
-                name: opName 
-              });
+              // Re-fetch the operation using the name
+              const updatedOp = await (genAI as any).operations.get({ name: opName });
+              if (updatedOp) {
+                operation = updatedOp;
+                if (operation.metadata?.progressPercentage) {
+                  console.log(`Generation progress: ${operation.metadata.progressPercentage}%`);
+                }
+              }
             } catch (pollErr: any) {
               console.error("Polling error (will retry):", pollErr.message);
-              // Don't throw here, just retry next cycle
+              // Check if it's already finished despite the error
+              if (operation.done) break;
             }
-          } else if (typeof (operation as any).poll === 'function') {
-            // Fallback if the SDK object has a poll method
-            operation = await (operation as any).poll();
           }
         }
 
