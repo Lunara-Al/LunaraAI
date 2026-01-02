@@ -127,7 +127,7 @@ export function createGeneratorRouter(): Router {
       let videoUrl: string;
       try {
         // Use Gemini's Veo model for video generation
-        const response = await genAI.models.generateVideos({
+        const videoResponse = await genAI.models.generateVideos({
           model: "veo-2.0-generate-001",
           prompt: enhancedPrompt,
           config: {
@@ -141,11 +141,19 @@ export function createGeneratorRouter(): Router {
         console.log("Video generation initiated, waiting for completion...");
 
         // Poll for completion with exponential backoff
-        let operation = response;
+        let operation = videoResponse;
         let pollInterval = 5000; // Start with 5 seconds
         const maxPollInterval = 15000; // Max 15 seconds between polls
         const maxWaitMs = 300000; // 5 minutes max
         const startTime = Date.now();
+
+        // The @google/genai SDK response might already have the name or be the operation
+        const operationName = operation.name || (operation as any).operation?.name;
+        
+        if (!operationName && !operation.done) {
+          console.error("No operation name found in response:", JSON.stringify(operation));
+          throw new Error("Failed to initiate video generation: No operation ID returned");
+        }
 
         while (!operation.done && (Date.now() - startTime) < maxWaitMs) {
           console.log("Video generation in progress...");
@@ -153,10 +161,18 @@ export function createGeneratorRouter(): Router {
           pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
           
           // Refresh operation status using the operation name
-          if (operation.name) {
-            operation = await genAI.operations.get({ 
-              name: operation.name 
-            });
+          if (operationName) {
+            try {
+              operation = await genAI.operations.get({ 
+                name: operationName 
+              });
+            } catch (pollErr: any) {
+              console.error("Polling error (will retry):", pollErr.message);
+              // Don't throw here, just retry next cycle
+            }
+          } else if (typeof (operation as any).poll === 'function') {
+            // Fallback if the SDK object has a poll method
+            operation = await (operation as any).poll();
           }
         }
 
