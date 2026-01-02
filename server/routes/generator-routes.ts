@@ -127,7 +127,7 @@ export function createGeneratorRouter(): Router {
       let videoUrl: string;
       try {
         // Use Gemini's Veo model for video generation
-        const videoResponse = await genAI.models.generateVideos({
+        const generationResponse = await genAI.models.generateVideos({
           model: "veo-2.0-generate-001",
           prompt: enhancedPrompt,
           config: {
@@ -141,16 +141,16 @@ export function createGeneratorRouter(): Router {
         console.log("Video generation initiated, waiting for completion...");
 
         // Poll for completion with exponential backoff
-        let operation = videoResponse;
+        let operation: any = generationResponse;
         let pollInterval = 5000; // Start with 5 seconds
         const maxPollInterval = 15000; // Max 15 seconds between polls
         const maxWaitMs = 300000; // 5 minutes max
         const startTime = Date.now();
 
-        // The @google/genai SDK response might already have the name or be the operation
-        const operationName = operation.name || (operation as any).operation?.name;
+        // Use any to avoid complex type issues with operation names in experimental SDK
+        const opName = (operation as any).name || (operation as any).operation?.name;
         
-        if (!operationName && !operation.done) {
+        if (!opName && !operation.done) {
           console.error("No operation name found in response:", JSON.stringify(operation));
           throw new Error("Failed to initiate video generation: No operation ID returned");
         }
@@ -161,10 +161,10 @@ export function createGeneratorRouter(): Router {
           pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
           
           // Refresh operation status using the operation name
-          if (operationName) {
+          if (opName) {
             try {
-              operation = await genAI.operations.get({ 
-                name: operationName 
+              operation = await (genAI as any).operations.get({ 
+                name: opName 
               });
             } catch (pollErr: any) {
               console.error("Polling error (will retry):", pollErr.message);
@@ -183,7 +183,8 @@ export function createGeneratorRouter(): Router {
         console.log("Video generation completed!");
 
         // Get the generated video from result (not response)
-        const generatedVideos = operation.result?.generatedVideos;
+        const opResult = (operation as any).result;
+        const generatedVideos = opResult?.generatedVideos;
         if (!generatedVideos || generatedVideos.length === 0) {
           throw new Error("No video was generated");
         }
@@ -198,12 +199,12 @@ export function createGeneratorRouter(): Router {
         console.log("Downloading video from:", videoUri);
 
         // Fetch the video content
-        const videoResponse = await fetch(videoUri);
-        if (!videoResponse.ok) {
-          throw new Error(`Failed to download video: ${videoResponse.statusText}`);
+        const downloadResponse = await fetch(videoUri);
+        if (!downloadResponse.ok) {
+          throw new Error(`Failed to download video: ${downloadResponse.statusText}`);
         }
         
-        const arrayBuffer = await videoResponse.arrayBuffer();
+        const arrayBuffer = await downloadResponse.arrayBuffer();
         const videoBuffer = Buffer.from(arrayBuffer);
         
         // Save video locally
