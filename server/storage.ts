@@ -245,6 +245,12 @@ export class DatabaseStorage implements IStorage {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
 
+    // Safety check for membershipTier
+    if (!user.membershipTier) {
+      const [updatedUser] = await db.update(users).set({ membershipTier: 'basic' }).where(eq(users.id, userId)).returning();
+      return updatedUser;
+    }
+
     const now = new Date();
     const lastReset = new Date(user.lastResetDate);
     const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));

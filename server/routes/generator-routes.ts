@@ -213,9 +213,9 @@ export function createGeneratorRouter(): Router {
         const fileName = `video_${uniqueId}.mp4`;
         const publicDir = path.join(process.cwd(), "public", "generated");
         
-        // Ensure directory exists
+        // Ensure directory exists with correct permissions
         if (!fs.existsSync(publicDir)) {
-          fs.mkdirSync(publicDir, { recursive: true });
+          fs.mkdirSync(publicDir, { recursive: true, mode: 0o755 });
         }
         
         const filePath = path.join(publicDir, fileName);
@@ -224,6 +224,11 @@ export function createGeneratorRouter(): Router {
         // Store the local URL path that will be served statically
         videoUrl = `/generated/${fileName}`;
         console.log("Video saved locally:", videoUrl);
+
+        // Verify the file exists and has content before proceeding
+        if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+          throw new Error("Video file was not saved correctly or is empty");
+        }
       } catch (err: any) {
         console.error("Video generation failed:", err);
         
