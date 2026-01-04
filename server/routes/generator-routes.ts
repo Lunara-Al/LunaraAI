@@ -140,37 +140,35 @@ export function createGeneratorRouter(): Router {
           },
         });
 
-        // Debug: Log the full response structure
+        console.log("Video generation initiated, waiting for completion...");
         console.log("Initial response type:", typeof operation);
-        console.log("Initial response keys:", Object.keys(operation || {}));
-        console.log("Has done property:", 'done' in (operation || {}));
-        console.log("Has name property:", 'name' in (operation || {}));
         
-        // Poll for video generation completion using the correct SDK method
-        const maxWaitMs = 600000; // 10 minutes max
-        const startTime = Date.now();
-        let pollInterval = 10000; // Start with 10 seconds
-        
-        console.log("Video generation initiated, polling for completion...");
-        console.log("Operation name:", (operation as any).name);
-        
-        // Poll using genAI.operations.getVideosOperation()
-        while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
-          console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
+        // Use the built-in wait() or waitForCompletion() method on the operation object
+        // as per Google GenAI SDK documentation for long-running operations
+        if (typeof (operation as any).wait === 'function') {
+          console.log("Using operation.wait()...");
+          operation = await (operation as any).wait();
+        } else if (typeof (operation as any).waitForCompletion === 'function') {
+          console.log("Using operation.waitForCompletion()...");
+          operation = await (operation as any).waitForCompletion();
+        } else {
+          // Fallback manual polling if no built-in method exists
+          const maxWaitMs = 600000;
+          const startTime = Date.now();
+          let pollInterval = 10000;
           
-          // Increase poll interval with slight backoff (cap at 20 seconds)
-          pollInterval = Math.min(pollInterval * 1.2, 20000);
-          
-          try {
-            // Use the correct SDK method: getVideosOperation
-            operation = await genAI.operations.getVideosOperation({
-              operation: operation
-            });
-            console.log("Poll result - done:", (operation as any).done);
-          } catch (pollErr: any) {
-            console.error("Polling error (will retry):", pollErr.message);
-            // Continue polling even if one poll fails
+          while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
+            console.log(`Polling manually... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+            
+            // Try refresh if available
+            if (typeof (operation as any).refresh === 'function') {
+              await (operation as any).refresh();
+            } else if (typeof (operation as any).poll === 'function') {
+              operation = await (operation as any).poll();
+            } else {
+              break; // Cannot poll
+            }
           }
         }
 
