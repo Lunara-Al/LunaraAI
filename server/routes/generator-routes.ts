@@ -127,7 +127,9 @@ export function createGeneratorRouter(): Router {
       let videoUrl: string;
       try {
         // Use Gemini's Veo model for video generation
-        const generationResponse = await genAI.models.generateVideos({
+        console.log("Calling Gemini generateVideos API...");
+        
+        let operation = await genAI.models.generateVideos({
           model: "veo-2.0-generate-001",
           prompt: enhancedPrompt,
           config: {
@@ -138,65 +140,77 @@ export function createGeneratorRouter(): Router {
           },
         });
 
-        console.log("Video generation initiated, waiting for completion...");
-
-        // Poll for completion with exponential backoff
-        let operation: any = generationResponse;
-        let pollInterval = 10000; // Start with 10 seconds for video (it takes time)
-        const maxPollInterval = 20000; // Max 20 seconds between polls
-        const maxWaitMs = 600000; // 10 minutes max for video generation
-        const startTime = Date.now();
-
-        // The @google/genai SDK response might already have the name or be the operation
-        const opName = (operation as any).name || (operation as any).operation?.name;
+        // Debug: Log the full response structure
+        console.log("Initial response type:", typeof operation);
+        console.log("Initial response keys:", Object.keys(operation || {}));
+        console.log("Has done property:", 'done' in (operation || {}));
+        console.log("Has name property:", 'name' in (operation || {}));
         
-        if (!opName && !operation.done) {
-          console.log("No operation name found, but checking if already done...");
-        }
-
-        while (!operation.done && (Date.now() - startTime) < maxWaitMs) {
-          console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
-          await new Promise(resolve => setTimeout(resolve, pollInterval));
-          pollInterval = Math.min(pollInterval * 1.2, maxPollInterval); // Slower backoff
-          
-          if (opName) {
+        // The @google/genai SDK returns a GenerateVideosOperation which has a waitForCompletion method
+        // or we need to poll using the operation itself
+        const maxWaitMs = 600000; // 10 minutes max
+        const startTime = Date.now();
+        let pollInterval = 10000; // 10 seconds
+        
+        // Check if the operation has a waitForCompletion or poll method
+        if (typeof (operation as any).waitForCompletion === 'function') {
+          console.log("Using waitForCompletion method...");
+          operation = await (operation as any).waitForCompletion();
+        } else {
+          // Manual polling using the operation's own methods
+          while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
+            console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
+            await new Promise(resolve => setTimeout(resolve, pollInterval));
+            pollInterval = Math.min(pollInterval * 1.2, 20000);
+            
+            // Try different polling approaches
             try {
-              // Re-fetch the operation using the name
-              const updatedOp = await (genAI as any).operations.get({ name: opName });
-              if (updatedOp) {
-                operation = updatedOp;
-                if (operation.metadata?.progressPercentage) {
-                  console.log(`Generation progress: ${operation.metadata.progressPercentage}%`);
+              if (typeof (operation as any).poll === 'function') {
+                console.log("Polling using operation.poll()...");
+                operation = await (operation as any).poll();
+              } else if (typeof (operation as any).refresh === 'function') {
+                console.log("Refreshing using operation.refresh()...");
+                await (operation as any).refresh();
+              } else {
+                // Log available methods for debugging
+                const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(operation) || {})
+                  .filter(m => typeof (operation as any)[m] === 'function');
+                console.log("Available methods on operation:", methods);
+                
+                // If no polling method, check if already done
+                if ((operation as any).done || (operation as any).generatedVideos) {
+                  console.log("Operation appears complete");
+                  break;
                 }
               }
             } catch (pollErr: any) {
-              console.error("Polling error (will retry):", pollErr.message);
-              // Check if it's already finished despite the error
-              if (operation.done) break;
+              console.error("Polling error:", pollErr.message);
             }
           }
         }
 
-        if (!operation.done) {
-          throw new Error("Video generation timed out after 5 minutes");
-        }
+        console.log("Final operation state - done:", (operation as any).done);
+        console.log("Final operation keys:", Object.keys(operation || {}));
 
-        console.log("Video generation completed!");
-
-        // Get the generated video from result (not response)
-        const opResult = (operation as any).result;
-        const generatedVideos = opResult?.generatedVideos;
+        // Extract generated videos - check multiple possible response structures
+        let generatedVideos = (operation as any).generatedVideos 
+          || (operation as any).result?.generatedVideos
+          || (operation as any).response?.generatedVideos;
+        
         if (!generatedVideos || generatedVideos.length === 0) {
-          throw new Error("No video was generated");
+          console.error("Full operation object:", JSON.stringify(operation, null, 2).slice(0, 2000));
+          throw new Error("No video was generated. The operation may have timed out or failed.");
         }
 
         const generatedVideo = generatedVideos[0];
-        if (!generatedVideo.video?.uri) {
+        const videoUri = generatedVideo?.video?.uri || generatedVideo?.uri;
+        
+        if (!videoUri) {
+          console.error("Generated video object:", JSON.stringify(generatedVideo, null, 2));
           throw new Error("Video URI not found in response");
         }
 
-        // Download video from Gemini's file service
-        const videoUri = generatedVideo.video.uri;
+        console.log("Video generation completed!");
         console.log("Downloading video from:", videoUri);
 
         // Fetch the video content
