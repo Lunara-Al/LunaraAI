@@ -146,56 +146,46 @@ export function createGeneratorRouter(): Router {
         console.log("Has done property:", 'done' in (operation || {}));
         console.log("Has name property:", 'name' in (operation || {}));
         
-        // The @google/genai SDK returns a GenerateVideosOperation which has a waitForCompletion method
-        // or we need to poll using the operation itself
+        // Poll for video generation completion using the correct SDK method
         const maxWaitMs = 600000; // 10 minutes max
         const startTime = Date.now();
-        let pollInterval = 10000; // 10 seconds
+        let pollInterval = 10000; // Start with 10 seconds
         
-        // Check if the operation has a waitForCompletion or poll method
-        if (typeof (operation as any).waitForCompletion === 'function') {
-          console.log("Using waitForCompletion method...");
-          operation = await (operation as any).waitForCompletion();
-        } else {
-          // Manual polling using the operation's own methods
-          while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
-            console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
-            await new Promise(resolve => setTimeout(resolve, pollInterval));
-            pollInterval = Math.min(pollInterval * 1.2, 20000);
-            
-            // Try different polling approaches
-            try {
-              if (typeof (operation as any).poll === 'function') {
-                console.log("Polling using operation.poll()...");
-                operation = await (operation as any).poll();
-              } else if (typeof (operation as any).refresh === 'function') {
-                console.log("Refreshing using operation.refresh()...");
-                await (operation as any).refresh();
-              } else {
-                // Log available methods for debugging
-                const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(operation) || {})
-                  .filter(m => typeof (operation as any)[m] === 'function');
-                console.log("Available methods on operation:", methods);
-                
-                // If no polling method, check if already done
-                if ((operation as any).done || (operation as any).generatedVideos) {
-                  console.log("Operation appears complete");
-                  break;
-                }
-              }
-            } catch (pollErr: any) {
-              console.error("Polling error:", pollErr.message);
-            }
+        console.log("Video generation initiated, polling for completion...");
+        console.log("Operation name:", (operation as any).name);
+        
+        // Poll using genAI.operations.getVideosOperation()
+        while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
+          console.log(`Video generation in progress... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          
+          // Increase poll interval with slight backoff (cap at 20 seconds)
+          pollInterval = Math.min(pollInterval * 1.2, 20000);
+          
+          try {
+            // Use the correct SDK method: getVideosOperation
+            operation = await genAI.operations.getVideosOperation({
+              operation: operation
+            });
+            console.log("Poll result - done:", (operation as any).done);
+          } catch (pollErr: any) {
+            console.error("Polling error (will retry):", pollErr.message);
+            // Continue polling even if one poll fails
           }
         }
 
         console.log("Final operation state - done:", (operation as any).done);
         console.log("Final operation keys:", Object.keys(operation || {}));
 
-        // Extract generated videos - check multiple possible response structures
-        let generatedVideos = (operation as any).generatedVideos 
-          || (operation as any).result?.generatedVideos
-          || (operation as any).response?.generatedVideos;
+        // Check if operation timed out
+        if (!(operation as any).done) {
+          throw new Error("Video generation timed out after 10 minutes. Please try again with a simpler prompt.");
+        }
+
+        // Extract generated videos - primary location is operation.response.generatedVideos
+        let generatedVideos = (operation as any).response?.generatedVideos
+          || (operation as any).generatedVideos 
+          || (operation as any).result?.generatedVideos;
         
         if (!generatedVideos || generatedVideos.length === 0) {
           console.error("Full operation object:", JSON.stringify(operation, null, 2).slice(0, 2000));

@@ -83,7 +83,7 @@ export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(DEFAULT_VIDEO_LENGTH);
-  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [aspectRatio, setAspectRatio] = useState("16:9");
   const [style, setStyle] = useState<string>("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -618,9 +618,8 @@ export default function Home() {
               <Label className="text-xs font-semibold text-muted-foreground">
                 Aspect Ratio
               </Label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[
-                  { ratio: "1:1", label: "1:1", platform: "Instagram" },
                   { ratio: "16:9", label: "16:9", platform: "YouTube" },
                   { ratio: "9:16", label: "9:16", platform: "TikTok" }
                 ].map(({ ratio, label, platform }) => (
