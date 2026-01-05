@@ -369,3 +369,50 @@ export const createUploadJobSchema = z.object({
 });
 
 export type CreateUploadJobRequest = z.infer<typeof createUploadJobSchema>;
+
+// ============================================================================
+// DATABASE TABLES - Video Generation Jobs (Async Processing)
+// ============================================================================
+
+export const VIDEO_JOB_STATUSES = ["pending", "processing", "polling", "downloading", "completed", "failed"] as const;
+export type VideoJobStatus = (typeof VIDEO_JOB_STATUSES)[number];
+
+export const videoGenerationJobs = pgTable("video_generation_jobs", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  prompt: text("prompt").notNull(),
+  enhancedPrompt: text("enhanced_prompt").notNull(),
+  length: integer("length").default(DEFAULT_VIDEO_LENGTH).notNull(),
+  aspectRatio: varchar("aspect_ratio", { length: 10 }).default("16:9").notNull(),
+  style: text("style"),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  progress: integer("progress").default(0).notNull(),
+  operationName: text("operation_name"),
+  videoUrl: text("video_url"),
+  errorMessage: text("error_message"),
+  errorCode: varchar("error_code", { length: 50 }),
+  rawApiResponse: text("raw_api_response"),
+  pollAttempts: integer("poll_attempts").default(0).notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type VideoGenerationJob = typeof videoGenerationJobs.$inferSelect;
+export type InsertVideoGenerationJob = typeof videoGenerationJobs.$inferInsert;
+
+export interface VideoJobStatusResponse {
+  jobId: number;
+  status: VideoJobStatus;
+  progress: number;
+  videoUrl?: string;
+  errorMessage?: string;
+  errorCode?: string;
+}
+
+export interface VideoJobInitResponse {
+  jobId: number;
+  status: "pending";
+  message: string;
+}

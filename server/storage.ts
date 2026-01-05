@@ -7,6 +7,7 @@ import {
   videoShareLinks,
   socialAccounts,
   socialUploadJobs,
+  videoGenerationJobs,
   type VideoGeneration, 
   type InsertVideoGeneration,
   type User,
@@ -25,7 +26,10 @@ import {
   type SocialPlatform,
   type SocialUploadJob,
   type InsertSocialUploadJob,
-  type UploadJobStatus
+  type UploadJobStatus,
+  type VideoGenerationJob,
+  type InsertVideoGenerationJob,
+  type VideoJobStatus
 } from "@shared/schema";
 import { db } from "./db";
 import { desc, eq, and, gte, sql } from "drizzle-orm";
@@ -88,6 +92,13 @@ export interface IStorage {
   getUploadJobs(userId: string, limit?: number): Promise<SocialUploadJob[]>;
   getUploadJob(id: number): Promise<SocialUploadJob | undefined>;
   updateUploadJobStatus(id: number, status: UploadJobStatus, externalPostId?: string, externalPostUrl?: string, errorMessage?: string): Promise<SocialUploadJob>;
+
+  // Video generation job operations (async processing)
+  createVideoGenerationJob(data: InsertVideoGenerationJob): Promise<VideoGenerationJob>;
+  getVideoGenerationJob(id: number): Promise<VideoGenerationJob | undefined>;
+  getVideoGenerationJobByUser(id: number, userId: string): Promise<VideoGenerationJob | undefined>;
+  getPendingVideoGenerationJobs(): Promise<VideoGenerationJob[]>;
+  updateVideoGenerationJob(id: number, updates: Partial<VideoGenerationJob>): Promise<VideoGenerationJob>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -614,6 +625,53 @@ export class DatabaseStorage implements IStorage {
       .update(socialUploadJobs)
       .set(updateData)
       .where(eq(socialUploadJobs.id, id))
+      .returning();
+    return job;
+  }
+
+  // Video generation job operations (async processing)
+  async createVideoGenerationJob(data: InsertVideoGenerationJob): Promise<VideoGenerationJob> {
+    const [job] = await db
+      .insert(videoGenerationJobs)
+      .values(data)
+      .returning();
+    return job;
+  }
+
+  async getVideoGenerationJob(id: number): Promise<VideoGenerationJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(videoGenerationJobs)
+      .where(eq(videoGenerationJobs.id, id));
+    return job;
+  }
+
+  async getVideoGenerationJobByUser(id: number, userId: string): Promise<VideoGenerationJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(videoGenerationJobs)
+      .where(and(
+        eq(videoGenerationJobs.id, id),
+        eq(videoGenerationJobs.userId, userId)
+      ));
+    return job;
+  }
+
+  async getPendingVideoGenerationJobs(): Promise<VideoGenerationJob[]> {
+    return await db
+      .select()
+      .from(videoGenerationJobs)
+      .where(
+        sql`${videoGenerationJobs.status} IN ('pending', 'processing', 'polling', 'downloading')`
+      )
+      .orderBy(videoGenerationJobs.createdAt);
+  }
+
+  async updateVideoGenerationJob(id: number, updates: Partial<VideoGenerationJob>): Promise<VideoGenerationJob> {
+    const [job] = await db
+      .update(videoGenerationJobs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(videoGenerationJobs.id, id))
       .returning();
     return job;
   }

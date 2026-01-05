@@ -3,66 +3,336 @@ import {
   videoGenerationSchema, 
   MEMBERSHIP_TIERS, 
   type MembershipTier,
-  type VideoGenerationResponse,
-  type ErrorResponse 
+  type VideoJobInitResponse,
+  type VideoJobStatusResponse,
+  type ErrorResponse,
+  type VideoJobStatus
 } from "@shared/schema";
 import { storage } from "../storage";
 import { isAuthenticated, getAuthenticatedUserId } from "../unified-auth";
 import { getWebSocketManager } from "../websocket";
-import { GoogleGenAI } from "@google/genai";
 import * as fs from "fs";
 import * as path from "path";
 import { randomBytes } from "crypto";
 
-// Initialize Gemini client
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
-// Map aspect ratios to Gemini Veo supported formats
 function mapAspectRatio(aspectRatio: string): "16:9" | "9:16" {
   if (aspectRatio === "9:16") return "9:16";
-  return "16:9"; // Default to landscape
+  return "16:9";
 }
 
-// Map UI video lengths to Gemini Veo durations (5-8 seconds)
 function mapDuration(length: number): number {
-  // Veo supports 5-8 second videos
   if (length <= 5) return 5;
-  return 8; // Max 8 seconds for Veo
+  return 8;
 }
 
-// Poll for video generation completion
-async function pollForVideoCompletion(
-  operation: any,
-  maxWaitMs: number = 300000 // 5 minutes max
-): Promise<{ done: boolean; result?: any; error?: string }> {
-  const startTime = Date.now();
-  let pollInterval = 5000; // Start with 5 seconds
-  const maxPollInterval = 15000; // Max 15 seconds between polls
+function classifyError(error: any, rawResponse?: string): { code: string; message: string } {
+  const errMsg = error?.message?.toLowerCase() || "";
+  const rawLower = rawResponse?.toLowerCase() || "";
+  
+  if (errMsg.includes("api key") || errMsg.includes("authentication") || errMsg.includes("401")) {
+    return { code: "AUTH_ERROR", message: "Invalid API key. Please check your GEMINI_API_KEY configuration." };
+  }
+  if (errMsg.includes("rate limit") || errMsg.includes("quota") || errMsg.includes("429")) {
+    return { code: "RATE_LIMIT", message: "Rate limit or quota exceeded. Please try again later." };
+  }
+  if (errMsg.includes("timeout") || errMsg.includes("timed out")) {
+    return { code: "TIMEOUT", message: "Video generation timed out. Please try again." };
+  }
+  if (errMsg.includes("safety") || errMsg.includes("filtered") || rawLower.includes("rai")) {
+    return { code: "CONTENT_FILTERED", message: "Your prompt was flagged by safety filters. Please try a different description." };
+  }
+  if (errMsg.includes("not found") || errMsg.includes("does not exist")) {
+    return { code: "MODEL_UNAVAILABLE", message: "Veo model not available. Please ensure your account has access." };
+  }
+  if (errMsg.includes("empty response") || rawResponse === "") {
+    return { code: "EMPTY_RESPONSE", message: "Empty response from API. This may be a temporary issue." };
+  }
+  return { code: "UNKNOWN_ERROR", message: error?.message || "An unexpected error occurred." };
+}
 
-  while (Date.now() - startTime < maxWaitMs) {
-    try {
-      // Check if the operation is complete
-      if (operation.done) {
-        return { done: true, result: operation.result };
-      }
-
-      // Wait before next poll
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-      
-      // Increase poll interval with exponential backoff (capped)
-      pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
-      
-      // Refresh operation status if there's a refresh method
-      if (typeof operation.refresh === 'function') {
-        await operation.refresh();
-      }
-    } catch (error: any) {
-      console.error("Error polling video status:", error);
-      return { done: false, error: error.message };
-    }
+async function processVideoGenerationJob(jobId: number): Promise<void> {
+  const job = await storage.getVideoGenerationJob(jobId);
+  if (!job || job.status === "completed" || job.status === "failed") {
+    return;
   }
 
-  return { done: false, error: "Video generation timed out after 5 minutes" };
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    await storage.updateVideoGenerationJob(jobId, {
+      status: "failed",
+      errorCode: "CONFIG_ERROR",
+      errorMessage: "Gemini API key is not configured.",
+      completedAt: new Date()
+    });
+    return;
+  }
+
+  try {
+    await storage.updateVideoGenerationJob(jobId, { 
+      status: "processing", 
+      startedAt: new Date(),
+      progress: 10
+    });
+
+    const generationUrl = `${GEMINI_API_BASE}/models/veo-2.0-generate-001:generateVideos`;
+    
+    const requestBody = {
+      instances: [{ prompt: job.enhancedPrompt }],
+      parameters: {
+        aspectRatio: job.aspectRatio,
+        sampleCount: 1,
+        durationSeconds: job.length,
+        personGeneration: "dont_allow",
+      },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+        { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_ONLY_HIGH" }
+      ]
+    };
+
+    console.log(`[Job ${jobId}] Starting video generation...`);
+    console.log(`[Job ${jobId}] Prompt: ${job.enhancedPrompt.substring(0, 100)}...`);
+
+    const initialResponse = await fetch(generationUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    const responseText = await initialResponse.text();
+    console.log(`[Job ${jobId}] Initial API response status: ${initialResponse.status}`);
+    console.log(`[Job ${jobId}] Raw response (first 500 chars): ${responseText.substring(0, 500)}`);
+
+    if (!responseText) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "EMPTY_RESPONSE",
+        errorMessage: "Empty response from video generation service.",
+        rawApiResponse: "EMPTY",
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    let initialData;
+    try {
+      initialData = JSON.parse(responseText);
+    } catch (e) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "INVALID_JSON",
+        errorMessage: "Invalid JSON response from API.",
+        rawApiResponse: responseText.substring(0, 2000),
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    if (!initialResponse.ok) {
+      const { code, message } = classifyError(initialData.error, responseText);
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: code,
+        errorMessage: message,
+        rawApiResponse: responseText.substring(0, 2000),
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    const operationName = initialData.name;
+    if (!operationName) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "NO_OPERATION_ID",
+        errorMessage: "Failed to get operation ID from API response.",
+        rawApiResponse: responseText.substring(0, 2000),
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    await storage.updateVideoGenerationJob(jobId, { 
+      status: "polling", 
+      operationName,
+      progress: 20
+    });
+
+    console.log(`[Job ${jobId}] Operation started: ${operationName}`);
+
+    let completedVideoUri: string | null = null;
+    const maxPolls = 60;
+
+    for (let i = 0; i < maxPolls; i++) {
+      await new Promise(r => setTimeout(r, 5000));
+
+      const pollUrl = `${GEMINI_API_BASE}/${operationName}`;
+      const pollResponse = await fetch(pollUrl, {
+        method: 'GET',
+        headers: { 'x-goog-api-key': apiKey }
+      });
+
+      if (!pollResponse.ok) {
+        console.error(`[Job ${jobId}] Poll ${i + 1} failed: ${pollResponse.status}`);
+        await storage.updateVideoGenerationJob(jobId, { 
+          pollAttempts: i + 1,
+          progress: Math.min(20 + (i * 1.2), 80)
+        });
+        continue;
+      }
+
+      const status = await pollResponse.json();
+      const progress = Math.min(20 + ((i + 1) / maxPolls * 60), 80);
+      
+      await storage.updateVideoGenerationJob(jobId, { 
+        pollAttempts: i + 1,
+        progress: Math.round(progress)
+      });
+
+      console.log(`[Job ${jobId}] Poll ${i + 1}/${maxPolls} - Done: ${status.done}, State: ${status.metadata?.state || "unknown"}`);
+
+      if (status.done) {
+        if (status.error) {
+          const { code, message } = classifyError(status.error, JSON.stringify(status));
+          await storage.updateVideoGenerationJob(jobId, {
+            status: "failed",
+            errorCode: code,
+            errorMessage: message,
+            rawApiResponse: JSON.stringify(status).substring(0, 2000),
+            completedAt: new Date()
+          });
+          return;
+        }
+
+        const raiCount = status.response?.generateVideoResponse?.raiMediaFilteredCount;
+        if (raiCount && raiCount > 0) {
+          await storage.updateVideoGenerationJob(jobId, {
+            status: "failed",
+            errorCode: "CONTENT_FILTERED",
+            errorMessage: "Your prompt was flagged by Google's safety filters. Please try a different description.",
+            rawApiResponse: JSON.stringify(status).substring(0, 2000),
+            completedAt: new Date()
+          });
+          return;
+        }
+
+        completedVideoUri = status.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri
+                          || status.response?.generateVideoResponse?.generatedVideos?.[0]?.video?.uri
+                          || status.response?.generatedVideos?.[0]?.video?.uri 
+                          || status.result?.generatedVideos?.[0]?.video?.uri
+                          || status.response?.videos?.[0]?.gcsUri
+                          || status.response?.candidates?.[0]?.content?.parts?.[0]?.fileData?.fileUri;
+
+        console.log(`[Job ${jobId}] Video URI extracted: ${completedVideoUri}`);
+        break;
+      }
+    }
+
+    if (!completedVideoUri) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "TIMEOUT",
+        errorMessage: "Video generation timed out after 5 minutes.",
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    await storage.updateVideoGenerationJob(jobId, { 
+      status: "downloading",
+      progress: 85
+    });
+
+    console.log(`[Job ${jobId}] Downloading video from: ${completedVideoUri}`);
+
+    const downloadResponse = await fetch(completedVideoUri, {
+      method: 'GET',
+      headers: { 'x-goog-api-key': apiKey }
+    });
+
+    if (!downloadResponse.ok) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "DOWNLOAD_FAILED",
+        errorMessage: `Failed to download video: ${downloadResponse.statusText}`,
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    const arrayBuffer = await downloadResponse.arrayBuffer();
+    const videoBuffer = Buffer.from(arrayBuffer);
+
+    const uniqueId = randomBytes(8).toString("hex");
+    const fileName = `video_${uniqueId}.mp4`;
+    const publicDir = path.join(process.cwd(), "public", "generated");
+
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true, mode: 0o755 });
+    }
+
+    const filePath = path.join(publicDir, fileName);
+    fs.writeFileSync(filePath, videoBuffer);
+
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "SAVE_FAILED",
+        errorMessage: "Video file was not saved correctly.",
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    const videoUrl = `/generated/${fileName}`;
+
+    const savedVideo = await storage.createVideoGeneration({
+      userId: job.userId,
+      prompt: job.prompt,
+      videoUrl,
+      length: job.length,
+      aspectRatio: job.aspectRatio,
+      style: job.style || null,
+    });
+
+    await storage.incrementVideoCount(job.userId);
+
+    await storage.updateVideoGenerationJob(jobId, {
+      status: "completed",
+      videoUrl,
+      progress: 100,
+      completedAt: new Date()
+    });
+
+    const wsManager = getWebSocketManager();
+    if (wsManager) {
+      wsManager.broadcastToUser(job.userId, {
+        type: 'video-generated',
+        userId: job.userId,
+        videoId: savedVideo.id
+      });
+    }
+
+    console.log(`[Job ${jobId}] Completed successfully! Video saved: ${videoUrl}`);
+
+  } catch (error: any) {
+    console.error(`[Job ${jobId}] Processing error:`, error);
+    const { code, message } = classifyError(error);
+    await storage.updateVideoGenerationJob(jobId, {
+      status: "failed",
+      errorCode: code,
+      errorMessage: message,
+      completedAt: new Date()
+    });
+  }
 }
 
 export function createGeneratorRouter(): Router {
@@ -111,7 +381,6 @@ export function createGeneratorRouter(): Router {
         return res.status(500).json(errorResponse);
       }
 
-      // Build the enhanced prompt with style if provided
       let enhancedPrompt = prompt;
       if (style) {
         enhancedPrompt = `${prompt}, ${style} style`;
@@ -121,243 +390,70 @@ export function createGeneratorRouter(): Router {
       const veoAspectRatio = mapAspectRatio(aspectRatio);
       const videoDuration = mapDuration(length);
 
-      console.log("Generating video via Google Gemini Veo API for prompt:", enhancedPrompt);
-      console.log("Options - Duration:", videoDuration, "s, Aspect Ratio:", veoAspectRatio);
-      
-      let videoUrl: string;
-      try {
-        // Build raw request for Gemini REST API with custom safety settings
-        const apiKey = process.env.GEMINI_API_KEY;
-        const generationUrl = `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:generateVideos`;
-        
-        console.log("Starting video generation via REST API...");
-        const requestBody = {
-          instances: [
-            {
-              prompt: enhancedPrompt,
-            }
-          ],
-          parameters: {
-            aspectRatio: veoAspectRatio,
-            sampleCount: 1,
-            durationSeconds: videoDuration,
-            personGeneration: "dont_allow",
-          },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_ONLY_HIGH" }
-          ]
-        };
-
-        const initialFetchResponse = await fetch(generationUrl, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey || ''
-          },
-          body: JSON.stringify(requestBody)
-        });
-
-        // Check if response is empty
-        const responseText = await initialFetchResponse.text();
-        if (!responseText) {
-          console.error("Empty response from Gemini API");
-          throw new Error("Empty response from video generation service. Please try again.");
-        }
-
-        let initialResponse;
-        try {
-          initialResponse = JSON.parse(responseText);
-        } catch (e) {
-          console.error("Failed to parse Gemini API response:", responseText);
-          throw new Error("Invalid response from video generation service.");
-        }
-
-        if (!initialFetchResponse.ok) {
-          console.error("Initial request failed:", initialResponse);
-          throw new Error(`Failed to start video generation: ${initialResponse.error?.message || initialFetchResponse.statusText}`);
-        }
-        
-        // 2. Get the Operation Name (The ID) safely
-        const operationName = initialResponse.name;
-        console.log("Video started. Operation ID:", operationName);
-
-        if (!operationName) {
-          console.error("Initial response:", JSON.stringify(initialResponse, null, 2));
-          throw new Error("Failed to get operation name from response");
-        }
-
-        // 3. Manual Polling Loop using REST API (check status every 5 seconds for up to 5 minutes)
-        // The SDK doesn't have genAI.operations, so we poll directly via REST API
-        let completedVideoUri: string | null = null;
-
-        for (let i = 0; i < 60; i++) {
-          // Wait 5 seconds
-          await new Promise(r => setTimeout(r, 5000));
-
-          // Poll operation status via REST API
-          const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}`;
-          const pollResponse = await fetch(pollUrl, {
-            method: 'GET',
-            headers: {
-              'x-goog-api-key': apiKey || '',
-            },
-          });
-
-          if (!pollResponse.ok) {
-            console.error(`Polling failed with status ${pollResponse.status}: ${pollResponse.statusText}`);
-            continue; // Try again
-          }
-
-          const status = await pollResponse.json();
-          console.log(`Polling attempt ${i + 1}/60 - Done:`, status.done, "State:", status.metadata?.state || "unknown");
-
-          // Check if done
-          if (status.done) {
-            // If there is an error in the result
-            if (status.error) {
-              throw new Error(`Generation failed: ${status.error.message || JSON.stringify(status.error)}`);
-            }
-            
-            // Check for content filtering (Responsible AI)
-            const raiCount = status.response?.generateVideoResponse?.raiMediaFilteredCount;
-            if (raiCount && raiCount > 0) {
-              const reasons = status.response?.generateVideoResponse?.raiMediaFilteredReasons || [];
-              console.warn("Content was filtered by Google RAI:", reasons);
-              throw new Error("Your prompt was flagged by Google's safety filters. Please try a different description without sensitive or violent terms.");
-            }
-            
-            // Success! Extract the URI from various possible locations
-            // The response nests videos under generateVideoResponse.generatedSamples (not generatedVideos)
-            completedVideoUri = status.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri
-                              || status.response?.generateVideoResponse?.generatedVideos?.[0]?.video?.uri
-                              || status.response?.generatedVideos?.[0]?.video?.uri 
-                              || status.result?.generatedVideos?.[0]?.video?.uri
-                              || status.response?.videos?.[0]?.gcsUri
-                              || status.response?.candidates?.[0]?.content?.parts?.[0]?.fileData?.fileUri;
-            
-            console.log("Completed status object keys:", Object.keys(status));
-            if (status.response) {
-              console.log("Response keys:", Object.keys(status.response));
-              if (status.response.generateVideoResponse) {
-                console.log("generateVideoResponse keys:", Object.keys(status.response.generateVideoResponse));
-                const samples = status.response.generateVideoResponse.generatedSamples;
-                if (samples?.[0]) {
-                  console.log("First sample keys:", Object.keys(samples[0]));
-                }
-              }
-            }
-            console.log("Extracted video URI:", completedVideoUri);
-            break; // Exit the loop
-          }
-        }
-
-        if (!completedVideoUri) {
-          throw new Error("Timed out waiting for video generation (5 minutes)");
-        }
-
-        const videoUri = completedVideoUri;
-        console.log("Video generation completed!");
-        console.log("Downloading video from:", videoUri);
-
-        // Fetch the video content (requires API key authentication)
-        const downloadResponse = await fetch(videoUri, {
-          method: 'GET',
-          headers: {
-            'x-goog-api-key': apiKey || '',
-          },
-        });
-        if (!downloadResponse.ok) {
-          console.error(`Download failed with status ${downloadResponse.status}: ${downloadResponse.statusText}`);
-          throw new Error(`Failed to download video: ${downloadResponse.statusText}`);
-        }
-        
-        const arrayBuffer = await downloadResponse.arrayBuffer();
-        const videoBuffer = Buffer.from(arrayBuffer);
-        
-        // Save video locally
-        const uniqueId = randomBytes(8).toString("hex");
-        const fileName = `video_${uniqueId}.mp4`;
-        const publicDir = path.join(process.cwd(), "public", "generated");
-        
-        // Ensure directory exists with correct permissions
-        if (!fs.existsSync(publicDir)) {
-          fs.mkdirSync(publicDir, { recursive: true, mode: 0o755 });
-        }
-        
-        const filePath = path.join(publicDir, fileName);
-        fs.writeFileSync(filePath, videoBuffer);
-        
-        // Store the local URL path that will be served statically
-        videoUrl = `/generated/${fileName}`;
-        console.log("Video saved locally:", videoUrl);
-
-        // Verify the file exists and has content before proceeding
-        if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-          throw new Error("Video file was not saved correctly or is empty");
-        }
-      } catch (err: any) {
-        console.error("Video generation failed:", err);
-        
-        // Provide more specific error messages
-        if (err.status === 401 || err.message?.includes("authentication") || err.message?.includes("API key")) {
-          throw new Error("Invalid Gemini API key. Please check your GEMINI_API_KEY configuration.");
-        }
-        if (err.status === 429 || err.message?.includes("rate limit") || err.message?.includes("quota")) {
-          throw new Error("Rate limit or quota exceeded. Please try again later.");
-        }
-        if (err.message?.includes("not found") || err.message?.includes("does not exist")) {
-          throw new Error("Veo model not available. Please ensure your Google Cloud account has access to Veo.");
-        }
-        
-        throw new Error(`Video generation failed: ${err.message}`);
-      }
-      
-      if (!videoUrl) {
-        const errorResponse: ErrorResponse = {
-          error: "Invalid response",
-          message: "Video URL not found in API response.",
-        };
-        return res.status(500).json(errorResponse);
-      }
-
-      const savedVideo = await storage.createVideoGeneration({
+      const job = await storage.createVideoGenerationJob({
         userId,
         prompt,
-        videoUrl,
+        enhancedPrompt,
         length: videoDuration,
-        aspectRatio,
+        aspectRatio: veoAspectRatio,
         style: style || null,
+        status: "pending",
+        progress: 0
       });
 
-      await storage.incrementVideoCount(userId);
+      console.log(`[API] Created generation job ${job.id} for user ${userId}`);
 
-      const wsManager = getWebSocketManager();
-      if (wsManager) {
-        wsManager.broadcastToUser(userId, {
-          type: 'video-generated',
-          userId,
-          videoId: savedVideo.id
+      setImmediate(() => {
+        processVideoGenerationJob(job.id).catch(err => {
+          console.error(`[Job ${job.id}] Background processing error:`, err);
         });
-      }
+      });
 
-      const successResponse: VideoGenerationResponse = {
-        videoUrl,
-        prompt,
-        id: savedVideo.id,
+      const response: VideoJobInitResponse = {
+        jobId: job.id,
+        status: "pending",
+        message: "Video generation started. Poll /api/generate/status/:jobId for updates."
       };
 
-      return res.json(successResponse);
+      return res.json(response);
     } catch (error) {
-      console.error("Generation error:", error);
+      console.error("Generation init error:", error);
       const errorResponse: ErrorResponse = {
         error: "Server error",
         message: error instanceof Error ? error.message : "An unexpected error occurred",
       };
       return res.status(500).json(errorResponse);
+    }
+  });
+
+  router.get("/status/:jobId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+      const jobId = parseInt(req.params.jobId, 10);
+      if (isNaN(jobId)) {
+        return res.status(400).json({ error: "Invalid job ID" });
+      }
+
+      const job = await storage.getVideoGenerationJobByUser(jobId, userId);
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      const response: VideoJobStatusResponse = {
+        jobId: job.id,
+        status: job.status as VideoJobStatus,
+        progress: job.progress,
+        videoUrl: job.videoUrl || undefined,
+        errorMessage: job.errorMessage || undefined,
+        errorCode: job.errorCode || undefined
+      };
+
+      return res.json(response);
+    } catch (error) {
+      console.error("Status check error:", error);
+      return res.status(500).json({ error: "Failed to check job status" });
     }
   });
 

@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
-import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoGenerationResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
+import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoJobInitResponse, type VideoJobStatusResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
 
 
@@ -164,12 +164,81 @@ export default function Home() {
   }, []);
 
   const [generationTimer, setGenerationTimer] = useState<number>(0);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [generationStatus, setGenerationStatus] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+  };
+
+  const getStatusMessage = (status: string, progress: number): string => {
+    switch (status) {
+      case "pending": return "Initializing cosmic generator...";
+      case "processing": return "Sending prompt to AI...";
+      case "polling": return `Generating video... ${progress}%`;
+      case "downloading": return "Downloading your cosmic creation...";
+      case "completed": return "Video complete!";
+      case "failed": return "Generation failed";
+      default: return "Processing...";
+    }
+  };
+
+  const pollJobStatus = async (jobId: number) => {
+    try {
+      const response = await fetch(`/api/generate/status/${jobId}`);
+      if (!response.ok) {
+        throw new Error("Failed to check status");
+      }
+      const status: VideoJobStatusResponse = await response.json();
+      
+      setGenerationProgress(status.progress);
+      setGenerationStatus(getStatusMessage(status.status, status.progress));
+
+      if (status.status === "completed" && status.videoUrl) {
+        stopPolling();
+        setIsGenerating(false);
+        setVideoUrl(status.videoUrl);
+        setCurrentJobId(null);
+        toast({
+          title: "Success!",
+          description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
+        });
+      } else if (status.status === "failed") {
+        stopPolling();
+        setIsGenerating(false);
+        setCurrentJobId(null);
+        toast({
+          variant: "destructive",
+          title: "Generation Failed",
+          description: status.errorMessage || "Unable to generate video. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Polling error:", error);
+    }
+  };
+
+  const generateVideoMutation = useMutation<VideoJobInitResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
     mutationFn: async (data) => {
       setGenerationTimer(0);
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      setGenerationProgress(0);
+      setGenerationStatus("Starting generation...");
+      setIsGenerating(true);
+      setVideoUrl(null);
+      
+      stopPolling();
+      
       timerIntervalRef.current = setInterval(() => {
         setGenerationTimer(prev => prev + 1);
       }, 1000);
@@ -177,33 +246,40 @@ export default function Home() {
       const response = await apiRequest("POST", "/api/generate", data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to generate video");
+        throw new Error(error.message || "Failed to start video generation");
       }
       return await response.json();
     },
     onSuccess: (data) => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-      setVideoUrl(data.videoUrl);
-      toast({
-        title: "Success!",
-        description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
-      });
-    },
-    onSettled: () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      setCurrentJobId(data.jobId);
+      setGenerationStatus("Video generation started...");
+      setGenerationProgress(5);
+      
+      pollIntervalRef.current = setInterval(() => {
+        pollJobStatus(data.jobId);
+      }, 4000);
+      
+      setTimeout(() => pollJobStatus(data.jobId), 1000);
     },
     onError: (error: any) => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      stopPolling();
+      setIsGenerating(false);
+      setCurrentJobId(null);
       toast({
         variant: "destructive",
         title: "Generation Failed",
-        description: error.message || "Unable to generate video. Please try again.",
+        description: error.message || "Unable to start video generation. Please try again.",
       });
     },
   });
 
-  const estimatedTime = length === 5 ? 45 : 75; // Estimated seconds based on observation
-  const progressPercent = Math.min((generationTimer / estimatedTime) * 100, 95);
+  useEffect(() => {
+    return () => {
+      stopPolling();
+    };
+  }, []);
+
+  const progressPercent = generationProgress;
 
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -661,23 +737,23 @@ export default function Home() {
             <Button
               type="submit"
               size="lg"
-              disabled={generateVideoMutation.isPending || !prompt.trim() || isProcessingImage}
+              disabled={isGenerating || !prompt.trim() || isProcessingImage}
               className="w-full relative overflow-hidden h-12 md:h-14 bg-gradient-to-r from-primary to-secondary moon-glow text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center justify-center"
               data-testid="button-generate"
             >
-              {generateVideoMutation.isPending ? (
+              {isGenerating ? (
                 <div className="flex flex-col items-center justify-center w-full space-y-1">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="animate-pulse">Generating Vision... ({generationTimer}s)</span>
+                    <span className="animate-pulse">{generationStatus || `Generating... (${generationTimer}s)`}</span>
                   </div>
                   <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-white transition-all duration-1000 ease-out"
+                      className="h-full bg-white transition-all duration-500 ease-out"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-                  <p className="text-[10px] opacity-70">Estimated time: ~{estimatedTime}s</p>
+                  <p className="text-[10px] opacity-70">{progressPercent}% complete</p>
                 </div>
               ) : isProcessingImage ? (
                 <>
@@ -718,7 +794,7 @@ export default function Home() {
         )}
 
         {/* Loading State */}
-        {generateVideoMutation.isPending && (
+        {isGenerating && (
           <div className="mt-12 flex flex-col items-center justify-center space-y-6 animate-fade-in-up" data-testid="loading-state">
             <div className="relative">
               <div className="w-20 h-20 border-4 border-primary/20 dark:border-primary/30 rounded-full animate-pulse-glow"></div>
@@ -727,9 +803,20 @@ export default function Home() {
                 <Moon className="w-8 h-8 text-primary/60 animate-float" />
               </div>
             </div>
-            <p className="text-lg text-muted-foreground animate-pulse font-medium">
-              Creating your cosmic masterpiece...
-            </p>
+            <div className="text-center space-y-2">
+              <p className="text-lg text-muted-foreground font-medium">
+                {generationStatus || "Creating your cosmic masterpiece..."}
+              </p>
+              <p className="text-sm text-muted-foreground/70">
+                {generationTimer}s elapsed • {progressPercent}% complete
+              </p>
+            </div>
+            <div className="w-64 h-2 bg-primary/20 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
             <div className="flex gap-1">
               <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
               <span className="w-2 h-2 rounded-full bg-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -739,7 +826,7 @@ export default function Home() {
         )}
 
         {/* Video Display */}
-        {videoUrl && !generateVideoMutation.isPending && (
+        {videoUrl && !isGenerating && (
           <div className="mt-12 flex justify-center animate-fade-in-scale" data-testid="video-container">
             <div className="relative w-full max-w-2xl space-y-4">
               <div className="relative group">
