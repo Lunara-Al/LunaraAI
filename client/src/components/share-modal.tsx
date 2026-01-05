@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { VideoWatermark } from "@/components/video-watermark";
+import type { UserSettings } from "@shared/schema";
 import { 
   Share2, 
   Copy, 
@@ -488,7 +490,12 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     queryKey: ["/api/auth/me"],
   });
 
+  const { data: settings } = useQuery<UserSettings>({
+    queryKey: ["/api/settings"],
+  });
+
   const isPro = user?.membershipTier === "pro" || user?.membershipTier === "premium";
+  const shouldShowWatermark = !isPro || (settings?.showWatermark === 1);
 
   const { data: socialAccounts, refetch: refetchAccounts } = useQuery<{ accounts: SocialAccount[] }>({
     queryKey: ["/api/social/accounts"],
@@ -910,6 +917,9 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     );
                   })()}
                   
+                  {/* Lunara Watermark */}
+                  <VideoWatermark showWatermark={shouldShowWatermark} size="sm" position="bottom-right" />
+                  
                   {/* Click to preview overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
                     <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 transform scale-90 group-hover:scale-100 transition-transform duration-300">
@@ -1157,30 +1167,33 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
               </div>
 
-              {(() => {
-                const isVideo = (url: string) => {
-                  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-                  return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
-                };
-                const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
-                return isVideo(video.videoUrl) ? (
-                  <video
-                    src={video.videoUrl}
-                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                    controls
-                    autoPlay
-                    loop
-                    data-testid="share-preview-video"
-                  />
-                ) : (
-                  <img
-                    src={video.videoUrl}
-                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                    alt={video.prompt}
-                    data-testid="share-preview-image"
-                  />
-                );
-              })()}
+              <div className="relative">
+                {(() => {
+                  const isVideo = (url: string) => {
+                    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                    return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                  };
+                  const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                  return isVideo(video.videoUrl) ? (
+                    <video
+                      src={video.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      controls
+                      autoPlay
+                      loop
+                      data-testid="share-preview-video"
+                    />
+                  ) : (
+                    <img
+                      src={video.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      alt={video.prompt}
+                      data-testid="share-preview-image"
+                    />
+                  );
+                })()}
+                <VideoWatermark showWatermark={shouldShowWatermark} size="md" position="bottom-right" />
+              </div>
 
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
                 <div className="p-4 rounded-2xl border border-white/10 backdrop-blur-xl bg-black/40">

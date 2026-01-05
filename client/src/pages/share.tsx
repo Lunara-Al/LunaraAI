@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VideoWatermark } from "@/components/video-watermark";
 
 type ShareData = {
   video: {
@@ -444,6 +445,9 @@ export default function SharePage() {
                 );
               })()}
               
+              {/* Lunara Watermark - always visible on public shares */}
+              <VideoWatermark showWatermark={true} size="sm" position="bottom-right" />
+              
               {/* Fullscreen button overlay */}
               <Button
                 size="icon"
@@ -711,30 +715,33 @@ export default function SharePage() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
               </div>
 
-              {(() => {
-                const isVideo = (url: string) => {
-                  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-                  return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
-                };
-                const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
-                return isVideo(video.videoUrl) ? (
-                  <video
-                    src={video.videoUrl}
-                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                    controls
-                    autoPlay
-                    loop
-                    data-testid="fullscreen-video"
-                  />
-                ) : (
-                  <img
-                    src={video.videoUrl}
-                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                    alt={video.prompt}
-                    data-testid="fullscreen-image"
-                  />
-                );
-              })()}
+              <div className="relative">
+                {(() => {
+                  const isVideo = (url: string) => {
+                    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                    return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                  };
+                  const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                  return isVideo(video.videoUrl) ? (
+                    <video
+                      src={video.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      controls
+                      autoPlay
+                      loop
+                      data-testid="fullscreen-video"
+                    />
+                  ) : (
+                    <img
+                      src={video.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      alt={video.prompt}
+                      data-testid="fullscreen-image"
+                    />
+                  );
+                })()}
+                <VideoWatermark showWatermark={true} size="md" position="bottom-right" />
+              </div>
 
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
                 <div className="p-4 rounded-2xl border border-white/10 backdrop-blur-xl bg-black/40">

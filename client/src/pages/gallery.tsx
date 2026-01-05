@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { ShareModal } from "@/components/share-modal";
+import { VideoWatermark } from "@/components/video-watermark";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -26,6 +28,7 @@ const VIDEOS_PER_PAGE = 12;
 
 export default function Gallery() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [limit, setLimit] = useState(VIDEOS_PER_PAGE);
   const [shareModalVideo, setShareModalVideo] = useState<VideoGeneration | null>(null);
   const [previewVideo, setPreviewVideo] = useState<VideoGeneration | null>(null);
@@ -34,6 +37,9 @@ export default function Gallery() {
   const { data: settings } = useQuery<UserSettings>({
     queryKey: ["/api/settings"],
   });
+  
+  const isPremiumUser = user?.membershipTier === "pro" || user?.membershipTier === "premium";
+  const shouldShowWatermark = !isPremiumUser || (settings?.showWatermark === 1);
 
   useEffect(() => {
     if (settings?.galleryView) {
@@ -241,6 +247,9 @@ export default function Gallery() {
             </div>
           </div>
         )}
+        
+        {/* Lunara Watermark */}
+        <VideoWatermark showWatermark={shouldShowWatermark} size="sm" position="bottom-right" />
       </div>
 
       {/* Action Overlay - Slimmed down */}
@@ -505,6 +514,7 @@ export default function Gallery() {
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>
+                      <VideoWatermark showWatermark={shouldShowWatermark} size="sm" position="bottom-right" />
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between py-0.5">
@@ -665,6 +675,7 @@ export default function Gallery() {
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/40">
                         <Play className="w-6 h-6 text-white fill-white" />
                       </div>
+                      <VideoWatermark showWatermark={shouldShowWatermark} size="sm" position="bottom-right" />
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between py-0.5">
@@ -820,30 +831,33 @@ export default function Gallery() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
                 </div>
 
-                {(() => {
-                  const isVideo = (url: string) => {
-                    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-                    return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
-                  };
-                  const aspectClass = previewVideo.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
-                  return isVideo(previewVideo.videoUrl) ? (
-                    <video
-                      src={previewVideo.videoUrl}
-                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                      controls
-                      autoPlay
-                      loop
-                      data-testid="preview-video"
-                    />
-                  ) : (
-                    <img
-                      src={previewVideo.videoUrl}
-                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
-                      alt={previewVideo.prompt}
-                      data-testid="preview-image"
-                    />
-                  );
-                })()}
+                <div className="relative">
+                  {(() => {
+                    const isVideo = (url: string) => {
+                      const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                      return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                    };
+                    const aspectClass = previewVideo.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                    return isVideo(previewVideo.videoUrl) ? (
+                      <video
+                        src={previewVideo.videoUrl}
+                        className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                        controls
+                        autoPlay
+                        loop
+                        data-testid="preview-video"
+                      />
+                    ) : (
+                      <img
+                        src={previewVideo.videoUrl}
+                        className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                        alt={previewVideo.prompt}
+                        data-testid="preview-image"
+                      />
+                    );
+                  })()}
+                  <VideoWatermark showWatermark={shouldShowWatermark} size="md" position="bottom-right" />
+                </div>
 
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
                   <div className="glass-card p-4 rounded-2xl border-white/10 backdrop-blur-xl bg-black/40">
