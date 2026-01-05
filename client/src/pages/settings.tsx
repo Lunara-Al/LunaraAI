@@ -31,6 +31,8 @@ import {
   MonitorSmartphone,
   HardDrive,
   Wand2,
+  Droplet,
+  Crown,
 } from "lucide-react";
 import MoonMenu from "@/components/moon-menu";
 import { Button } from "@/components/ui/button";
@@ -61,6 +63,7 @@ type UserSettings = {
   galleryView: string;
   theme: string;
   autoSave: number;
+  showWatermark: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -107,6 +110,7 @@ export default function Settings() {
     galleryView: "list",
     theme: "dark",
     autoSave: 1,
+    showWatermark: 1,
   });
 
   const [hasChanges, setHasChanges] = useState(false);
@@ -151,6 +155,7 @@ export default function Settings() {
         galleryView: settings.galleryView,
         theme: settings.theme,
         autoSave: settings.autoSave,
+        showWatermark: settings.showWatermark ?? 1,
       });
     }
   }, [settings]);
@@ -208,6 +213,7 @@ export default function Settings() {
       galleryView: "list",
       theme: "dark",
       autoSave: 1,
+      showWatermark: 1,
     };
     setFormData(defaults);
     setHasChanges(true);
@@ -597,6 +603,55 @@ export default function Settings() {
                       </Button>
                     </div>
                   </SettingsCard>
+
+                  <SettingsCard
+                    icon={Droplet}
+                    title="Lunara Watermark"
+                    description={
+                      user?.membershipTier === "pro" || user?.membershipTier === "premium"
+                        ? "Control the Lunara watermark on your videos"
+                        : "Upgrade to Pro or Premium to remove the watermark"
+                    }
+                    gradient="from-violet-500 to-fuchsia-600"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <Switch
+                          id="showWatermark"
+                          checked={formData.showWatermark === 1}
+                          onCheckedChange={(checked) => {
+                            if (user?.membershipTier === "pro" || user?.membershipTier === "premium") {
+                              updateField("showWatermark", checked ? 1 : 0);
+                            }
+                          }}
+                          disabled={user?.membershipTier !== "pro" && user?.membershipTier !== "premium"}
+                          data-testid="switch-watermark"
+                        />
+                        <Label htmlFor="showWatermark" className="text-sm font-medium cursor-pointer">
+                          {formData.showWatermark === 1 ? (
+                            <span className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+                              <Droplet className="w-4 h-4" /> Visible
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                              <Check className="w-4 h-4" /> Hidden
+                            </span>
+                          )}
+                        </Label>
+                      </div>
+                      {user?.membershipTier !== "pro" && user?.membershipTier !== "premium" && (
+                        <Badge variant="secondary" className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30">
+                          <Crown className="w-3 h-3 mr-1" />
+                          Pro+
+                        </Badge>
+                      )}
+                    </div>
+                    {user?.membershipTier !== "pro" && user?.membershipTier !== "premium" && (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Basic members have a subtle Lunara watermark on videos. Upgrade to Pro or Premium to remove it.
+                      </p>
+                    )}
+                  </SettingsCard>
                 </motion.div>
               )}
 
@@ -792,6 +847,7 @@ export default function Settings() {
                           galleryView: settings.galleryView,
                           theme: settings.theme,
                           autoSave: settings.autoSave,
+                          showWatermark: settings.showWatermark ?? 1,
                         });
                         setHasChanges(false);
                       }
