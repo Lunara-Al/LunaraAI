@@ -154,16 +154,28 @@ export function createGeneratorRouter(): Router {
           body: JSON.stringify(requestBody)
         });
 
-        if (!initialFetchResponse.ok) {
-          const errorData = await initialFetchResponse.json();
-          console.error("Initial request failed:", errorData);
-          throw new Error(`Failed to start video generation: ${errorData.error?.message || initialFetchResponse.statusText}`);
+        // Check if response is empty
+        const responseText = await initialFetchResponse.text();
+        if (!responseText) {
+          console.error("Empty response from Gemini API");
+          throw new Error("Empty response from video generation service. Please try again.");
         }
 
-        const initialResponse = await initialFetchResponse.json();
+        let initialResponse;
+        try {
+          initialResponse = JSON.parse(responseText);
+        } catch (e) {
+          console.error("Failed to parse Gemini API response:", responseText);
+          throw new Error("Invalid response from video generation service.");
+        }
+
+        if (!initialFetchResponse.ok) {
+          console.error("Initial request failed:", initialResponse);
+          throw new Error(`Failed to start video generation: ${initialResponse.error?.message || initialFetchResponse.statusText}`);
+        }
         
         // 2. Get the Operation Name (The ID) safely
-        const operationName = (initialResponse as any).name;
+        const operationName = initialResponse.name;
         console.log("Video started. Operation ID:", operationName);
 
         if (!operationName) {
