@@ -1,0 +1,60 @@
+!IMPORTANT FIX REQUIRED
+
+The app is crashing with "operation.result is not a function".
+This confirms that the object returned by `generateVideos` DOES NOT have `.result()`, `.wait()`, or `.poll()` methods. It is a plain object.
+
+STOP trying to use helper methods. You must implement a MANUAL polling loop.
+
+Please replace the entire video generation logic with this EXACT pattern. Do not change it:
+
+// 1. Start the generation
+console.log("Starting video generation...");
+const initialResponse = await client.models.generateVideos({
+    model: 'imagen-2.0-video-001', // or your specific model
+    prompt: userPrompt,
+    config: { aspect_ratio: '16:9' }
+});
+
+// 2. Get the Operation Name (The ID) safely
+// The name is likely inside initialResponse or initialResponse.name
+const operationName = initialResponse.name;
+console.log("Video started. Operation ID:", operationName);
+
+if (!operationName) {
+    throw new Error("Failed to get operation name from response");
+}
+
+// 3. Manual Polling Loop (The "Manager" Check)
+let completedVideoUri = null;
+
+// Loop for up to 5 minutes
+for (let i = 0; i < 60; i++) {
+    // Wait 5 seconds
+    await new Promise(r => setTimeout(r, 5000));
+
+    // ASK THE CLIENT (THE MANAGER) FOR STATUS
+    // We use the client to check the status using the ID string
+    const status = await client.operations.get({ name: operationName });
+    
+    console.log("Polling status:", status.metadata?.state || "unknown");
+
+    // Check if done
+    if (status.done) {
+        // If there is an error in the result
+        if (status.error) {
+             throw new Error(`Generation failed: ${status.error.message}`);
+        }
+        
+        // Success! Extract the URI
+        // Note: The path to the URI might vary, checking common paths
+        completedVideoUri = status.result?.generatedVideos?.[0]?.video?.uri 
+                            || status.response?.candidates?.[0]?.content?.parts?.[0]?.fileData?.fileUri;
+        break; // Exit the loop
+    }
+}
+
+if (!completedVideoUri) {
+    throw new Error("Timed out waiting for video generation");
+}
+
+return completedVideoUri;

@@ -126,10 +126,9 @@ export function createGeneratorRouter(): Router {
       
       let videoUrl: string;
       try {
-        // Use Gemini's Veo model for video generation
-        console.log("Calling Gemini generateVideos API...");
-        
-        let operation = await genAI.models.generateVideos({
+        // 1. Start the video generation
+        console.log("Starting video generation...");
+        const initialResponse = await genAI.models.generateVideos({
           model: "veo-2.0-generate-001",
           prompt: enhancedPrompt,
           config: {
@@ -140,49 +139,67 @@ export function createGeneratorRouter(): Router {
           },
         });
 
-        console.log("Video generation started. Operation name:", (operation as any).name);
-        
-        // Use the non-enumerable result() helper which handles all polling internally
-        // This is the correct approach for @google/genai v1.x long-running operations
-        console.log("Waiting for video generation to complete (polling via operation.result())...");
-        
-        const completed = await (operation as any).result({
-          pollIntervalMs: 5000,  // Check every 5 seconds
-          timeoutMs: 300000,     // 5 minute timeout
-          onProgress: (op: any) => {
-            const evt = op.metadata?.progressEvents?.at(-1);
-            console.log(`Veo progress: ${evt?.stage ?? "pending"} ${evt?.progressPercent ?? 0}%`);
+        // 2. Get the Operation Name (The ID) safely
+        const operationName = (initialResponse as any).name;
+        console.log("Video started. Operation ID:", operationName);
+
+        if (!operationName) {
+          console.error("Initial response:", JSON.stringify(initialResponse, null, 2));
+          throw new Error("Failed to get operation name from response");
+        }
+
+        // 3. Manual Polling Loop using REST API (check status every 5 seconds for up to 5 minutes)
+        // The SDK doesn't have genAI.operations, so we poll directly via REST API
+        let completedVideoUri: string | null = null;
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        for (let i = 0; i < 60; i++) {
+          // Wait 5 seconds
+          await new Promise(r => setTimeout(r, 5000));
+
+          // Poll operation status via REST API
+          const pollUrl = `https://generativelanguage.googleapis.com/v1beta/${operationName}`;
+          const pollResponse = await fetch(pollUrl, {
+            method: 'GET',
+            headers: {
+              'x-goog-api-key': apiKey || '',
+            },
+          });
+
+          if (!pollResponse.ok) {
+            console.error(`Polling failed with status ${pollResponse.status}: ${pollResponse.statusText}`);
+            continue; // Try again
           }
-        });
-        
-        console.log("Video generation completed!");
-        console.log("Completed response keys:", Object.keys(completed || {}));
-        
-        // Check for errors in the completed operation
-        if (completed.error) {
-          throw new Error(`Video generation failed: ${completed.error.message || JSON.stringify(completed.error)}`);
+
+          const status = await pollResponse.json();
+          console.log(`Polling attempt ${i + 1}/60 - Done:`, status.done, "State:", status.metadata?.state || "unknown");
+
+          // Check if done
+          if (status.done) {
+            // If there is an error in the result
+            if (status.error) {
+              throw new Error(`Generation failed: ${status.error.message || JSON.stringify(status.error)}`);
+            }
+            
+            // Success! Extract the URI from various possible locations
+            completedVideoUri = status.response?.generatedVideos?.[0]?.video?.uri 
+                              || status.result?.generatedVideos?.[0]?.video?.uri
+                              || status.response?.videos?.[0]?.gcsUri
+                              || status.response?.candidates?.[0]?.content?.parts?.[0]?.fileData?.fileUri;
+            
+            console.log("Completed status object keys:", Object.keys(status));
+            if (status.response) {
+              console.log("Response keys:", Object.keys(status.response));
+            }
+            break; // Exit the loop
+          }
         }
 
-        // Extract generated videos from the response
-        const generatedVideos = completed.response?.generatedVideos 
-          || completed.generatedVideos;
-        
-        if (!generatedVideos || generatedVideos.length === 0) {
-          console.error("Full completed object:", JSON.stringify(completed, null, 2).slice(0, 2000));
-          throw new Error("No video was generated. Please try again with a different prompt.");
+        if (!completedVideoUri) {
+          throw new Error("Timed out waiting for video generation (5 minutes)");
         }
 
-        const generatedVideo = generatedVideos[0];
-        const videoUri = generatedVideo?.video?.uri 
-          || generatedVideo?.downloadUri 
-          || generatedVideo?.video?.downloadUri
-          || generatedVideo?.uri;
-        
-        if (!videoUri) {
-          console.error("Generated video object:", JSON.stringify(generatedVideo, null, 2));
-          throw new Error("Video URI not found in response");
-        }
-
+        const videoUri = completedVideoUri;
         console.log("Video generation completed!");
         console.log("Downloading video from:", videoUri);
 
