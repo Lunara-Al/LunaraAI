@@ -182,7 +182,9 @@ export function createGeneratorRouter(): Router {
             }
             
             // Success! Extract the URI from various possible locations
-            completedVideoUri = status.response?.generatedVideos?.[0]?.video?.uri 
+            // The response nests videos under generateVideoResponse
+            completedVideoUri = status.response?.generateVideoResponse?.generatedVideos?.[0]?.video?.uri
+                              || status.response?.generatedVideos?.[0]?.video?.uri 
                               || status.result?.generatedVideos?.[0]?.video?.uri
                               || status.response?.videos?.[0]?.gcsUri
                               || status.response?.candidates?.[0]?.content?.parts?.[0]?.fileData?.fileUri;
@@ -190,6 +192,9 @@ export function createGeneratorRouter(): Router {
             console.log("Completed status object keys:", Object.keys(status));
             if (status.response) {
               console.log("Response keys:", Object.keys(status.response));
+              if (status.response.generateVideoResponse) {
+                console.log("generateVideoResponse keys:", Object.keys(status.response.generateVideoResponse));
+              }
             }
             break; // Exit the loop
           }
