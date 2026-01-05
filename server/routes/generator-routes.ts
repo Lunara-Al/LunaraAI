@@ -76,23 +76,18 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
       progress: 10
     });
 
-    const generationUrl = `${GEMINI_API_BASE}/models/veo-2.0-generate-001:generateVideos`;
+    const generationUrl = `${GEMINI_API_BASE}/models/veo-3.1-generate-preview:predictLongRunning`;
     
     const requestBody = {
-      instances: [{ prompt: job.enhancedPrompt }],
+      instances: [{ 
+        prompt: job.enhancedPrompt 
+      }],
       parameters: {
         aspectRatio: job.aspectRatio,
         sampleCount: 1,
         durationSeconds: job.length,
         personGeneration: "dont_allow",
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
-        { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_ONLY_HIGH" }
-      ]
+      }
     };
 
     console.log(`[Job ${jobId}] Starting video generation...`);
@@ -177,7 +172,10 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
       const pollUrl = `${GEMINI_API_BASE}/${operationName}`;
       const pollResponse = await fetch(pollUrl, {
         method: 'GET',
-        headers: { 'x-goog-api-key': apiKey }
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey 
+        }
       });
 
       if (!pollResponse.ok) {
