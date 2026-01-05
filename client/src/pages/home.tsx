@@ -749,7 +749,7 @@ export default function Home() {
                   controls
                   autoPlay
                   loop
-                  className="relative w-full rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black"
+                  className="relative w-full rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black object-contain aspect-video"
                   style={{
                     boxShadow: '0 25px 50px -12px rgba(107, 91, 255, 0.25), 0 15px 30px -8px rgba(255, 79, 225, 0.2)'
                   }}

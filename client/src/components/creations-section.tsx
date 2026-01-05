@@ -81,11 +81,11 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
               data-testid={`creation-card-${video.id}`}
             >
               {/* Media Container */}
-              <div className="aspect-square relative">
+              <div className="aspect-square relative bg-black/40 backdrop-blur-sm overflow-hidden">
                 {isActuallyVideo ? (
                   <video
                     src={video.videoUrl}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     loop
                     muted
                     preload="metadata"

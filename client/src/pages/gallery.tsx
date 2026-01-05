@@ -196,7 +196,7 @@ export default function Gallery() {
           return isActuallyVideo ? (
             <video
               src={video.videoUrl}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               loop
               muted
               onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
@@ -210,7 +210,7 @@ export default function Gallery() {
           ) : (
             <img
               src={video.videoUrl}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               alt={video.prompt}
               data-testid={isCreation ? `creation-image-${video.id}` : `image-${video.id}`}
             />
