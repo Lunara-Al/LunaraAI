@@ -1,7 +1,7 @@
 # Lunara AI - Cosmic ASMR Video Generation
 
 ## Overview
-Lunara AI is a web application designed to generate cosmic ASMR videos from text prompts using the Google Gemini Veo API (veo-2.0-generate-001 model). It features a unique "Glass Bubble Moon" design system with purple-pink gradients, smooth animations, and a polished user experience. The project aims to provide an immersive platform for creating short, aesthetically pleasing, AI-generated video content.
+Lunara AI is a web application designed to generate cosmic ASMR videos from text prompts using the Google Gemini Veo API (veo-3.1-generate-preview model with predictLongRunning endpoint). It features a unique "Glass Bubble Moon" design system with purple-pink gradients, smooth animations, and a polished user experience. The project aims to provide an immersive platform for creating short, aesthetically pleasing, AI-generated video content.
 
 ## User Preferences
 - **Design Philosophy:** Focused, immersive single-purpose interface optimized for video generation
@@ -9,10 +9,12 @@ Lunara AI is a web application designed to generate cosmic ASMR videos from text
 - **Typography:** Poppins font family throughout
 
 ## Recent Changes
-- **Migrated to Google Gemini Veo API (veo-2.0-generate-001 model)** for video generation, replacing OpenAI Sora API.
-- **Video lengths updated to 5s and 8s** to match Gemini Veo API constraints.
+- **Updated to Google Gemini Veo API (veo-3.1-generate-preview model)** using the `predictLongRunning` endpoint for async video generation.
+- **Implemented full async polling architecture** with `video_generation_jobs` database table for tracking job state.
+- **Frontend polls every 4 seconds** for job status updates with real-time progress display (0-100%).
+- **Comprehensive error handling** with granular error classification (AUTH_ERROR, RATE_LIMIT, TIMEOUT, CONTENT_FILTERED, etc.).
+- **Video lengths:** 5s and 8s matching Gemini Veo API constraints.
 - **Membership tier video lengths:** Basic (free) = 5s, Pro = 8s, Premium = 8s (Veo max).
-- Implemented polling-based video generation with exponential backoff (5-10s intervals, max 5min timeout).
 - Videos saved locally to public/generated/ as .mp4 files to prevent URL expiration.
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.
@@ -56,7 +58,7 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - Automatic fallback to simulation mode if Stripe unavailable
     - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
     - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
-- **Video Generation Parameters:** Supports customizable video length (5s or 8s matching Gemini Veo API), aspect ratio (16:9, 9:16), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via Google Gemini Veo API (veo-2.0-generate-001 model) with polling-based status checks and saved locally to public/generated/ to prevent URL expiration.
+- **Video Generation Parameters:** Supports customizable video length (5s or 8s matching Gemini Veo API), aspect ratio (16:9, 9:16), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via Google Gemini Veo API (veo-3.1-generate-preview model) using the `predictLongRunning` endpoint with async polling-based status checks and saved locally to public/generated/ to prevent URL expiration.
 
 ### Feature Specifications
 - **Video Generation:** Users input text prompts to generate cosmic ASMR videos (5s or 8s based on membership tier) with autoplay and looping.
