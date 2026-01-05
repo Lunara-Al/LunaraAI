@@ -219,11 +219,20 @@ export default function Home() {
         stopPolling();
         setIsGenerating(false);
         setCurrentJobId(null);
+        
+        // Show specific error from job if available
+        const errorMsg = status.errorMessage || "Unable to generate video. Please try again.";
+        console.error("Generation failed:", errorMsg, status.errorCode);
+        
         toast({
           variant: "destructive",
           title: "Generation Failed",
-          description: status.errorMessage || "Unable to generate video. Please try again.",
+          description: errorMsg,
         });
+        
+        // Update mutation state manually since it's used for error display
+        // We'll use setGenerationStatus to show error in UI
+        setGenerationStatus(`Error: ${errorMsg}`);
       }
     } catch (error) {
       console.error("Polling error:", error);
@@ -241,7 +250,20 @@ export default function Home() {
       stopPolling();
       
       timerIntervalRef.current = setInterval(() => {
-        setGenerationTimer(prev => prev + 1);
+        setGenerationTimer(prev => {
+          // Stop timer if it exceeds 10 minutes (600s) as a safety measure
+          if (prev >= 600) {
+            stopPolling();
+            setIsGenerating(false);
+            toast({
+              variant: "destructive",
+              title: "Generation Timeout",
+              description: "The cosmic generator timed out. Please try again with a different prompt.",
+            });
+            return prev;
+          }
+          return prev + 1;
+        });
       }, 1000);
 
       const response = await apiRequest("POST", "/api/generate", data);
@@ -780,7 +802,7 @@ export default function Home() {
         </Card>
 
         {/* Error State */}
-        {generateVideoMutation.isError && (
+        {(generateVideoMutation.isError || (generationStatus.startsWith("Error:") && !isGenerating)) && (
           <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3 animate-in" data-testid="error-message">
             <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
             <div>
@@ -788,7 +810,9 @@ export default function Home() {
                 Failed to generate video
               </p>
               <p className="text-xs md:text-sm text-destructive/80 mt-1">
-                {generateVideoMutation.error?.message || "Please check your input and try again. Ensure you have Pika API key configured."}
+                {generationStatus.startsWith("Error:") 
+                  ? generationStatus.replace("Error: ", "") 
+                  : (generateVideoMutation.error?.message || "Please check your input and try again.")}
               </p>
             </div>
           </div>
