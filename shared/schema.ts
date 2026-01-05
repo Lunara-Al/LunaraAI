@@ -178,6 +178,7 @@ export const userSettings = pgTable("user_settings", {
   galleryView: varchar("gallery_view", { length: 10 }).default("grid").notNull(),
   theme: varchar("theme", { length: 10 }).default("dark").notNull(),
   autoSave: integer("auto_save").default(1).notNull(),
+  showWatermark: integer("show_watermark").default(1).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
