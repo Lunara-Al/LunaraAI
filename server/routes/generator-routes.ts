@@ -23,7 +23,8 @@ function mapAspectRatio(aspectRatio: string): "16:9" | "9:16" {
 }
 
 function mapDuration(length: number): number {
-  if (length <= 5) return 5;
+  // Gemini Veo 3.1 API only supports 4, 6, or 8 seconds
+  if (length <= 5) return 6; // Map 5s to 6s (closest supported value)
   return 8;
 }
 
@@ -78,6 +79,8 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
 
     const generationUrl = `${GEMINI_API_BASE}/models/veo-3.1-generate-preview:predictLongRunning`;
     
+    console.log(`[Job ${jobId}] Job data - length: ${job.length} (type: ${typeof job.length}), aspectRatio: ${job.aspectRatio}`);
+    
     const requestBody = {
       instances: [{ 
         prompt: job.enhancedPrompt 
@@ -90,6 +93,7 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
       }
     };
 
+    console.log(`[Job ${jobId}] API Request body:`, JSON.stringify(requestBody, null, 2));
     console.log(`[Job ${jobId}] Starting video generation...`);
     console.log(`[Job ${jobId}] Prompt: ${job.enhancedPrompt.substring(0, 100)}...`);
 
@@ -363,6 +367,8 @@ export function createGeneratorRouter(): Router {
 
       const { prompt, length = 5, aspectRatio = "16:9", style } = validation.data;
 
+      console.log(`[API Debug] Received request - length: ${length} (type: ${typeof length}), aspectRatio: ${aspectRatio}, style: ${style}`);
+
       if (length > tierConfig.maxLength) {
         const errorResponse: ErrorResponse = {
           error: "Length not allowed",
@@ -387,6 +393,8 @@ export function createGeneratorRouter(): Router {
 
       const veoAspectRatio = mapAspectRatio(aspectRatio);
       const videoDuration = mapDuration(length);
+
+      console.log(`[API Debug] Mapped values - videoDuration: ${videoDuration}, veoAspectRatio: ${veoAspectRatio}`);
 
       const job = await storage.createVideoGenerationJob({
         userId,

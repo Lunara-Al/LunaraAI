@@ -13,8 +13,8 @@ Lunara AI is a web application designed to generate cosmic ASMR videos from text
 - **Implemented full async polling architecture** with `video_generation_jobs` database table for tracking job state.
 - **Frontend polls every 4 seconds** for job status updates with real-time progress display (0-100%).
 - **Comprehensive error handling** with granular error classification (AUTH_ERROR, RATE_LIMIT, TIMEOUT, CONTENT_FILTERED, etc.).
-- **Video lengths:** 5s and 8s matching Gemini Veo API constraints.
-- **Membership tier video lengths:** Basic (free) = 5s, Pro = 8s, Premium = 8s (Veo max).
+- **Video lengths:** 6s and 8s matching Gemini Veo 3.1 API constraints (API only supports 4, 6, or 8 seconds).
+- **Membership tier video lengths:** Basic (free) = 6s, Pro = 8s, Premium = 8s (Veo max).
 - Videos saved locally to public/generated/ as .mp4 files to prevent URL expiration.
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.

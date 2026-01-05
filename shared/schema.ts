@@ -8,8 +8,8 @@ import { z } from "zod";
 // ============================================================================
 
 export const CREDIT_RESET_DAYS = 30;
-export const DEFAULT_VIDEO_LENGTH = 5;
-export const VIDEO_LENGTHS = [5, 8] as const;
+export const DEFAULT_VIDEO_LENGTH = 6;
+export const VIDEO_LENGTHS = [6, 8] as const;
 export const ASPECT_RATIOS = ["16:9", "9:16"] as const;
 export const QUALITY_LEVELS = ["basic", "hd", "4k"] as const;
 
@@ -18,7 +18,7 @@ export const MEMBERSHIP_TIERS = {
     name: "Basic",
     price: 0,
     monthlyVideos: 5,
-    maxLength: 5,
+    maxLength: 6,
     quality: "basic" as const,
     monthlyCredits: 25,
   },
@@ -235,7 +235,7 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 
 export const videoGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(5000, "Prompt must be less than 5000 characters"),
-  length: z.number().refine((val) => VIDEO_LENGTHS.includes(val as VideoLength), "Length must be 5 or 8 seconds").default(DEFAULT_VIDEO_LENGTH),
+  length: z.number().refine((val) => VIDEO_LENGTHS.includes(val as VideoLength), "Length must be 6 or 8 seconds").default(DEFAULT_VIDEO_LENGTH),
   aspectRatio: z.enum(ASPECT_RATIOS).default("16:9"),
   style: z.string().optional(),
   imageBase64: z.string().optional(),

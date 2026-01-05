@@ -1,0 +1,15 @@
+Currently, the video generation is failing with a critical error that indicates a disconnect between the UI and the API payload. Despite "5s" being selected in the UI, the backend is rejecting the request with the error: "The number value for durationSeconds is out of bound. Please provide a value between 4 and 8, inclusive."
+This proves conclusively that the frontend is not sending the number 5 to the backend. The UI selection is not being correctly mapped to the API request.
+Stop adding new UI elements. The priority now is to fix the broken data flow for the existing ones. The current approach of adding features without verifying the core functionality is incorrect and is leading to this persistent failure.
+Here is the required plan of action to fix this definitively:
+1. Locate the API Request Logic: Find the exact function that is triggered when the "Generate Cosmic Video" button is clicked. This is where the payload is constructed.
+2. Implement Immediate Debugging: Inside that function, immediately before the API call is sent, add a log statement to print the entire payload object to the console (e.g., console.log("API Payload:", payload)).
+3. Identify the Incorrect Value: Run the app, select "5s", click generate, and look at the console log. You will see the durationSeconds value is wrong. It will likely be a hardcoded number (like 3 or 10), null, undefined, or possibly a string like "5s".
+4. Fix the Data Pipeline (Root Cause):
+• Do not hardcode the fix. Do not just change a 3 to a 5.
+• You must correctly retrieve the state variable that represents the currently selected duration button ("5s" or "8s").
+• You must convert this value into a pure Number (e.g., transform "5s" to 5). The backend explicitly demands a number, not a string.
+• Assign this dynamic, numbered value to the durationSeconds key in the API payload object.
+5. Verify Dynamic Functionality: Test the fix by selecting "5s" and verifying it works. Then, select "8s" and verify it also works. The payload log must show durationSeconds: 5 and durationSeconds: 8 respectively.
+6. Audit All Inputs: Apply this same logic to the "Aspect Ratio" and "Style" inputs. Ensure their selected values are also being dynamically and correctly passed into the API payload. Do not assume they are working just because there is no error yet.
+Your goal is not just to make the error go away, but to correctly wire the UI state to the API call so that whatever the user selects is what is actually sent to the server.
