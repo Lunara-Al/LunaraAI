@@ -163,8 +163,17 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [generationTimer, setGenerationTimer] = useState<number>(0);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const generateVideoMutation = useMutation<VideoGenerationResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
     mutationFn: async (data) => {
+      setGenerationTimer(0);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = setInterval(() => {
+        setGenerationTimer(prev => prev + 1);
+      }, 1000);
+
       const response = await apiRequest("POST", "/api/generate", data);
       if (!response.ok) {
         const error = await response.json();
@@ -173,13 +182,18 @@ export default function Home() {
       return await response.json();
     },
     onSuccess: (data) => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       setVideoUrl(data.videoUrl);
       toast({
         title: "Success!",
-        description: "Your cosmic video has been created and saved to your gallery.",
+        description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
       });
     },
+    onSettled: () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    },
     onError: (error: any) => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
       toast({
         variant: "destructive",
         title: "Generation Failed",
@@ -187,6 +201,10 @@ export default function Home() {
       });
     },
   });
+
+  const estimatedTime = length === 5 ? 45 : 75; // Estimated seconds based on observation
+  const progressPercent = Math.min((generationTimer / estimatedTime) * 100, 95);
+
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -644,14 +662,23 @@ export default function Home() {
               type="submit"
               size="lg"
               disabled={generateVideoMutation.isPending || !prompt.trim() || isProcessingImage}
-              className="w-full bg-gradient-to-r from-primary to-secondary moon-glow text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ripple"
+              className="w-full relative overflow-hidden h-12 md:h-14 bg-gradient-to-r from-primary to-secondary moon-glow text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center justify-center"
               data-testid="button-generate"
             >
               {generateVideoMutation.isPending ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Generating your masterpiece... (This may take a moment)
-                </>
+                <div className="flex flex-col items-center justify-center w-full space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="animate-pulse">Generating Vision... ({generationTimer}s)</span>
+                  </div>
+                  <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-white transition-all duration-1000 ease-out"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] opacity-70">Estimated time: ~{estimatedTime}s</p>
+                </div>
               ) : isProcessingImage ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
