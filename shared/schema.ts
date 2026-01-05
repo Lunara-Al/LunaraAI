@@ -234,7 +234,7 @@ export type ContactMessage = typeof contactMessages.$inferSelect;
 // ============================================================================
 
 export const videoGenerationSchema = z.object({
-  prompt: z.string().min(1, "Prompt is required").max(500, "Prompt must be less than 500 characters"),
+  prompt: z.string().min(1, "Prompt is required").max(5000, "Prompt must be less than 5000 characters"),
   length: z.number().refine((val) => VIDEO_LENGTHS.includes(val as VideoLength), "Length must be 5 or 8 seconds").default(DEFAULT_VIDEO_LENGTH),
   aspectRatio: z.enum(ASPECT_RATIOS).default("16:9"),
   style: z.string().optional(),
