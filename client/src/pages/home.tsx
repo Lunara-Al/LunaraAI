@@ -198,7 +198,8 @@ export default function Home() {
     try {
       const response = await fetch(`/api/generate/status/${jobId}`);
       if (!response.ok) {
-        throw new Error("Failed to check status");
+        console.error("Status check failed:", response.status);
+        return;
       }
       const status: VideoJobStatusResponse = await response.json();
       
