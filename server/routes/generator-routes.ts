@@ -140,58 +140,43 @@ export function createGeneratorRouter(): Router {
           },
         });
 
-        console.log("Video generation initiated, waiting for completion...");
-        console.log("Initial response type:", typeof operation);
+        console.log("Video generation started. Operation name:", (operation as any).name);
         
-        // Use the built-in wait() or waitForCompletion() method on the operation object
-        // as per Google GenAI SDK documentation for long-running operations
-        if (typeof (operation as any).wait === 'function') {
-          console.log("Using operation.wait()...");
-          operation = await (operation as any).wait();
-        } else if (typeof (operation as any).waitForCompletion === 'function') {
-          console.log("Using operation.waitForCompletion()...");
-          operation = await (operation as any).waitForCompletion();
-        } else {
-          // Fallback manual polling if no built-in method exists
-          const maxWaitMs = 600000;
-          const startTime = Date.now();
-          let pollInterval = 10000;
-          
-          while (!(operation as any).done && (Date.now() - startTime) < maxWaitMs) {
-            console.log(`Polling manually... (Elapsed: ${Math.round((Date.now() - startTime)/1000)}s)`);
-            await new Promise(resolve => setTimeout(resolve, pollInterval));
-            
-            // Try refresh if available
-            if (typeof (operation as any).refresh === 'function') {
-              await (operation as any).refresh();
-            } else if (typeof (operation as any).poll === 'function') {
-              operation = await (operation as any).poll();
-            } else {
-              break; // Cannot poll
-            }
+        // Use the non-enumerable result() helper which handles all polling internally
+        // This is the correct approach for @google/genai v1.x long-running operations
+        console.log("Waiting for video generation to complete (polling via operation.result())...");
+        
+        const completed = await (operation as any).result({
+          pollIntervalMs: 5000,  // Check every 5 seconds
+          timeoutMs: 300000,     // 5 minute timeout
+          onProgress: (op: any) => {
+            const evt = op.metadata?.progressEvents?.at(-1);
+            console.log(`Veo progress: ${evt?.stage ?? "pending"} ${evt?.progressPercent ?? 0}%`);
           }
+        });
+        
+        console.log("Video generation completed!");
+        console.log("Completed response keys:", Object.keys(completed || {}));
+        
+        // Check for errors in the completed operation
+        if (completed.error) {
+          throw new Error(`Video generation failed: ${completed.error.message || JSON.stringify(completed.error)}`);
         }
 
-        console.log("Final operation state - done:", (operation as any).done);
-        console.log("Final operation keys:", Object.keys(operation || {}));
-
-        // Check if operation timed out
-        if (!(operation as any).done) {
-          throw new Error("Video generation timed out after 10 minutes. Please try again with a simpler prompt.");
-        }
-
-        // Extract generated videos - primary location is operation.response.generatedVideos
-        let generatedVideos = (operation as any).response?.generatedVideos
-          || (operation as any).generatedVideos 
-          || (operation as any).result?.generatedVideos;
+        // Extract generated videos from the response
+        const generatedVideos = completed.response?.generatedVideos 
+          || completed.generatedVideos;
         
         if (!generatedVideos || generatedVideos.length === 0) {
-          console.error("Full operation object:", JSON.stringify(operation, null, 2).slice(0, 2000));
-          throw new Error("No video was generated. The operation may have timed out or failed.");
+          console.error("Full completed object:", JSON.stringify(completed, null, 2).slice(0, 2000));
+          throw new Error("No video was generated. Please try again with a different prompt.");
         }
 
         const generatedVideo = generatedVideos[0];
-        const videoUri = generatedVideo?.video?.uri || generatedVideo?.uri;
+        const videoUri = generatedVideo?.video?.uri 
+          || generatedVideo?.downloadUri 
+          || generatedVideo?.video?.downloadUri
+          || generatedVideo?.uri;
         
         if (!videoUri) {
           console.error("Generated video object:", JSON.stringify(generatedVideo, null, 2));
