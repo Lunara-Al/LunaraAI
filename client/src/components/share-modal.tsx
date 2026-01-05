@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -476,6 +477,7 @@ function PlatformCard({
 export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   const { toast } = useToast();
   const [shareData, setShareData] = useState<ShareResponse | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [uploadStates, setUploadStates] = useState<Record<SocialPlatform, UploadState>>({
     tiktok: { platform: "tiktok", status: "idle", caption: "", hashtags: [] },

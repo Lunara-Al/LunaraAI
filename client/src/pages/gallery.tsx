@@ -27,6 +27,7 @@ export default function Gallery() {
   const { toast } = useToast();
   const [limit, setLimit] = useState(VIDEOS_PER_PAGE);
   const [shareModalVideo, setShareModalVideo] = useState<VideoGeneration | null>(null);
+  const [previewVideo, setPreviewVideo] = useState<VideoGeneration | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   const { data: settings } = useQuery<UserSettings>({
@@ -196,9 +197,10 @@ export default function Gallery() {
           return isActuallyVideo ? (
             <video
               src={video.videoUrl}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain cursor-pointer"
               loop
               muted
+              onClick={() => setPreviewVideo(video)}
               onMouseEnter={(e) => (e.currentTarget as HTMLVideoElement).play()}
               onMouseLeave={(e) => {
                 const vid = e.currentTarget as HTMLVideoElement;
@@ -210,8 +212,9 @@ export default function Gallery() {
           ) : (
             <img
               src={video.videoUrl}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain cursor-pointer"
               alt={video.prompt}
+              onClick={() => setPreviewVideo(video)}
               data-testid={isCreation ? `creation-image-${video.id}` : `image-${video.id}`}
             />
           );
@@ -467,7 +470,11 @@ export default function Gallery() {
                     className="group relative flex gap-3 p-2 rounded-xl bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/30 shadow-md hover:shadow-lg transition-all duration-300"
                     style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
                   >
-                    <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
+                    <div 
+                      key={`list-media-${video.id}`}
+                      className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0 cursor-pointer"
+                      onClick={() => setPreviewVideo(video)}
+                    >
                       {(() => {
                         const isVideo = (url: string) => {
                           const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
@@ -623,7 +630,11 @@ export default function Gallery() {
                     className="group relative flex gap-3 p-2 rounded-xl bg-gradient-to-br from-card/90 to-card/60 dark:from-card/80 dark:to-card/40 border border-primary/10 shadow-sm hover:shadow-md transition-all duration-300"
                     style={{ animation: `fadeInUp 0.5s ease-out ${index * 40}ms both` }}
                   >
-                    <div className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0">
+                    <div 
+                      key={`list-media-${video.id}`}
+                      className="relative w-32 md:w-40 aspect-video overflow-hidden rounded-lg bg-black/40 flex-shrink-0 cursor-pointer"
+                      onClick={() => setPreviewVideo(video)}
+                    >
                       {(() => {
                         const isVideo = (url: string) => {
                           const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
