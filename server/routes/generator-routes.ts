@@ -214,9 +214,15 @@ export function createGeneratorRouter(): Router {
         console.log("Video generation completed!");
         console.log("Downloading video from:", videoUri);
 
-        // Fetch the video content
-        const downloadResponse = await fetch(videoUri);
+        // Fetch the video content (requires API key authentication)
+        const downloadResponse = await fetch(videoUri, {
+          method: 'GET',
+          headers: {
+            'x-goog-api-key': apiKey || '',
+          },
+        });
         if (!downloadResponse.ok) {
+          console.error(`Download failed with status ${downloadResponse.status}: ${downloadResponse.statusText}`);
           throw new Error(`Failed to download video: ${downloadResponse.statusText}`);
         }
         
