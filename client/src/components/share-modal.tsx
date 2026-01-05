@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -884,7 +883,10 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     background: 'linear-gradient(135deg, rgba(107, 91, 255, 0.5) 0%, rgba(255, 107, 204, 0.5) 100%)'
                   }}
                 />
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black/10 dark:bg-black/30">
+                <div 
+                  className="relative aspect-video rounded-xl overflow-hidden bg-black/10 dark:bg-black/30 cursor-pointer"
+                  onClick={() => setPreviewOpen(true)}
+                >
                   {(() => {
                     const isVideo = (url: string) => {
                       const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
@@ -907,6 +909,13 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                       />
                     );
                   })()}
+                  
+                  {/* Click to preview overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
+                    <div className="p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/20 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                      <Eye className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
                   
                   <div 
                     className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
@@ -1124,6 +1133,66 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
           }
         `}</style>
       </DialogContent>
+
+      {/* Fullscreen Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-none bg-black/95 backdrop-blur-2xl overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Video Preview</DialogTitle>
+            <DialogDescription>Full screen cosmic video preview</DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-full flex items-center justify-center group/preview">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all duration-300 hover:rotate-90"
+              onClick={() => setPreviewOpen(false)}
+              data-testid="button-close-share-preview"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+
+            <div className="relative flex items-center justify-center p-4 md:p-8">
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+              </div>
+
+              {(() => {
+                const isVideo = (url: string) => {
+                  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                  return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                };
+                const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                return isVideo(video.videoUrl) ? (
+                  <video
+                    src={video.videoUrl}
+                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                    controls
+                    autoPlay
+                    loop
+                    data-testid="share-preview-video"
+                  />
+                ) : (
+                  <img
+                    src={video.videoUrl}
+                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                    alt={video.prompt}
+                    data-testid="share-preview-image"
+                  />
+                );
+              })()}
+
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
+                <div className="p-4 rounded-2xl border border-white/10 backdrop-blur-xl bg-black/40">
+                  <p className="text-white text-sm md:text-base font-medium line-clamp-2 text-center drop-shadow-sm">
+                    {video.prompt}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

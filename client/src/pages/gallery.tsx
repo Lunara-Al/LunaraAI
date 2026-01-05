@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Share2, List, Grid3x3, AlertTriangle } from "lucide-react";
+import { Download, Sparkles, Trash2, Loader2, Star, Play, Zap, Share2, List, Grid3x3, AlertTriangle, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import MoonMenu from "@/components/moon-menu";
@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import type { VideoGeneration, UserSettings } from "@shared/schema";
 
 const VIDEOS_PER_PAGE = 12;
@@ -794,6 +795,68 @@ export default function Gallery() {
           onClose={() => setShareModalVideo(null)}
         />
       )}
+
+      {/* Fullscreen Preview Modal */}
+      <Dialog open={!!previewVideo} onOpenChange={(open) => !open && setPreviewVideo(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-none bg-black/95 backdrop-blur-2xl overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Video Preview</DialogTitle>
+            <DialogDescription>Full screen cosmic video preview</DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-full flex items-center justify-center group/preview">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all duration-300 hover:rotate-90"
+              onClick={() => setPreviewVideo(null)}
+              data-testid="button-close-preview"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+
+            {previewVideo && (
+              <div className="relative flex items-center justify-center p-4 md:p-8">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+                </div>
+
+                {(() => {
+                  const isVideo = (url: string) => {
+                    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                    return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                  };
+                  const aspectClass = previewVideo.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                  return isVideo(previewVideo.videoUrl) ? (
+                    <video
+                      src={previewVideo.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      controls
+                      autoPlay
+                      loop
+                      data-testid="preview-video"
+                    />
+                  ) : (
+                    <img
+                      src={previewVideo.videoUrl}
+                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      alt={previewVideo.prompt}
+                      data-testid="preview-image"
+                    />
+                  );
+                })()}
+
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
+                  <div className="glass-card p-4 rounded-2xl border-white/10 backdrop-blur-xl bg-black/40">
+                    <p className="text-white text-sm md:text-base font-medium line-clamp-2 text-center drop-shadow-sm">
+                      {previewVideo.prompt}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add fadeInUp animation */}
       <style>{`

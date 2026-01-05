@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
-import { Play, Download, Share2, Copy, Check, ExternalLink, Moon, AlertCircle, Eye, Clock, Ratio, Calendar, Sparkles, Star } from "lucide-react";
+import { Play, Download, Share2, Copy, Check, ExternalLink, Moon, AlertCircle, Eye, Clock, Ratio, Calendar, Sparkles, Star, X, Expand } from "lucide-react";
 import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 type ShareData = {
   video: {
@@ -165,6 +166,7 @@ export default function SharePage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     const fetchShareData = async () => {
@@ -434,12 +436,24 @@ export default function SharePage() {
                 ) : (
                   <img
                     src={video.videoUrl}
-                    className="w-full aspect-video object-cover relative z-10"
+                    className="w-full aspect-video object-cover relative z-10 cursor-pointer"
                     alt={video.prompt}
+                    onClick={() => setPreviewOpen(true)}
                     data-testid="share-image-preview"
                   />
                 );
               })()}
+              
+              {/* Fullscreen button overlay */}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute top-3 left-3 z-30 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-md transition-all duration-300 opacity-0 group-hover:opacity-100"
+                onClick={() => setPreviewOpen(true)}
+                data-testid="button-expand-video"
+              >
+                <Expand className="w-4 h-4" />
+              </Button>
             </div>
 
             <div className="p-6 md:p-8 space-y-5">
@@ -673,6 +687,66 @@ export default function SharePage() {
           </p>
         </div>
       </div>
+
+      {/* Fullscreen Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-none bg-black/95 backdrop-blur-2xl overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Video Preview</DialogTitle>
+            <DialogDescription>Full screen cosmic video preview</DialogDescription>
+          </DialogHeader>
+          <div className="relative w-full h-full flex items-center justify-center group/preview">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all duration-300 hover:rotate-90"
+              onClick={() => setPreviewOpen(false)}
+              data-testid="button-close-fullscreen"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+
+            <div className="relative flex items-center justify-center p-4 md:p-8">
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+              </div>
+
+              {(() => {
+                const isVideo = (url: string) => {
+                  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+                  return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
+                };
+                const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                return isVideo(video.videoUrl) ? (
+                  <video
+                    src={video.videoUrl}
+                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                    controls
+                    autoPlay
+                    loop
+                    data-testid="fullscreen-video"
+                  />
+                ) : (
+                  <img
+                    src={video.videoUrl}
+                    className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                    alt={video.prompt}
+                    data-testid="fullscreen-image"
+                  />
+                );
+              })()}
+
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
+                <div className="p-4 rounded-2xl border border-white/10 backdrop-blur-xl bg-black/40">
+                  <p className="text-white text-sm md:text-base font-medium line-clamp-2 text-center drop-shadow-sm">
+                    {share.title}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
