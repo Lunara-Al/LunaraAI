@@ -181,6 +181,14 @@ export function createGeneratorRouter(): Router {
               throw new Error(`Generation failed: ${status.error.message || JSON.stringify(status.error)}`);
             }
             
+            // Check for content filtering (Responsible AI)
+            const raiCount = status.response?.generateVideoResponse?.raiMediaFilteredCount;
+            if (raiCount && raiCount > 0) {
+              const reasons = status.response?.generateVideoResponse?.raiMediaFilteredReasons || [];
+              console.warn("Content was filtered by Google RAI:", reasons);
+              throw new Error("Your prompt was flagged by Google's safety filters. Please try a different description without sensitive or violent terms.");
+            }
+            
             // Success! Extract the URI from various possible locations
             // The response nests videos under generateVideoResponse.generatedSamples (not generatedVideos)
             completedVideoUri = status.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri
