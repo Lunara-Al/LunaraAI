@@ -126,26 +126,42 @@ export function createGeneratorRouter(): Router {
       
       let videoUrl: string;
       try {
-        // 1. Start the video generation
-        console.log("Starting video generation...");
-        const initialResponse = await genAI.models.generateVideos({
-          model: "veo-2.0-generate-001",
+        // Build raw request for Gemini REST API with custom safety settings
+        const apiKey = process.env.GEMINI_API_KEY;
+        const generationUrl = `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:generateVideos?key=${apiKey}`;
+        
+        console.log("Starting video generation via REST API...");
+        const requestBody = {
           prompt: enhancedPrompt,
           config: {
             aspectRatio: veoAspectRatio,
             numberOfVideos: 1,
             durationSeconds: videoDuration,
             personGeneration: "dont_allow",
-            safetySettings: [
-              { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-              { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
-              { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_ONLY_HIGH" }
-            ]
           },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" },
+            { category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_ONLY_HIGH" }
+          ]
+        };
+
+        const initialFetchResponse = await fetch(generationUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
         });
 
+        if (!initialFetchResponse.ok) {
+          const errorData = await initialFetchResponse.json();
+          console.error("Initial request failed:", errorData);
+          throw new Error(`Failed to start video generation: ${errorData.error?.message || initialFetchResponse.statusText}`);
+        }
+
+        const initialResponse = await initialFetchResponse.json();
+        
         // 2. Get the Operation Name (The ID) safely
         const operationName = (initialResponse as any).name;
         console.log("Video started. Operation ID:", operationName);
@@ -158,7 +174,6 @@ export function createGeneratorRouter(): Router {
         // 3. Manual Polling Loop using REST API (check status every 5 seconds for up to 5 minutes)
         // The SDK doesn't have genAI.operations, so we poll directly via REST API
         let completedVideoUri: string | null = null;
-        const apiKey = process.env.GEMINI_API_KEY;
 
         for (let i = 0; i < 60; i++) {
           // Wait 5 seconds
