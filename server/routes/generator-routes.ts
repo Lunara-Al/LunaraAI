@@ -128,14 +128,18 @@ export function createGeneratorRouter(): Router {
       try {
         // Build raw request for Gemini REST API with custom safety settings
         const apiKey = process.env.GEMINI_API_KEY;
-        const generationUrl = `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:generateVideos?key=${apiKey}`;
+        const generationUrl = `https://generativelanguage.googleapis.com/v1beta/models/veo-2.0-generate-001:generateVideos`;
         
         console.log("Starting video generation via REST API...");
         const requestBody = {
-          prompt: enhancedPrompt,
-          config: {
+          instances: [
+            {
+              prompt: enhancedPrompt,
+            }
+          ],
+          parameters: {
             aspectRatio: veoAspectRatio,
-            numberOfVideos: 1,
+            sampleCount: 1,
             durationSeconds: videoDuration,
             personGeneration: "dont_allow",
           },
@@ -150,7 +154,10 @@ export function createGeneratorRouter(): Router {
 
         const initialFetchResponse = await fetch(generationUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey || ''
+          },
           body: JSON.stringify(requestBody)
         });
 
