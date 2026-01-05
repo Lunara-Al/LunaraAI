@@ -89,7 +89,6 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
         aspectRatio: job.aspectRatio,
         sampleCount: 1,
         durationSeconds: job.length,
-        personGeneration: "dont_allow",
       }
     };
 
