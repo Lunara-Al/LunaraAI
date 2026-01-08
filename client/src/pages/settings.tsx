@@ -403,7 +403,7 @@ export default function Settings() {
                         >
                           <Film className="w-3 h-3 mr-1.5" />
                           {length}s
-                          {length === 12 && <Zap className="w-3 h-3 ml-1 text-amber-400" />}
+                          {length === 8 && <Zap className="w-3 h-3 ml-1 text-amber-400" />}
                         </Button>
                       ))}
                     </div>
