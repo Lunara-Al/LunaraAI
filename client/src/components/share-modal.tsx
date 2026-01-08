@@ -495,7 +495,8 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   });
 
   const isPro = user?.membershipTier === "pro" || user?.membershipTier === "premium";
-  const shouldShowWatermark = !isPro || (settings?.showWatermark === 1);
+  // Default to showing watermark; only hide when settings explicitly set showWatermark to 0
+  const shouldShowWatermark = !isPro || settings?.showWatermark !== 0;
 
   const { data: socialAccounts, refetch: refetchAccounts } = useQuery<{ accounts: SocialAccount[] }>({
     queryKey: ["/api/social/accounts"],

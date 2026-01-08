@@ -39,7 +39,8 @@ export default function Gallery() {
   });
   
   const isPremiumUser = user?.membershipTier === "pro" || user?.membershipTier === "premium";
-  const shouldShowWatermark = !isPremiumUser || (settings?.showWatermark === 1);
+  // Default to showing watermark; only hide when settings explicitly set showWatermark to 0
+  const shouldShowWatermark = !isPremiumUser || settings?.showWatermark !== 0;
 
   useEffect(() => {
     if (settings?.galleryView) {
