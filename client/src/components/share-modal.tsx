@@ -748,20 +748,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
       const response = await fetch(video.videoUrl);
       if (!response.ok) throw new Error("Failed to fetch video");
       
-      const reader = response.body?.getReader();
-      const chunks = [];
-      
-      if (reader) {
-        while(true) {
-          const {done, value} = await reader.read();
-          if (done) break;
-          chunks.push(value);
-        }
-      }
-
-      const blob = new Blob(chunks, { type: 'video/mp4' });
-
-      // Desktop & Fallback: Traditional Download
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = 'none';
@@ -772,15 +759,14 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
       document.body.appendChild(a);
       a.click();
       
-      // Cleanup
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-      }, 100);
+      }, 2000);
       
       toast({
-        title: "Download complete",
-        description: `Saved as ${filename}`,
+        title: "Download started",
+        description: "Your cosmic video is being saved to your device.",
       });
     } catch (error) {
       console.error("Download failed:", error);

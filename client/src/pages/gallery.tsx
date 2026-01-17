@@ -119,47 +119,33 @@ export default function Gallery() {
     
     setDownloadingId(id);
     try {
+      // Use direct fetch with blob to ensure we have the file data
       const response = await fetch(videoUrl);
       if (!response.ok) throw new Error("Failed to fetch video");
       
-      const reader = response.body?.getReader();
-      const contentLength = +(response.headers.get("Content-Length") ?? 0);
-      
-      let receivedLength = 0;
-      const chunks = [];
-      
-      if (reader) {
-        while(true) {
-          const {done, value} = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          receivedLength += value.length;
-        }
-      }
-
-      const blob = new Blob(chunks, { type: 'video/mp4' });
-
-      // Desktop & Fallback: Traditional Download
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.style.display = 'none';
       a.href = url;
-      // Sanitize prompt for filename and add timestamp for uniqueness
+      
+      // Sanitize prompt for filename
       const safePrompt = prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase();
       const filename = `lunara-${safePrompt}-${Date.now()}.mp4`;
       a.download = filename;
+      
       document.body.appendChild(a);
       a.click();
       
-      // Cleanup
+      // For mobile devices, sometimes a small delay helps before cleanup
       setTimeout(() => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-      }, 100);
+      }, 2000);
       
       toast({
-        title: "Download complete",
-        description: `Saved as ${filename}`,
+        title: "Download started",
+        description: "Your cosmic video is being saved to your device.",
       });
     } catch (error) {
       console.error("Download failed:", error);

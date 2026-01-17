@@ -393,6 +393,43 @@ export default function Home() {
   };
 
 
+  const handleDownload = async (videoUrl: string, prompt: string) => {
+    try {
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error("Failed to fetch video");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = 'none';
+      a.href = url;
+      
+      const safePrompt = prompt.slice(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+      const filename = `lunara-${safePrompt}-${Date.now()}.mp4`;
+      a.download = filename;
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 2000);
+      
+      toast({
+        title: "Download started",
+        description: "Your cosmic video is being saved to your device.",
+      });
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Download Error",
+        description: "Failed to download video. Please try again.",
+      });
+    }
+  };
+
   const isVideo = (url: string) => {
     const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
     return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
