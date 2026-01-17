@@ -704,6 +704,8 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     }
   }, [isOpen]);
 
+  const [showSelectableLink, setShowSelectableLink] = useState(false);
+
   const handleCopyLink = async () => {
     if (!shareData?.shareUrl) return;
     
@@ -743,9 +745,10 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
         description: "Share link copied to clipboard!",
       });
     } else {
+      setShowSelectableLink(true);
       toast({
-        title: "Copy the link",
-        description: shareData.shareUrl,
+        title: "Select and copy the link below",
+        description: "Tap the link field to select and copy manually.",
       });
     }
   };
@@ -858,6 +861,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     onClose();
     setShareData(null);
     setCopied(false);
+    setShowSelectableLink(false);
     setUploadStates({
       tiktok: { platform: "tiktok", status: "idle", caption: "", hashtags: [] },
       instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
@@ -981,6 +985,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     <Input
                       value={shareData.shareUrl}
                       readOnly
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
                       className="flex-1 text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                       data-testid="input-share-url"
                     />
@@ -1004,6 +1009,11 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                       )}
                     </Button>
                   </div>
+                  {showSelectableLink && (
+                    <p className="text-xs text-muted-foreground">
+                      Tap the link above to select it, then copy manually.
+                    </p>
+                  )}
                 </div>
               </div>
 
