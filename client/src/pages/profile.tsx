@@ -155,7 +155,7 @@ export default function Profile() {
   const [imagePreviewForCropper, setImagePreviewForCropper] = useState<string | null>(null);
 
   const [deletePasswordVerification, setDeletePasswordVerification] = useState<
-    "verifying" | "correct" | "incorrect" | null
+    "checking" | "valid" | "failed" | null
   >(null);
   const [showDeletePassword, setShowDeletePassword] = useState(false);
 
@@ -246,13 +246,13 @@ export default function Profile() {
     },
     onSuccess: (data: { isCorrect?: boolean }) => {
       if (data?.isCorrect) {
-        setDeletePasswordVerification("correct");
+        setDeletePasswordVerification("valid");
       } else {
-        setDeletePasswordVerification("incorrect");
+        setDeletePasswordVerification("failed");
       }
     },
     onError: () => {
-      setDeletePasswordVerification("incorrect");
+      setDeletePasswordVerification("failed");
     },
   });
 
@@ -268,7 +268,7 @@ export default function Profile() {
       return;
     }
 
-    setDeletePasswordVerification("verifying");
+    setDeletePasswordVerification("checking");
 
     verifyPasswordTimeoutRef.current = setTimeout(() => {
       verifyPasswordMutation.mutate(value);
@@ -283,7 +283,7 @@ export default function Profile() {
     };
   }, []);
 
-  const isPasswordCorrect = deletePasswordVerification === "correct";
+  const isPasswordVerified = deletePasswordVerification === "valid";
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -371,7 +371,7 @@ export default function Profile() {
   const handleDeleteAccount = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isPasswordCorrect) {
+    if (!isPasswordVerified) {
       toast({
         title: "Error",
         description: "Please enter the correct password to delete your account.",
@@ -1183,13 +1183,13 @@ export default function Profile() {
                   placeholder="Enter your password"
                   disabled={deleteAccountMutation.isPending}
                   aria-label="Password for account deletion"
-                  aria-invalid={deletePasswordVerification === "incorrect"}
+                  aria-invalid={deletePasswordVerification === "failed"}
                   data-testid="input-delete-password"
                   autoFocus
                   className={`pl-11 pr-10 transition-colors rounded-lg border-slate-200/60 dark:border-slate-700/40 ${
-                    deletePasswordVerification === "incorrect"
+                    deletePasswordVerification === "failed"
                       ? "border-red-500 focus:border-red-500"
-                      : deletePasswordVerification === "correct"
+                      : deletePasswordVerification === "valid"
                       ? "border-green-500 focus:border-green-500"
                       : ""
                   }`}
@@ -1210,32 +1210,32 @@ export default function Profile() {
                   )}
                 </button>
 
-                {deletePasswordVerification === "verifying" && (
+                {deletePasswordVerification === "checking" && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
                 )}
-                {deletePasswordVerification === "incorrect" && (
+                {deletePasswordVerification === "failed" && (
                   <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500 flex-shrink-0 pointer-events-none" />
                 )}
-                {deletePasswordVerification === "correct" && (
+                {deletePasswordVerification === "valid" && (
                   <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500 flex-shrink-0 pointer-events-none" />
                 )}
               </div>
 
-              {deletePasswordVerification === "verifying" && (
+              {deletePasswordVerification === "checking" && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5" aria-live="polite">
                   <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
                   Verifying password...
                 </p>
               )}
 
-              {deletePasswordVerification === "incorrect" && (
+              {deletePasswordVerification === "failed" && (
                 <p className="text-xs text-red-600 dark:text-red-500 flex items-center gap-1.5" role="alert">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  Incorrect password. Try again.
+                  Password did not match. Try again.
                 </p>
               )}
 
-              {deletePasswordVerification === "correct" && (
+              {deletePasswordVerification === "valid" && (
                 <p className="text-xs text-green-600 dark:text-green-500 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   Password verified. Ready to delete.
@@ -1254,7 +1254,7 @@ export default function Profile() {
               </AlertDialogCancel>
               <Button
                 type="submit"
-                disabled={!isPasswordCorrect || deleteAccountMutation.isPending}
+                disabled={!isPasswordVerified || deleteAccountMutation.isPending}
                 className="bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover-elevate active-elevate-2"
                 data-testid="button-confirm-delete"
               >
@@ -1263,7 +1263,7 @@ export default function Profile() {
                     <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
                     Deleting Account...
                   </>
-                ) : !isPasswordCorrect ? (
+                ) : !isPasswordVerified ? (
                   <>
                     <Lock className="w-5 h-5 mr-2 flex-shrink-0" />
                     Enter Correct Password
