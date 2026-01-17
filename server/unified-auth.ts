@@ -162,10 +162,20 @@ export async function setupUnifiedAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureOidcStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    
+    // Support identity_provider query param for direct Google/GitHub etc auth
+    const identityProvider = req.query.identity_provider as string | undefined;
+    const authOptions: any = {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    };
+    
+    // Pass identity_provider to Replit OIDC to skip provider selection
+    if (identityProvider) {
+      authOptions.identity_provider = identityProvider;
+    }
+    
+    passport.authenticate(`replitauth:${req.hostname}`, authOptions)(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
