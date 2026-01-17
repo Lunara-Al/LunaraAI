@@ -16,39 +16,60 @@ export function VideoWatermark({
   if (!showWatermark) return null;
 
   const positionClasses = {
-    "bottom-right": "bottom-3 right-3",
-    "bottom-left": "bottom-3 left-3",
-    "top-right": "top-3 right-3",
-    "top-left": "top-3 left-3",
+    "bottom-right": "bottom-4 right-4",
+    "bottom-left": "bottom-4 left-4",
+    "top-right": "top-4 right-4",
+    "top-left": "top-4 left-4",
   };
 
   const sizeClasses = {
-    sm: "text-xs gap-1",
-    md: "text-sm gap-1.5",
-    lg: "text-base gap-2",
+    sm: "text-[10px] gap-1 px-2 py-0.5",
+    md: "text-xs gap-1.25 px-2.5 py-1",
+    lg: "text-sm gap-2 px-3 py-1.5",
   };
 
   const logoSizes = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
-    lg: "w-6 h-6",
+    sm: "w-3 h-3",
+    md: "w-3.5 h-3.5",
+    lg: "w-4.5 h-4.5",
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.3, duration: 0.4 }}
-      className={`absolute ${positionClasses[position]} z-20 pointer-events-none`}
-      style={{ opacity }}
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={`absolute ${positionClasses[position]} z-30 pointer-events-none`}
       data-testid="video-watermark"
     >
-      <div className={`flex items-center ${sizeClasses[size]} px-2 py-1 rounded-lg bg-black/30 backdrop-blur-sm border border-white/10`}>
-        <LunaraMiniLogo className={logoSizes[size]} />
-        <span className="font-semibold text-white/90 drop-shadow-md tracking-wide">
+      <motion.div 
+        animate={{ 
+          boxShadow: [
+            "0 0 0px rgba(168, 85, 247, 0)",
+            "0 0 15px rgba(168, 85, 247, 0.4)",
+            "0 0 0px rgba(168, 85, 247, 0)"
+          ],
+          borderColor: [
+            "rgba(255, 255, 255, 0.1)",
+            "rgba(168, 85, 247, 0.4)",
+            "rgba(255, 255, 255, 0.1)"
+          ]
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        className={`flex items-center ${sizeClasses[size]} rounded-full bg-black/40 backdrop-blur-md border shadow-2xl overflow-hidden relative`}
+      >
+        {/* Shimmering Cosmic Beam */}
+        <motion.div 
+          animate={{ x: ["-100%", "200%"] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent w-1/2 skew-x-12"
+        />
+        
+        <LunaraMiniLogo className={`${logoSizes[size]} relative z-10 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]`} />
+        <span className="font-bold text-white/90 tracking-[0.1em] relative z-10 uppercase drop-shadow-md">
           Lunara
         </span>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
