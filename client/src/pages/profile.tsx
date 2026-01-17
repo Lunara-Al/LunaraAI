@@ -155,7 +155,7 @@ export default function Profile() {
   const [imagePreviewForCropper, setImagePreviewForCropper] = useState<string | null>(null);
 
   const [deletePasswordVerification, setDeletePasswordVerification] = useState<
-    "checking" | "valid" | "failed" | null
+    "pending" | "valid" | "failed" | null
   >(null);
   const [showDeletePassword, setShowDeletePassword] = useState(false);
 
@@ -268,7 +268,7 @@ export default function Profile() {
       return;
     }
 
-    setDeletePasswordVerification("checking");
+    setDeletePasswordVerification("pending");
 
     verifyPasswordTimeoutRef.current = setTimeout(() => {
       verifyPasswordMutation.mutate(value);
@@ -1210,7 +1210,7 @@ export default function Profile() {
                   )}
                 </button>
 
-                {deletePasswordVerification === "checking" && (
+                {deletePasswordVerification === "pending" && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground animate-spin flex-shrink-0 pointer-events-none" />
                 )}
                 {deletePasswordVerification === "failed" && (
@@ -1221,7 +1221,7 @@ export default function Profile() {
                 )}
               </div>
 
-              {deletePasswordVerification === "checking" && (
+              {deletePasswordVerification === "pending" && (
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5" aria-live="polite">
                   <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
                   Verifying password...
