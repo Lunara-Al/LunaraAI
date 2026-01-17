@@ -905,7 +905,7 @@ export default function Gallery() {
 
                   {/* Watermark Overlay */}
                   <VideoWatermark showWatermark={shouldShowWatermark} size="md" position="bottom-right" />
-                </div>
+                </>
               )}
             </div>
           </div>
