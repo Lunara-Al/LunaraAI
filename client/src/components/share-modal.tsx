@@ -1144,63 +1144,75 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
         `}</style>
       </DialogContent>
 
-      {/* Fullscreen Preview Dialog */}
+      {/* Fullscreen Preview Dialog - Mobile-first polished design */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-none bg-black/95 backdrop-blur-2xl overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <DialogContent className="max-w-[100vw] md:max-w-5xl w-full h-[100dvh] md:h-auto md:max-h-[90vh] p-0 border-none md:border md:border-white/10 md:rounded-3xl bg-black/95 backdrop-blur-2xl overflow-hidden shadow-[0_0_100px_rgba(168,85,247,0.2)] animate-in fade-in zoom-in-95 duration-300">
           <DialogHeader className="sr-only">
             <DialogTitle>Video Preview</DialogTitle>
             <DialogDescription>Full screen cosmic video preview</DialogDescription>
           </DialogHeader>
-          <div className="relative w-full h-full flex items-center justify-center group/preview">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all duration-300 hover:rotate-90"
-              onClick={() => setPreviewOpen(false)}
-              data-testid="button-close-share-preview"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+          
+          <div className="relative flex flex-col h-full">
+            {/* Top Header - Always visible */}
+            <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-3 md:p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+              <Badge variant="outline" className="bg-black/50 backdrop-blur-md border-white/20 text-white px-3 py-1.5 text-xs font-medium shadow-lg">
+                {video.length}s • {video.aspectRatio}
+              </Badge>
+              
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-10 w-10 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-white shadow-lg"
+                onClick={() => setPreviewOpen(false)}
+                data-testid="button-close-share-preview"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
 
-            <div className="relative flex items-center justify-center p-4 md:p-8">
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+            {/* Video Container */}
+            <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden">
+              {/* Cosmic background glow */}
+              <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-primary/15 blur-[100px] rounded-full" />
+                <div className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-secondary/15 blur-[100px] rounded-full" />
               </div>
 
-              <div className="relative">
+              {/* Video/Image with responsive sizing */}
+              <div className="relative z-10 max-w-full max-h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.5)]">
                 {(() => {
                   const isVideo = (url: string) => {
                     const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
                     return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
                   };
-                  const aspectClass = video.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                  const isVertical = video.aspectRatio === "9:16";
                   return isVideo(video.videoUrl) ? (
                     <video
                       src={video.videoUrl}
-                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      className={`${isVertical ? "max-h-[calc(100dvh-140px)] md:max-h-[calc(90vh-120px)] w-auto" : "max-w-full max-h-[calc(100dvh-140px)] md:max-h-[calc(90vh-120px)]"} object-contain bg-black`}
                       controls
                       autoPlay
                       loop
+                      playsInline
                       data-testid="share-preview-video"
                     />
                   ) : (
                     <img
                       src={video.videoUrl}
-                      className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                      className={`${isVertical ? "max-h-[calc(100dvh-140px)] md:max-h-[calc(90vh-120px)] w-auto" : "max-w-full max-h-[calc(100dvh-140px)] md:max-h-[calc(90vh-120px)]"} object-contain`}
                       alt={video.prompt}
                       data-testid="share-preview-image"
                     />
                   );
                 })()}
               </div>
+            </div>
 
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
-                <div className="p-4 rounded-2xl border border-white/10 backdrop-blur-xl bg-black/40">
-                  <p className="text-white text-sm md:text-base font-medium line-clamp-2 text-center drop-shadow-sm">
-                    {video.prompt}
-                  </p>
-                </div>
-              </div>
+            {/* Bottom Info Bar */}
+            <div className="absolute bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+              <p className="text-center text-sm text-white/80 max-w-lg mx-auto line-clamp-2 px-4">
+                {video.prompt}
+              </p>
             </div>
           </div>
         </DialogContent>
