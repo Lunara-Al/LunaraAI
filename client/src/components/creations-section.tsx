@@ -1,3 +1,4 @@
+import { VideoWatermark } from "@/components/video-watermark";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Star } from "lucide-react";
 import type { VideoGeneration } from "@shared/schema";
@@ -107,9 +108,12 @@ export function CreationsSection({ userId }: CreationsSectionProps) {
                 )}
 
                 {/* Star Badge - Always visible */}
-                <div className="absolute top-3 right-3 bg-gradient-to-br from-primary to-secondary text-white rounded-full p-2 shadow-lg backdrop-blur-md">
+                <div className="absolute top-3 right-3 bg-gradient-to-br from-primary to-secondary text-white rounded-full p-2 shadow-lg backdrop-blur-md z-20">
                   <Star className="w-4 h-4 fill-white" />
                 </div>
+
+                {/* Lunara Watermark */}
+                <VideoWatermark showWatermark={true} size="sm" position="bottom-right" />
 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 pointer-events-none">

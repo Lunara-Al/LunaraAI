@@ -25,7 +25,8 @@ import {
   AlertCircle,
   Crown,
   Hash,
-  Plus
+  Plus,
+  Moon
 } from "lucide-react";
 import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import type { VideoGeneration, SocialPlatform } from "@shared/schema";

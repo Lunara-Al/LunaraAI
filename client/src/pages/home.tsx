@@ -10,6 +10,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
+import { VideoWatermark } from "@/components/video-watermark";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoJobInitResponse, type VideoJobStatusResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
@@ -856,17 +857,26 @@ export default function Home() {
             <div className="relative w-full max-w-2xl space-y-4">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/20 to-primary/30 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                <video
-                  src={videoUrl}
-                  controls
-                  autoPlay
-                  loop
-                  className="relative w-full rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black object-contain aspect-video"
-                  style={{
-                    boxShadow: '0 25px 50px -12px rgba(107, 91, 255, 0.25), 0 15px 30px -8px rgba(255, 79, 225, 0.2)'
-                  }}
-                  data-testid="video-player"
-                />
+                <div className="relative overflow-hidden rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black aspect-video">
+                  {isVideo(videoUrl) ? (
+                    <video
+                      src={videoUrl}
+                      controls
+                      autoPlay
+                      loop
+                      className="w-full h-full object-contain"
+                      data-testid="video-player"
+                    />
+                  ) : (
+                    <img
+                      src={videoUrl}
+                      className="w-full h-full object-contain"
+                      alt="Generated cosmic vision"
+                    />
+                  )}
+                  {/* Lunara Watermark - Always show on generated results */}
+                  <VideoWatermark showWatermark={true} size="md" position="bottom-right" />
+                </div>
               </div>
               <div className="flex gap-3">
                 <Button
