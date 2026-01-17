@@ -808,67 +808,106 @@ export default function Gallery() {
         />
       )}
 
-      {/* Fullscreen Preview Modal */}
+      {/* Fullscreen Preview Modal - Enhanced for immersive glass bubble feel */}
       <Dialog open={!!previewVideo} onOpenChange={(open) => !open && setPreviewVideo(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto h-auto p-0 border-none bg-black/95 backdrop-blur-2xl overflow-hidden rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Video Preview</DialogTitle>
-            <DialogDescription>Full screen cosmic video preview</DialogDescription>
-          </DialogHeader>
-          <div className="relative w-full h-full flex items-center justify-center group/preview">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md transition-all duration-300 hover:rotate-90"
-              onClick={() => setPreviewVideo(null)}
-              data-testid="button-close-preview"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none focus-visible:outline-none">
+          <DialogTitle className="sr-only">Video Preview</DialogTitle>
+          <DialogDescription className="sr-only">Fullscreen preview of your cosmic video</DialogDescription>
+          
+          <div className="relative group/preview flex items-center justify-center min-h-[60vh] md:min-h-[80vh]">
+            {/* Immersive Cosmic Background Glow */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-3xl">
+              <div className="absolute top-1/4 left-1/4 w-full h-full bg-primary/20 blur-[120px] animate-pulse-glow" />
+              <div className="absolute bottom-1/4 right-1/4 w-full h-full bg-secondary/20 blur-[120px] animate-pulse-glow" style={{ animationDelay: '1s' }} />
+            </div>
 
-            {previewVideo && (
-              <div className="relative flex items-center justify-center p-4 md:p-8">
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-                </div>
-
-                <div className="relative">
+            {/* Video Container with Glass Effect */}
+            <div className="relative z-10 w-full rounded-3xl overflow-hidden border border-white/20 shadow-[0_0_80px_rgba(0,0,0,0.5)] bg-black/40 backdrop-blur-xl animate-in zoom-in-95 duration-500 group-hover/preview:border-primary/40 transition-all">
+              {previewVideo && (
+                <>
                   {(() => {
                     const isVideo = (url: string) => {
                       const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
                       return videoExtensions.some(ext => url.toLowerCase().includes(ext)) || url.startsWith('blob:');
                     };
-                    const aspectClass = previewVideo.aspectRatio === "9:16" ? "max-h-[80vh] w-auto" : "max-w-[90vw] h-auto";
+                    const aspectClass = previewVideo.aspectRatio === "9:16" ? "max-h-[85vh] w-auto mx-auto" : "w-full h-auto";
                     return isVideo(previewVideo.videoUrl) ? (
                       <video
                         src={previewVideo.videoUrl}
-                        className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
                         controls
                         autoPlay
                         loop
-                        data-testid="preview-video"
+                        className={`${aspectClass} object-contain`}
+                        data-testid="preview-video-player"
                       />
                     ) : (
                       <img
                         src={previewVideo.videoUrl}
-                        className={`${aspectClass} rounded-2xl shadow-2xl object-contain animate-in zoom-in-95 duration-500`}
+                        className={`${aspectClass} object-contain`}
                         alt={previewVideo.prompt}
-                        data-testid="preview-image"
+                        data-testid="preview-image-display"
                       />
                     );
                   })()}
+                  
+                  {/* Floating Action Bar - Bottom Center */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 p-2 rounded-full bg-black/60 backdrop-blur-2xl border border-white/20 shadow-2xl opacity-0 group-hover/preview:opacity-100 transition-all duration-300 translate-y-4 group-hover/preview:translate-y-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10 rounded-full text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all"
+                      onClick={() => handleDownload(previewVideo.id, previewVideo.videoUrl, previewVideo.prompt)}
+                      data-testid="preview-download-button"
+                    >
+                      <Download className="w-5 h-5" />
+                    </Button>
+                    <div className="w-px h-6 bg-white/10" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10 rounded-full text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all"
+                      onClick={() => setShareModalVideo(previewVideo)}
+                      data-testid="preview-share-button"
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </Button>
+                    <div className="w-px h-6 bg-white/10" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10 rounded-full text-white hover:bg-white/20 hover:scale-110 active:scale-95 transition-all"
+                      onClick={() => {
+                        toggleCreationMutation.mutate({ id: previewVideo.id, display: !previewVideo.displayOnProfile });
+                      }}
+                      data-testid="preview-star-button"
+                    >
+                      <Star className={`w-5 h-5 ${previewVideo.displayOnProfile ? "fill-primary text-primary" : ""}`} />
+                    </Button>
+                  </div>
+
+                  {/* Top Right Close Button */}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all hover:rotate-90"
+                    onClick={() => setPreviewVideo(null)}
+                    data-testid="preview-close-button"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+
+                  {/* Info Badge - Top Left */}
+                  <div className="absolute top-4 left-4 z-20 hidden md:flex flex-col gap-2">
+                    <Badge variant="outline" className="bg-black/40 backdrop-blur-md border-white/10 text-white px-3 py-1 text-xs font-medium">
+                      {previewVideo.length}s • {previewVideo.aspectRatio}
+                    </Badge>
+                  </div>
+
+                  {/* Watermark Overlay */}
                   <VideoWatermark showWatermark={shouldShowWatermark} size="md" position="bottom-right" />
                 </div>
-
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
-                  <div className="glass-card p-4 rounded-2xl border-white/10 backdrop-blur-xl bg-black/40">
-                    <p className="text-white text-sm md:text-base font-medium line-clamp-2 text-center drop-shadow-sm">
-                      {previewVideo.prompt}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
