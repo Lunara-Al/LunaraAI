@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { VideoWatermark } from "@/components/video-watermark";
 
 type ShareData = {
   video: {
@@ -446,7 +445,6 @@ export default function SharePage() {
               })()}
               
               {/* Lunara Watermark - always visible on public shares */}
-              <VideoWatermark showWatermark={true} size="sm" position="bottom-right" />
               
               {/* Fullscreen button overlay */}
               <Button
@@ -740,7 +738,6 @@ export default function SharePage() {
                     />
                   );
                 })()}
-                <VideoWatermark showWatermark={true} size="md" position="bottom-right" />
               </div>
 
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">

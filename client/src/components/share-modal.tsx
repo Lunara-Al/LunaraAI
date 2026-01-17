@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { VideoWatermark } from "@/components/video-watermark";
 import type { UserSettings } from "@shared/schema";
 import { 
   Share2, 
@@ -920,7 +919,6 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                   })()}
                   
                   {/* Lunara Watermark */}
-                  <VideoWatermark showWatermark={shouldShowWatermark} size="sm" position="bottom-right" />
                   
                   {/* Click to preview overlay */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/30">
@@ -1194,7 +1192,6 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
                     />
                   );
                 })()}
-                <VideoWatermark showWatermark={shouldShowWatermark} size="md" position="bottom-right" />
               </div>
 
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">

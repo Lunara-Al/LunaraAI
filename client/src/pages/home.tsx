@@ -10,7 +10,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
-import { VideoWatermark } from "@/components/video-watermark";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoJobInitResponse, type VideoJobStatusResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
@@ -875,7 +874,6 @@ export default function Home() {
                     />
                   )}
                   {/* Lunara Watermark - Always show on generated results */}
-                  <VideoWatermark showWatermark={true} size="md" position="bottom-right" />
                 </div>
               </div>
               <div className="flex gap-3">
