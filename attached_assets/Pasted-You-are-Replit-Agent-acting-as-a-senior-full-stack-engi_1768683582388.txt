@@ -1,0 +1,81 @@
+You are Replit Agent acting as a senior full-stack engineer + release manager. Your job is to make this app fully publishable and production-ready. Be ruthless: find every bug, broken flow, UI inconsistency, missing edge case, and deployment issue. Then fix them with minimal, high-quality changes.
+
+NON-NEGOTIABLE GOAL
+- “Publishable” means: builds cleanly, runs without console errors, core flows work end-to-end, UI is consistent, and the app is stable under normal usage and common edge cases.
+- Do not change product behavior unless it’s clearly a bug or makes the app fail/unsafe.
+
+WORKFLOW (follow in order)
+1) Repo reconnaissance
+   - Read project structure, package scripts, env requirements, and entrypoints.
+   - Identify framework (Next/React/Vite/etc), backend (Express/Fastify/etc), database, auth, storage, and any external APIs.
+
+2) Baseline run + error capture
+   - Install deps, run dev, then run build (production build).
+   - Capture all TypeScript errors, lint errors, test failures, runtime exceptions, missing env vars, and broken imports.
+   - Output a concise “Fail List” grouped by: Build blockers, Runtime blockers, UX blockers, Deployment blockers.
+
+3) Fix in a “smallest safe change” order
+   - First: Build blockers (TypeScript, bundler, missing exports, circular deps).
+   - Second: Runtime blockers (API errors, null/undefined, state bugs, auth issues).
+   - Third: UX blockers (layout breaks, inconsistent components, broken navigation, missing loading/error states).
+   - Fourth: Deployment blockers (env handling, prod config, start script, static assets, server routing).
+
+4) Production hardening checklist
+   - Error boundaries / global error handling
+   - Loading states for all async calls
+   - Empty states for lists/galleries
+   - Defensive checks for undefined data
+   - Toast/inline error messages (no silent fails)
+   - Remove dead code + obvious duplicated logic
+   - Standardize formatting + component patterns
+
+5) Performance and reliability (only meaningful improvements)
+   - Avoid unnecessary re-renders, memo where it matters
+   - Fix expensive effects / runaway intervals
+   - Ensure image/video loading isn’t blocking UI
+   - Add caching where appropriate (lightweight, not over-engineered)
+
+6) Security and data sanity
+   - Validate all API inputs (server-side)
+   - Never trust client data
+   - Ensure secrets are only in env vars
+   - Sanitize user-provided strings in UI where relevant
+
+7) Deployment readiness (Replit publish)
+   - Confirm the correct “run” and “build” commands
+   - Ensure PORT usage is correct
+   - Provide a .env.example with required keys
+   - Confirm production start uses built output, not dev server
+   - Ensure no hardcoded localhost URLs; use env-based base URLs
+
+8) Testing / verification
+   - Add at least minimal sanity tests OR a scripted “smoke test” routine (depending on stack).
+   - Manually verify these flows:
+     a) App loads with no console errors
+     b) Auth (if present) works
+     c) Primary CRUD flows work (create/read/update/delete if applicable)
+     d) Gallery/video display works (load, play, pause, error fallback)
+     e) Share flow works (copy link / share sheet / export) with graceful fallback
+     f) Mobile responsiveness: no overflow, key screens usable
+
+OUTPUT REQUIREMENTS
+- Before making changes: show the Fail List.
+- As you fix: create a “Fix Log” with bullet points (what you changed + why).
+- After: provide a “Release Summary” including:
+  - How to run dev
+  - How to build
+  - How to start production
+  - Required env vars
+  - Remaining known issues (if any) and why they weren’t changed.
+
+RULES
+- Do not rewrite the entire codebase. Refactor only where it pays off.
+- Prefer consistent patterns already used in the repo.
+- If you remove or rename anything, update all references.
+- Keep UI styling consistent (use the existing design system / Tailwind tokens / components).
+- No new dependencies unless absolutely necessary; if you add one, justify it.
+
+NOW BEGIN:
+1) Run the baseline build/test and produce the Fail List.
+2) Fix issues in the priority order above.
+3) End with the Release Summary.

@@ -705,37 +705,70 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
   }, [isOpen]);
 
   const handleCopyLink = async () => {
-    if (shareData?.shareUrl) {
+    if (!shareData?.shareUrl) return;
+    
+    let copied = false;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(shareData.shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        toast({
-          title: "Link Copied",
-          description: "Share link copied to clipboard!",
-        });
+        copied = true;
       } catch (err) {
-        toast({
-          variant: "destructive",
-          title: "Copy Failed",
-          description: "Failed to copy link to clipboard",
-        });
+        console.error("Clipboard API failed:", err);
       }
+    }
+    
+    if (!copied) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = shareData.shareUrl;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        copied = document.execCommand("copy");
+        document.body.removeChild(textArea);
+      } catch (err) {
+        console.error("Fallback copy failed:", err);
+      }
+    }
+    
+    if (copied) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Link Copied",
+        description: "Share link copied to clipboard!",
+      });
+    } else {
+      toast({
+        title: "Copy the link",
+        description: shareData.shareUrl,
+      });
     }
   };
 
   const handleNativeShare = async () => {
-    if (navigator.share && shareData) {
+    if (!shareData) return;
+    
+    if (navigator.share) {
       try {
         await navigator.share({
           title: `Cosmic ASMR: ${video.prompt.substring(0, 50)}`,
           text: video.prompt,
           url: shareData.shareUrl,
         });
-      } catch (err) {
-        console.log("Share cancelled");
+        return;
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("Native share failed:", err);
+        }
       }
     }
+    
+    handleCopyLink();
   };
 
   const [isDownloading, setIsDownloading] = useState(false);

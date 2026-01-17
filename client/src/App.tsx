@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
+import { ErrorBoundary } from "@/components/error-boundary";
 import Landing from "@/pages/landing";
 import Register from "@/pages/register";
 import Login from "@/pages/login";
@@ -57,14 +58,16 @@ function SyncProvider() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <SyncProvider />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <SyncProvider />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
