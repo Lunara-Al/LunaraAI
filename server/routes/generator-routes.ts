@@ -271,27 +271,77 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
 
     const arrayBuffer = await downloadResponse.arrayBuffer();
     const videoBuffer = Buffer.from(arrayBuffer);
+    
+    console.log(`[Job ${jobId}] Downloaded video buffer size: ${videoBuffer.length} bytes`);
 
     const uniqueId = randomBytes(8).toString("hex");
     const fileName = `video_${uniqueId}.mp4`;
-    const publicDir = path.join(process.cwd(), "public", "generated");
+    
+    // Use path.resolve for absolute path to ensure consistency
+    const projectRoot = process.cwd();
+    const publicDir = path.resolve(projectRoot, "public", "generated");
 
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true, mode: 0o755 });
-    }
+    console.log(`[Job ${jobId}] Project root: ${projectRoot}`);
+    console.log(`[Job ${jobId}] Target directory: ${publicDir}`);
 
-    const filePath = path.join(publicDir, fileName);
-    fs.writeFileSync(filePath, videoBuffer);
-
-    if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
+    try {
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true, mode: 0o755 });
+        console.log(`[Job ${jobId}] Created directory: ${publicDir}`);
+      }
+    } catch (mkdirError) {
+      console.error(`[Job ${jobId}] Failed to create directory:`, mkdirError);
       await storage.updateVideoGenerationJob(jobId, {
         status: "failed",
-        errorCode: "SAVE_FAILED",
-        errorMessage: "Video file was not saved correctly.",
+        errorCode: "DIRECTORY_ERROR",
+        errorMessage: "Failed to create output directory.",
         completedAt: new Date()
       });
       return;
     }
+
+    const filePath = path.resolve(publicDir, fileName);
+    console.log(`[Job ${jobId}] Writing video to: ${filePath}`);
+    
+    try {
+      fs.writeFileSync(filePath, videoBuffer);
+      console.log(`[Job ${jobId}] File write completed`);
+    } catch (writeError) {
+      console.error(`[Job ${jobId}] Failed to write file:`, writeError);
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "WRITE_FAILED",
+        errorMessage: `Failed to write video file: ${writeError instanceof Error ? writeError.message : 'Unknown error'}`,
+        completedAt: new Date()
+      });
+      return;
+    }
+
+    // Verify file was written successfully
+    if (!fs.existsSync(filePath)) {
+      console.error(`[Job ${jobId}] File does not exist after write: ${filePath}`);
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "SAVE_FAILED",
+        errorMessage: "Video file was not saved correctly - file does not exist.",
+        completedAt: new Date()
+      });
+      return;
+    }
+    
+    const fileStats = fs.statSync(filePath);
+    if (fileStats.size === 0) {
+      console.error(`[Job ${jobId}] File is empty: ${filePath}`);
+      await storage.updateVideoGenerationJob(jobId, {
+        status: "failed",
+        errorCode: "SAVE_FAILED",
+        errorMessage: "Video file was not saved correctly - file is empty.",
+        completedAt: new Date()
+      });
+      return;
+    }
+    
+    console.log(`[Job ${jobId}] File verified: ${filePath} (${fileStats.size} bytes)`);
 
     const videoUrl = `/generated/${fileName}`;
 

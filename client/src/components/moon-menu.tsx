@@ -65,21 +65,20 @@ export default function MoonMenu() {
               const isActive = location === item.path;
               
               return (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    className={`w-full justify-start gap-4 h-11 transition-all duration-200 font-medium ${
-                      isActive 
-                        ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg hover-elevate" 
-                        : "text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 dark:hover:from-primary/15 dark:hover:to-secondary/15"
-                    }`}
-                    onClick={() => setIsOpen(false)}
-                    data-testid={item.testId}
-                    style={{ animationDelay: `${index * 30}ms` }}
-                  >
-                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-white" : "text-primary/80 dark:text-primary/70"}`} />
-                    <span className="text-base">{item.label}</span>
-                  </Button>
+                <Link 
+                  key={item.path} 
+                  href={item.path}
+                  className={`flex items-center w-full justify-start gap-4 h-11 px-4 rounded-md transition-all duration-200 font-medium ${
+                    isActive 
+                      ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg" 
+                      : "text-slate-700 dark:text-slate-300 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 dark:hover:from-primary/15 dark:hover:to-secondary/15"
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                  data-testid={item.testId}
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-white" : "text-primary/80 dark:text-primary/70"}`} />
+                  <span className="text-base">{item.label}</span>
                 </Link>
               );
             })}

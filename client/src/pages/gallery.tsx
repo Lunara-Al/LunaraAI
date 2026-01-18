@@ -347,15 +347,13 @@ export default function Gallery() {
               {videos?.length || 0} videos • {creations.length} creations
             </p>
           </div>
-          <Link href="/">
-            <Button 
-              size="lg" 
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-primary-foreground whitespace-nowrap font-semibold shadow-md hover:shadow-lg dark:shadow-lg dark:hover:shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] ripple" 
-              data-testid="button-create-new"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Create New
-            </Button>
+          <Link 
+            href="/"
+            className="inline-flex items-center justify-center h-11 px-6 w-full sm:w-auto bg-gradient-to-r from-primary to-secondary text-primary-foreground whitespace-nowrap font-semibold rounded-md shadow-md hover:shadow-lg dark:shadow-lg dark:hover:shadow-xl transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]" 
+            data-testid="button-create-new"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Create New
           </Link>
         </div>
 
@@ -423,11 +421,13 @@ export default function Gallery() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" data-testid="button-start-creating">
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Start Creating
-                </Button>
+              <Link 
+                href="/"
+                className="inline-flex items-center justify-center h-11 px-6 bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold rounded-md shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                data-testid="button-start-creating"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Start Creating
               </Link>
             </div>
           </div>

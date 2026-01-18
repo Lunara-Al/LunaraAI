@@ -350,14 +350,13 @@ export default function SharePage() {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">Video Unavailable</h1>
             <p className="text-muted-foreground mb-6">{error}</p>
-            <Link href="/">
-              <Button 
-                className="w-full bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500"
-                style={{ backgroundSize: "200% 100%" }}
-              >
-                <Moon className="w-4 h-4 mr-2" />
-                Go to Lunara AI
-              </Button>
+            <Link 
+              href="/"
+              className="flex items-center justify-center w-full h-10 px-4 text-sm font-medium text-primary-foreground rounded-md bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500"
+              style={{ backgroundSize: "200% 100%" }}
+            >
+              <Moon className="w-4 h-4 mr-2" />
+              Go to Lunara AI
             </Link>
           </div>
         </Card>
@@ -669,20 +668,18 @@ export default function SharePage() {
           <FloatingStar className="left-1/4 top-0" delay={1} size={2} />
           <FloatingStar className="right-1/4 bottom-0" delay={1.5} size={2} />
           
-          <Link href="/">
-            <Button 
-              size="lg"
-              className="bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 shadow-xl hover:shadow-primary/30 px-8 py-6 text-lg font-semibold group"
-              style={{ 
-                backgroundSize: "200% 100%",
-                boxShadow: "0 0 30px rgba(168, 85, 247, 0.3), 0 0 50px rgba(236, 72, 153, 0.2)"
-              }}
-              data-testid="link-create-own"
-            >
-              <Sparkles className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              Create Your Own Cosmic Videos
-              <Moon className="w-5 h-5 ml-2 group-hover:rotate-12 transition-transform duration-300" />
-            </Button>
+          <Link 
+            href="/"
+            className="inline-flex items-center justify-center h-12 px-8 text-lg font-semibold text-primary-foreground rounded-md bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all duration-500 shadow-xl hover:shadow-primary/30 group"
+            style={{ 
+              backgroundSize: "200% 100%",
+              boxShadow: "0 0 30px rgba(168, 85, 247, 0.3), 0 0 50px rgba(236, 72, 153, 0.2)"
+            }}
+            data-testid="link-create-own"
+          >
+            <Sparkles className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+            Create Your Own Cosmic Videos
+            <Moon className="w-5 h-5 ml-2 group-hover:rotate-12 transition-transform duration-300" />
           </Link>
           <p className="text-sm text-muted-foreground mt-4">
             Join thousands creating magical ASMR content

@@ -237,16 +237,13 @@ function PlatformCard({
             Pro
           </Badge>
         </div>
-        <Link href="/membership">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-3 text-xs border-purple-400/30 hover:bg-purple-500/10"
-            data-testid={`button-upgrade-${platform}`}
-          >
-            <Crown className="w-3 h-3 mr-1.5 text-purple-500" />
-            Upgrade to Pro
-          </Button>
+        <Link 
+          href="/membership"
+          className="flex items-center justify-center gap-1.5 w-full mt-3 h-8 px-3 text-xs font-medium rounded-md border border-purple-400/30 hover:bg-purple-500/10 transition-colors"
+          data-testid={`button-upgrade-${platform}`}
+        >
+          <Crown className="w-3 h-3 text-purple-500" />
+          Upgrade to Pro
         </Link>
       </div>
     );

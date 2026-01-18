@@ -1065,11 +1065,12 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <Link href="/membership">
-                <Button variant="ghost" size="sm" className="text-xs font-bold text-primary hover:bg-primary/10 rounded-xl group/btn">
-                  Upgrade Plan
-                  <ChevronRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
+              <Link 
+                href="/membership"
+                className="flex items-center h-8 px-3 text-xs font-bold text-primary hover:bg-primary/10 rounded-xl transition-colors group/btn"
+              >
+                Upgrade Plan
+                <ChevronRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
               </Link>
             </Card>
           </div>
