@@ -395,6 +395,8 @@ export function createGeneratorRouter(): Router {
       if (!userId) return res.status(401).json({ error: "Unauthorized" });
       
       let user = await storage.checkAndResetVideoCount(userId);
+      user = await storage.checkAndAllocateCredits(userId, user.membershipTier as MembershipTier);
+      
       const tierConfig = MEMBERSHIP_TIERS[user.membershipTier as MembershipTier];
       
       if (tierConfig.monthlyVideos !== -1 && user.videosGeneratedThisMonth >= tierConfig.monthlyVideos) {
@@ -414,9 +416,23 @@ export function createGeneratorRouter(): Router {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt, length = 5, aspectRatio = "16:9", style } = validation.data;
+      const { prompt, length = 6, aspectRatio = "16:9", style } = validation.data;
 
-      console.log(`[API Debug] Received request - length: ${length} (type: ${typeof length}), aspectRatio: ${aspectRatio}, style: ${style}`);
+      // Calculate credit cost
+      // Base cost 10, +2 for 8s, +3 for 4K (Premium), +2 for HD (Pro)
+      let creditCost = 10;
+      if (length > 6) creditCost += 2;
+      if (user.membershipTier === "premium") creditCost += 3;
+      else if (user.membershipTier === "pro") creditCost += 2;
+
+      if (user.credits < creditCost) {
+        return res.status(403).json({
+          error: "Insufficient credits",
+          message: `You need ${creditCost} credits to generate this video. You have ${user.credits}.`,
+        });
+      }
+
+      console.log(`[API Debug] Received request - length: ${length} (type: ${typeof length}), aspectRatio: ${aspectRatio}, style: ${style}, cost: ${creditCost}`);
 
       if (length > tierConfig.maxLength) {
         const errorResponse: ErrorResponse = {
@@ -456,7 +472,10 @@ export function createGeneratorRouter(): Router {
         progress: 0
       });
 
-      console.log(`[API] Created generation job ${job.id} for user ${userId}`);
+      // Deduct credits
+      await storage.deductCredits(userId, creditCost);
+
+      console.log(`[API] Created generation job ${job.id} for user ${userId}, deducted ${creditCost} credits`);
 
       setImmediate(() => {
         processVideoGenerationJob(job.id).catch(err => {

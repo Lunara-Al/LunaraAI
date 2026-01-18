@@ -1076,13 +1076,17 @@ export default function Home() {
                 </Avatar>
                 <div>
                   <p className="text-sm font-bold text-foreground dark:text-white">Welcome back, {user.firstName || user.username}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex items-center gap-3 mt-0.5">
                     <Badge className={`px-2 py-0 text-[10px] font-bold tracking-wider uppercase ${
                       user.membershipTier === 'premium' ? 'bg-gradient-to-r from-primary to-secondary' : 
                       user.membershipTier === 'pro' ? 'bg-primary/80' : 'bg-slate-400/50'
                     }`}>
                       {user.membershipTier}
                     </Badge>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                      <Zap className="w-3 h-3 text-primary fill-primary/20" />
+                      <span className="text-xs font-bold text-primary">{user.credits?.toLocaleString() || 0}</span>
+                    </div>
                   </div>
                 </div>
               </div>

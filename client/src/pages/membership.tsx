@@ -359,7 +359,7 @@ export default function Membership() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">25 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">30 monthly credits</span>
                 </li>
               </ul>
 
@@ -367,7 +367,7 @@ export default function Membership() {
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-lg text-primary">25</span>
+                  <span className="font-bold text-lg text-primary">30</span>
                 </div>
               </div>
               
@@ -425,7 +425,7 @@ export default function Membership() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">300 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">1,000 monthly credits</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -437,7 +437,7 @@ export default function Membership() {
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-lg text-primary">300</span>
+                  <span className="font-bold text-lg text-primary">10,000</span>
                 </div>
               </div>
               
@@ -535,7 +535,7 @@ export default function Membership() {
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-lg text-primary">1,000</span>
+                  <span className="font-bold text-lg text-primary">10,000</span>
                 </div>
               </div>
               

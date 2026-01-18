@@ -20,7 +20,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: 3,
     maxLength: 6,
     quality: "basic" as const,
-    monthlyCredits: 25,
+    monthlyCredits: 30, // 3 videos * 10 credits
   },
   pro: {
     name: "Pro",
@@ -28,7 +28,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: 100,
     maxLength: 8,
     quality: "hd" as const,
-    monthlyCredits: 300,
+    monthlyCredits: 1000, // 100 videos * 10 credits
     get stripePriceId() {
       return process.env.STRIPE_PRICE_ID_PRO?.trim() || null;
     },
@@ -39,7 +39,7 @@ export const MEMBERSHIP_TIERS = {
     monthlyVideos: -1,
     maxLength: 8,
     quality: "4k" as const,
-    monthlyCredits: 1000,
+    monthlyCredits: 10000, // Large amount for "unlimited" feel
     get stripePriceId() {
       return process.env.STRIPE_PRICE_ID_PREMIUM?.trim() || null;
     },

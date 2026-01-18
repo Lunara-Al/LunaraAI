@@ -326,6 +326,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async deductCredits(userId: string, amount: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        credits: sql`${users.credits} - ${amount}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
   // User settings operations
   async getUserSettings(userId: string): Promise<UserSettings | undefined> {
     const [settings] = await db.select().from(userSettings).where(eq(userSettings.userId, userId));
