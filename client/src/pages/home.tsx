@@ -1128,12 +1128,11 @@ export default function Home() {
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            setPrompt(example.description);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                           className="h-8 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-white/10 hover:bg-white/20 text-white border border-white/20"
                         >
-                          Remix
+                          Create
                         </Button>
                       </div>
                     </div>
