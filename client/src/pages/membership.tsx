@@ -437,7 +437,7 @@ export default function Membership() {
                 <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">Monthly Credits</div>
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-lg text-primary">10,000</span>
+                  <span className="font-bold text-lg text-primary">1,000</span>
                 </div>
               </div>
               
@@ -511,7 +511,7 @@ export default function Membership() {
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">1,000 monthly credits</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">10,000 monthly credits</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -594,15 +594,15 @@ export default function Membership() {
               <tbody>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Monthly Videos</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">5</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">3</td>
                   <td className="text-center text-slate-900 dark:text-slate-100">100</td>
                   <td className="text-center text-slate-900 dark:text-slate-100">Unlimited</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Max Length</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">4s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">6s</td>
                   <td className="text-center text-slate-900 dark:text-slate-100">8s</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">12s</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">8s</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Quality</td>
@@ -612,9 +612,9 @@ export default function Membership() {
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">Monthly Credits</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">25</td>
-                  <td className="text-center text-slate-900 dark:text-slate-100">300</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">30</td>
                   <td className="text-center text-slate-900 dark:text-slate-100">1,000</td>
+                  <td className="text-center text-slate-900 dark:text-slate-100">10,000</td>
                 </tr>
                 <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="py-3 px-4 text-slate-900 dark:text-slate-100">No Watermark</td>

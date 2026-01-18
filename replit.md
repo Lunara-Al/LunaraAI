@@ -16,6 +16,7 @@ Lunara AI is a web application designed to generate cosmic ASMR videos from text
 - **Video lengths:** 6s and 8s matching Gemini Veo 3.1 API constraints (API only supports 4, 6, or 8 seconds).
 - **Membership tier video lengths:** Basic (free) = 6s, Pro = 8s, Premium = 8s (Veo max).
 - **Membership tier video limits:** Basic (free) = 3 videos/month, Pro = 100 videos/month, Premium = unlimited.
+- **Credit system synced with limits:** Basic = 30 credits (3 videos), Pro = 1,000 credits (approx 100 videos), Premium = 10,000 credits (approx 1,000 videos or unlimited base videos).
 - Videos saved locally to public/generated/ as .mp4 files to prevent URL expiration.
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.
