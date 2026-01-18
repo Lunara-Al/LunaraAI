@@ -79,7 +79,7 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
         mode: "subscription",
         payment_method_types: ["card"],
         line_items: [{ price: tierConfig.stripePriceId, quantity: 1 }],
-        success_url: `${req.protocol}://${req.get("host")}/membership?success=true`,
+        success_url: `${req.protocol}://${req.get("host")}/membership?success=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get("host")}/membership?canceled=true`,
         metadata: { userId, tier },
       });

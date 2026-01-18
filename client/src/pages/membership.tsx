@@ -9,6 +9,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type SubscriptionStatus = {
@@ -25,15 +26,73 @@ type SubscriptionStatus = {
 export default function Membership() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
   const [downgradeDialogOpen, setDowngradeDialogOpen] = useState(false);
   const [targetDowngradeTier, setTargetDowngradeTier] = useState<string | null>(null);
   const [showContentCalendarDetails, setShowContentCalendarDetails] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   // Fetch subscription status
   const { data: subscription, isLoading: subLoading, refetch } = useQuery<SubscriptionStatus>({
     queryKey: ["/api/subscription/status"],
     enabled: isAuthenticated,
   });
+
+  // Handle Stripe checkout success callback
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const success = params.get("success");
+    const canceled = params.get("canceled");
+    const sessionId = params.get("session_id");
+
+    if (success === "true") {
+      setPaymentProcessing(true);
+      
+      const verifyPayment = async () => {
+        try {
+          if (sessionId) {
+            const response = await apiRequest("GET", `/api/stripe/verify-session?session_id=${sessionId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+              toast({
+                title: "Payment Successful!",
+                description: `You've been upgraded to ${data.tier}. Enjoy your new features!`,
+              });
+              queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+              queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+            }
+          } else {
+            toast({
+              title: "Payment Successful!",
+              description: "Your subscription has been updated. Please refresh if your plan doesn't update.",
+            });
+            refetch();
+          }
+        } catch (error) {
+          console.error("Failed to verify payment:", error);
+          toast({
+            title: "Payment Received",
+            description: "Your payment was received. Your plan will update shortly.",
+          });
+          refetch();
+        } finally {
+          setPaymentProcessing(false);
+          setLocation("/membership", { replace: true });
+        }
+      };
+
+      verifyPayment();
+    } else if (canceled === "true") {
+      toast({
+        title: "Payment Canceled",
+        description: "Your subscription upgrade was canceled.",
+        variant: "destructive",
+      });
+      setLocation("/membership", { replace: true });
+    }
+  }, [searchString, toast, setLocation, refetch]);
 
   // Handle unauthorized errors
   useEffect(() => {
