@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
@@ -99,6 +99,14 @@ export default function Home() {
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  const [generationTimer, setGenerationTimer] = useState<number>(0);
+  const [generationProgress, setGenerationProgress] = useState<number>(0);
+  const [generationStatus, setGenerationStatus] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Auto-save settings to localStorage
   useEffect(() => {
     localStorage.setItem("lunara_prompt", prompt);
@@ -119,6 +127,83 @@ export default function Home() {
     }
   }, [imageBase64, imagePreview]);
 
+  const { data: user } = useQuery<FrontendUser>({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me");
+      if (!response.ok) throw new Error("Not authenticated");
+      return response.json();
+    },
+  });
+
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+  }, []);
+
+  const getStatusMessage = useCallback((status: string, progress: number): string => {
+    switch (status) {
+      case "pending": return "Initializing cosmic generator...";
+      case "processing": return "Sending prompt to AI...";
+      case "polling": return `Generating video... ${progress}%`;
+      case "downloading": return "Downloading your cosmic creation...";
+      case "completed": return "Video complete!";
+      case "failed": return "Generation failed";
+      default: return "Processing...";
+    }
+  }, []);
+
+  const pollJobStatus = useCallback(async (jobId: number) => {
+    try {
+      const response = await fetch(`/api/generate/status/${jobId}`);
+      if (!response.ok) {
+        console.error("Status check failed:", response.status);
+        return;
+      }
+      const status: VideoJobStatusResponse = await response.json();
+      
+      setGenerationProgress(status.progress);
+      setGenerationStatus(getStatusMessage(status.status, status.progress));
+
+      if (status.status === "completed" && status.videoUrl) {
+        stopPolling();
+        setIsGenerating(false);
+        setVideoUrl(status.videoUrl);
+        setCurrentJobId(null);
+        toast({
+          title: "Success!",
+          description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
+        });
+      } else if (status.status === "failed") {
+        stopPolling();
+        setIsGenerating(false);
+        setCurrentJobId(null);
+        
+        // Show specific error from job if available
+        const errorMsg = status.errorMessage || "Unable to generate video. Please try again.";
+        console.error("Generation failed:", errorMsg, status.errorCode);
+        
+        toast({
+          variant: "destructive",
+          title: "Generation Failed",
+          description: errorMsg,
+        });
+        
+        // Update mutation state manually since it's used for error display
+        // We'll use setGenerationStatus to show error in UI
+        setGenerationStatus(`Error: ${errorMsg}`);
+      }
+    } catch (error) {
+      console.error("Polling error:", error);
+    }
+  }, [generationTimer, getStatusMessage, stopPolling, toast]);
+
   // Persistence for video generation status
   useEffect(() => {
     const savedJobId = localStorage.getItem("lunara_currentJobId");
@@ -135,7 +220,7 @@ export default function Home() {
       
       pollJobStatus(jobId);
     }
-  }, []);
+  }, [pollJobStatus, isGenerating, videoUrl]);
 
   useEffect(() => {
     if (currentJobId) {
@@ -144,16 +229,6 @@ export default function Home() {
       localStorage.removeItem("lunara_currentJobId");
     }
   }, [currentJobId]);
-  
-  // Fetch user data to check tier
-  const { data: user } = useQuery<FrontendUser>({
-    queryKey: ["/api/auth/me"],
-    queryFn: async () => {
-      const response = await fetch("/api/auth/me");
-      if (!response.ok) throw new Error("Not authenticated");
-      return response.json();
-    },
-  });
 
   // Handle search with debounce
   useEffect(() => {
@@ -208,82 +283,6 @@ export default function Home() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const [generationTimer, setGenerationTimer] = useState<number>(0);
-  const [generationProgress, setGenerationProgress] = useState<number>(0);
-  const [generationStatus, setGenerationStatus] = useState<string>("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
-  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const stopPolling = () => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-  };
-
-  const getStatusMessage = (status: string, progress: number): string => {
-    switch (status) {
-      case "pending": return "Initializing cosmic generator...";
-      case "processing": return "Sending prompt to AI...";
-      case "polling": return `Generating video... ${progress}%`;
-      case "downloading": return "Downloading your cosmic creation...";
-      case "completed": return "Video complete!";
-      case "failed": return "Generation failed";
-      default: return "Processing...";
-    }
-  };
-
-  const pollJobStatus = async (jobId: number) => {
-    try {
-      const response = await fetch(`/api/generate/status/${jobId}`);
-      if (!response.ok) {
-        console.error("Status check failed:", response.status);
-        return;
-      }
-      const status: VideoJobStatusResponse = await response.json();
-      
-      setGenerationProgress(status.progress);
-      setGenerationStatus(getStatusMessage(status.status, status.progress));
-
-      if (status.status === "completed" && status.videoUrl) {
-        stopPolling();
-        setIsGenerating(false);
-        setVideoUrl(status.videoUrl);
-        setCurrentJobId(null);
-        toast({
-          title: "Success!",
-          description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
-        });
-      } else if (status.status === "failed") {
-        stopPolling();
-        setIsGenerating(false);
-        setCurrentJobId(null);
-        
-        // Show specific error from job if available
-        const errorMsg = status.errorMessage || "Unable to generate video. Please try again.";
-        console.error("Generation failed:", errorMsg, status.errorCode);
-        
-        toast({
-          variant: "destructive",
-          title: "Generation Failed",
-          description: errorMsg,
-        });
-        
-        // Update mutation state manually since it's used for error display
-        // We'll use setGenerationStatus to show error in UI
-        setGenerationStatus(`Error: ${errorMsg}`);
-      }
-    } catch (error) {
-      console.error("Polling error:", error);
-    }
-  };
 
   const generateVideoMutation = useMutation<VideoJobInitResponse, any, { prompt: string; length: number; aspectRatio: string; style?: string; imageBase64?: string }>({
     mutationFn: async (data) => {
@@ -618,523 +617,483 @@ export default function Home() {
           {showSearchDropdown && searchTab === "creations" && creationResults.length > 0 && (
             <div className="absolute top-full mt-3 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="max-h-96 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-1">
-                  {creationResults.map((creation) => (
-                    <button
-                      key={creation.id}
-                      onClick={() => {
-                        setSearchQuery("");
-                        setCreationResults([]);
-                        setShowSearchDropdown(false);
-                      }}
-                      className="group relative aspect-square overflow-hidden hover:opacity-80 transition-opacity"
-                      data-testid={`button-creation-result-${creation.id}`}
-                    >
-                      {isVideo(creation.videoUrl) ? (
-                        <video
-                          src={creation.videoUrl}
-                          className="w-full h-full object-cover"
-                          muted
-                        />
-                      ) : (
-                        <img
-                          src={creation.videoUrl}
-                          className="w-full h-full object-cover"
-                          alt={creation.prompt}
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs line-clamp-1 font-semibold">
-                            {creation.prompt}
-                          </p>
-                          <p className="text-white/70 text-[10px]">
-                            {creation.length}s • {creation.aspectRatio}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* No Results Message */}
-          {showSearchDropdown && searchQuery && searchResults.length === 0 && creationResults.length === 0 && (
-            <div className="absolute top-full mt-3 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border border-white/50 dark:border-slate-700/50 rounded-2xl shadow-2xl p-6 text-center text-sm text-slate-600 dark:text-slate-400 animate-in fade-in slide-in-from-top-2 duration-200 space-y-2">
-              <Sparkles className="w-8 h-8 mx-auto text-primary/40" />
-              <p className="font-medium">No {searchTab === "users" ? "users" : "creations"} found</p>
-              <p className="text-xs opacity-70">Try a different search query</p>
-            </div>
-          )}
-        </div>
-        {/* Header Section */}
-        <div className="text-center space-y-3 md:space-y-4">
-          <h1 
-            className="text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-text-gradient drop-shadow-sm"
-            style={{
-              backgroundSize: '200% 200%',
-            }}
-            data-testid="text-title"
-          >
-            Lunara AI
-          </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4 animate-fade-in-up" style={{ animationDelay: '100ms' }} data-testid="text-subtitle">
-            <span className="inline-flex items-center gap-2 flex-wrap justify-center">
-              <span>Write your prompt and use a reference image to guide your cosmic video</span>
-              <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-primary animate-pulse-glow" />
-            </span>
-          </p>
-        </div>
-
-        {/* Generation Form with Glass Card */}
-        <Card className="p-6 md:p-8 glass-card hover-shadow animate-fade-in-scale" style={{ animationDelay: '150ms' }}>
-          <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
-            {/* Image Upload Section */}
-            <div className="space-y-3 relative">
-              <Label className="text-sm font-semibold flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-secondary transition-transform hover:scale-110" />
-                Reference Image
-              </Label>
-              <p className="text-xs text-muted-foreground">Upload an image to blend with your prompt for more consistent visual style</p>
-              
-              {!imagePreview ? (
-                <label className={`flex items-center justify-center w-full p-6 border-2 border-dashed border-primary/30 dark:border-primary/40 rounded-lg bg-primary/5 dark:bg-primary/15 hover:border-primary/50 dark:hover:border-primary/60 hover:bg-primary/10 dark:hover:bg-primary/20 transition-all cursor-pointer group`}>
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <Upload className="w-6 h-6 text-primary/60 dark:text-primary/50 group-hover:text-primary dark:group-hover:text-primary/80 transition-colors" />
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-foreground dark:text-white">Click to upload or drag and drop</p>
-                      <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, GIF, BMP, SVG or TIFF (up to 500MB)</p>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    disabled={generateVideoMutation.isPending || isProcessingImage}
-                    className="hidden"
-                    data-testid="input-image"
-                  />
-                </label>
-              ) : (
-                <div className={`relative rounded-lg overflow-hidden border-2 border-primary/30 dark:border-primary/40 bg-primary/5 dark:bg-primary/15 p-3`}>
-                  <img 
-                    src={imagePreview} 
-                    alt="Reference" 
-                    className="w-full h-48 object-cover rounded-md"
-                    data-testid="image-preview"
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="destructive"
-                    onClick={handleRemoveImage}
-                    disabled={generateVideoMutation.isPending}
-                    className="absolute top-2 right-2 h-8 w-8"
-                    data-testid="button-remove-image"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 dark:bg-black/70 px-2 py-1 rounded text-xs text-white dark:text-white/90">
-                    <Check className="w-3 h-3 text-green-400 dark:text-green-300" />
-                    Will be used in generation
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Prompt Input */}
-            <div className="space-y-3">
-              <Label htmlFor="prompt" className="text-sm font-semibold flex items-center gap-2">
-                <Moon className="w-4 h-4 text-primary animate-float-slow" />
-                Your Cosmic Vision
-              </Label>
-              <Input
-                id="prompt"
-                type="text"
-                placeholder="e.g. a glowing crystal peach sliced in slow motion"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                required
-                disabled={generateVideoMutation.isPending}
-                className="text-base h-12 transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
-                data-testid="input-prompt"
-              />
-            </div>
-
-            {/* Parameters in Glass Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Length */}
-              <div className="space-y-3">
-                <Label className="text-xs font-semibold text-muted-foreground">
-                  Video Length
-                </Label>
-                <div className="flex gap-2">
-                  {VIDEO_LENGTHS.map((len) => {
-                    const tierMaxLength = user?.membershipTier 
-                      ? MEMBERSHIP_TIERS[user.membershipTier as MembershipTier].maxLength 
-                      : MEMBERSHIP_TIERS.free.maxLength;
-                    const isLocked = len > tierMaxLength;
-                    return (
-                      <Button
-                        key={len}
-                        type="button"
-                        size="sm"
-                        variant={length === len ? "default" : "outline"}
-                        onClick={() => setLength(len)}
-                        disabled={generateVideoMutation.isPending || isLocked}
-                        className={`flex-1 ${length === len ? "moon-glow" : ""}`}
-                        data-testid={`button-length-${len}`}
-                        title={isLocked ? `Upgrade to unlock ${len}s videos` : ""}
-                      >
-                        {len}s
-                        {isLocked && <Zap className="w-3 h-3 ml-1" />}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Style */}
-              <div className="space-y-3 relative">
-                <Label htmlFor="style" className="text-xs font-semibold text-muted-foreground">
-                  Style (Optional)
-                </Label>
-                <Input
-                  id="style"
-                  type="text"
-                  placeholder="e.g. cinematic"
-                  value={style}
-                  onChange={(e) => setStyle(e.target.value)}
-                  disabled={generateVideoMutation.isPending}
-                  data-testid="input-style"
-                />
-              </div>
-            </div>
-
-            {/* Aspect Ratio */}
-            <div className="space-y-3">
-              <Label className="text-xs font-semibold text-muted-foreground">
-                Aspect Ratio
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { ratio: "16:9", label: "16:9", platform: "YouTube" },
-                  { ratio: "9:16", label: "9:16", platform: "TikTok" }
-                ].map(({ ratio, label, platform }) => (
-                  <Button
-                    key={ratio}
-                    type="button"
-                    variant={aspectRatio === ratio ? "default" : "outline"}
-                    onClick={() => setAspectRatio(ratio)}
-                    disabled={generateVideoMutation.isPending}
-                    className={`flex flex-col items-center justify-center h-auto py-3 ${aspectRatio === ratio ? "moon-glow" : ""}`}
-                    data-testid={`button-ratio-${ratio.replace(':', '-')}`}
-                  >
-                    <span className="text-sm font-bold">{label}</span>
-                    <span className="text-xs opacity-70">{platform}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Generate Button */}
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isGenerating || !prompt.trim() || isProcessingImage}
-              className="w-full relative overflow-hidden h-12 md:h-14 bg-gradient-to-r from-primary to-secondary moon-glow text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center justify-center"
-              data-testid="button-generate"
-            >
-              {isGenerating ? (
-                <div className="flex flex-col items-center justify-center w-full space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="animate-pulse">{generationStatus || `Generating... (${generationTimer}s)`}</span>
-                  </div>
-                  <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-white transition-all duration-500 ease-out"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] opacity-70">{progressPercent}% complete</p>
-                </div>
-              ) : isProcessingImage ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing image...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-5 h-5 mr-2 transition-transform group-hover:rotate-12" />
-                  Generate Cosmic Video
-                </>
-              )}
-            </Button>
-
-            {/* Gallery Button */}
-            <Link href="/gallery" className="block">
-              <Button variant="outline" size="lg" className="w-full" data-testid="button-view-gallery">
-                <History className="w-5 h-5 mr-2" />
-                View Gallery
-              </Button>
-            </Link>
-          </form>
-        </Card>
-
-        {/* Error State */}
-        {(generateVideoMutation.isError || (generationStatus.startsWith("Error:") && !isGenerating)) && (
-          <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3 animate-in" data-testid="error-message">
-            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm md:text-base text-destructive font-medium">
-                Failed to generate video
-              </p>
-              <p className="text-xs md:text-sm text-destructive/80 mt-1">
-                {generationStatus.startsWith("Error:") 
-                  ? generationStatus.replace("Error: ", "") 
-                  : (generateVideoMutation.error?.message || "Please check your input and try again.")}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {isGenerating && (
-          <div className="mt-12 flex flex-col items-center justify-center space-y-6 animate-fade-in-up" data-testid="loading-state">
-            <div className="relative">
-              <div className="w-20 h-20 border-4 border-primary/20 dark:border-primary/30 rounded-full animate-pulse-glow"></div>
-              <div className="w-20 h-20 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Moon className="w-8 h-8 text-primary/60 animate-float" />
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-lg text-muted-foreground font-medium">
-                {generationStatus || "Creating your cosmic masterpiece..."}
-              </p>
-              <p className="text-sm text-muted-foreground/70">
-                {generationTimer}s elapsed • {progressPercent}% complete
-              </p>
-            </div>
-            <div className="w-64 h-2 bg-primary/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="flex gap-1">
-              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-secondary animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          </div>
-        )}
-
-        {/* Video Display */}
-        {videoUrl && !isGenerating && (
-          <div className="mt-12 flex justify-center animate-fade-in-scale" data-testid="video-container">
-            <div className="relative w-full max-w-2xl space-y-4">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-secondary/20 to-primary/30 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                <div className="relative overflow-hidden rounded-xl border-2 border-primary/20 dark:border-primary/30 shadow-2xl bg-black aspect-video">
-                  {isVideo(videoUrl) ? (
-                    <video
-                      src={videoUrl}
-                      controls
-                      autoPlay
-                      loop
-                      className="w-full h-full object-contain"
-                      data-testid="video-player"
-                    />
-                  ) : (
-                    <img
-                      src={videoUrl}
-                      className="w-full h-full object-contain"
-                      alt="Generated cosmic vision"
-                    />
-                  )}
-                  {/* Lunara Watermark - Always show on generated results */}
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  size="lg"
-                  variant="outline"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="flex-1"
-                  data-testid="button-create-another"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Create Another
-                </Button>
-                <Link href="/gallery" className="flex-1">
-                  <Button size="lg" variant="secondary" className="w-full" data-testid="button-view-gallery-video">
-                    <History className="w-4 h-4 mr-2" />
-                    View Gallery
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Preset Prompts Section - Collapsible */}
-      {!videoUrl && (
-        <div className="w-full max-w-3xl mx-auto mt-12 md:mt-16 px-4 space-y-12">
-          <div className="space-y-4">
-            <button
-              onClick={() => setShowPresets(!showPresets)}
-              className="flex items-center justify-between w-full group p-3 -m-3 rounded-xl hover:bg-accent/50 dark:hover:bg-accent/30 transition-all duration-200"
-              data-testid="button-toggle-presets"
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary group-hover:animate-wiggle transition-transform" />
-                <h3 className="text-sm md:text-base font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
-                  Quick Start - Try These Prompts
-                </h3>
-              </div>
-              <div className="text-muted-foreground group-hover:text-foreground transition-colors">
-                {showPresets ? (
-                  <svg className="w-4 h-4 md:w-5 md:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4 md:w-5 md:h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
-              </div>
-            </button>
-            {showPresets && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                {PRESET_PROMPTS.map((presetPrompt, index) => (
+                {creationResults.map((result, idx) => (
                   <button
-                    key={presetPrompt}
-                    onClick={() => handlePresetClick(presetPrompt)}
-                    disabled={generateVideoMutation.isPending}
-                    className="text-left p-3.5 rounded-xl bg-card/80 dark:bg-card border border-card-border/80 dark:border-card-border hover:border-primary/40 dark:hover:border-primary/50 hover:bg-card hover:shadow-md dark:hover:shadow-lg transition-all duration-200 disabled:opacity-50 animate-fade-in-up group/preset"
-                    style={{ animationDelay: `${index * 60}ms` }}
-                    data-testid="button-preset-prompt"
+                    key={result.id}
+                    onClick={() => {
+                      setVideoUrl(result.videoUrl);
+                      setPrompt(result.prompt);
+                      setShowSearchDropdown(false);
+                      setSearchQuery("");
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors text-left ${
+                      idx !== 0 ? "border-t border-slate-200/50 dark:border-slate-700/30" : ""
+                    }`}
+                    data-testid={`button-creation-search-result-${result.id}`}
                   >
-                    <p className="text-xs md:text-sm text-foreground line-clamp-2 group-hover/preset:text-primary/90 dark:group-hover/preset:text-primary transition-colors">
-                      {presetPrompt}
-                    </p>
-                    {copiedPreset === presetPrompt ? (
-                      <div className="flex items-center gap-1.5 mt-2.5 text-primary">
-                        <Check className="w-3.5 h-3.5 animate-scale-pulse" />
-                        <span className="text-xs font-medium">Loaded</span>
+                    <div className="w-12 h-12 rounded-lg bg-black/20 overflow-hidden flex-shrink-0 border border-primary/20">
+                      {isVideo(result.videoUrl) ? (
+                        <video src={result.videoUrl} className="w-full h-full object-cover" />
+                      ) : (
+                        <img src={result.videoUrl} className="w-full h-full object-cover" alt="" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground dark:text-white line-clamp-2">
+                        {result.prompt}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-primary/30 text-primary">
+                          {result.length}s
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-secondary/30 text-secondary">
+                          {result.aspectRatio}
+                        </Badge>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 mt-2.5 text-muted-foreground group-hover/preset:text-primary/70 transition-colors">
-                        <Copy className="w-3 h-3 group-hover/preset:scale-110 transition-transform" />
-                        <span className="text-xs">Click to use</span>
-                      </div>
-                    )}
+                    </div>
                   </button>
                 ))}
               </div>
-            )}
-          </div>
-
-          {/* Featured Examples Section */}
-          <div className="space-y-5 border-t border-primary/20 dark:border-primary/30 pt-8">
-            <div className="flex items-start gap-3 group animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/15 dark:from-primary/30 dark:to-secondary/20 shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-110 flex-shrink-0 animate-float-slow">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-primary fill-primary/30 dark:fill-primary/40" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-                  Featured ASMR Examples
-                </h2>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1 font-medium">
-                  Explore these cosmic soundscapes to inspire your creations
-                </p>
-              </div>
             </div>
+          )}
+        </div>
 
-            {/* Example Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-              {EXAMPLE_VIDEOS.map((example, index) => {
-                const IconComponent = example.icon;
-                return (
-                  <div
-                    key={example.id}
-                    className="group relative h-64 overflow-hidden rounded-xl transition-all duration-300 hover:scale-105 cursor-pointer border border-white/20 dark:border-white/10"
-                    style={{
-                      animation: `fadeInUp 0.6s ease-out ${index * 120}ms both`,
-                    }}
-                    data-testid={`example-video-${example.id}`}
-                  >
-                    {/* Video Background */}
-                    <div className="absolute inset-0 z-0">
-                      <video
-                        src={example.videoUrl}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="w-full h-full object-cover"
+        {/* Hero & Preview Section */}
+        <div className="relative w-full max-w-2xl mx-auto">
+          {isGenerating ? (
+            <div className="relative aspect-video rounded-[2.5rem] bg-slate-900/40 backdrop-blur-xl border-4 border-white/10 dark:border-white/5 shadow-2xl flex flex-col items-center justify-center p-8 overflow-hidden moon-glow-lg group" data-testid="status-generating">
+              {/* Dynamic light rays */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-30 group-hover:opacity-50 transition-opacity duration-1000" />
+              
+              <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-sm">
+                <div className="relative w-24 h-24">
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping" />
+                  <div className="absolute inset-0 rounded-full border-4 border-secondary/30 animate-pulse delay-150" />
+                  <div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary via-secondary to-primary bg-animate flex items-center justify-center shadow-lg moon-glow">
+                    <Loader2 className="w-10 h-10 text-white animate-spin" />
+                  </div>
+                </div>
+                
+                <div className="space-y-3 text-center w-full">
+                  <h3 className="text-xl font-bold text-white tracking-wide" data-testid="text-generation-status">
+                    {generationStatus || "Consulting the Stars..."}
+                  </h3>
+                  
+                  <div className="w-full space-y-2">
+                    <div className="flex justify-between text-[10px] uppercase tracking-widest font-bold text-white/50">
+                      <span>Cosmic Progress</span>
+                      <span>{progressPercent}%</span>
+                    </div>
+                    <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden border border-white/10 backdrop-blur-md">
+                      <div 
+                        className="h-full bg-gradient-to-r from-primary via-secondary to-primary bg-animate transition-all duration-1000 moon-glow"
+                        style={{ width: `${progressPercent}%` }}
                       />
                     </div>
+                  </div>
+                  
+                  <p className="text-xs font-medium text-white/40 tracking-wider">
+                    {generationTimer}s elapsed in the void
+                  </p>
+                </div>
+              </div>
 
-                    {/* Background Overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${example.gradient} opacity-40 group-hover:opacity-30 transition-opacity duration-300 z-10`} />
-                    
-                    {/* Animated Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent group-hover:from-black/95 transition-all duration-300 z-20" />
+              {/* Decorative floating particles */}
+              <div className="absolute top-10 left-10 w-2 h-2 bg-white/40 rounded-full animate-float blur-sm" />
+              <div className="absolute bottom-20 right-15 w-3 h-3 bg-primary/30 rounded-full animate-float-slow blur-md" />
+              <div className="absolute top-1/2 right-10 w-1.5 h-1.5 bg-secondary/40 rounded-full animate-float blur-sm" style={{ animationDelay: '1s' }} />
+            </div>
+          ) : videoUrl ? (
+            <div className="relative aspect-video rounded-[2.5rem] bg-black shadow-2xl overflow-hidden border-4 border-white/20 dark:border-white/10 moon-glow-lg animate-fade-in group" data-testid="video-preview-container">
+              {isVideo(videoUrl) ? (
+                <video
+                  src={videoUrl}
+                  className="w-full h-full object-contain"
+                  autoPlay
+                  loop
+                  controls
+                  playsInline
+                  data-testid="video-preview"
+                />
+              ) : (
+                <img
+                  src={videoUrl}
+                  className="w-full h-full object-contain"
+                  alt="Generated content"
+                  data-testid="image-preview"
+                />
+              )}
+              
+              {/* Action overlay - appears on hover */}
+              <div className="absolute top-6 right-6 flex gap-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+                <Button 
+                  size="icon" 
+                  variant="secondary"
+                  className="rounded-full w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-xl border border-white/30 transition-all hover-elevate active-elevate-2 shadow-xl"
+                  onClick={() => handleDownload(videoUrl, prompt)}
+                  title="Download Video"
+                  data-testid="button-download"
+                >
+                  <Upload className="w-5 h-5 text-white -rotate-180" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="secondary"
+                  className="rounded-full w-12 h-12 bg-white/20 hover:bg-white/40 backdrop-blur-xl border border-white/30 transition-all hover-elevate active-elevate-2 shadow-xl"
+                  onClick={() => setVideoUrl(null)}
+                  title="Close Preview"
+                  data-testid="button-close-preview"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="relative aspect-video rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-4 border-white/10 dark:border-white/5 shadow-2xl flex flex-col items-center justify-center p-8 overflow-hidden moon-glow-lg group cursor-pointer" onClick={() => document.getElementById('cosmic-input')?.focus()}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
+              
+              {/* Animated stars in background */}
+              <div className="absolute inset-0 opacity-30 pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white rounded-full animate-ping" />
+                <div className="absolute top-3/4 left-2/3 w-0.5 h-0.5 bg-white rounded-full animate-ping delay-300" />
+                <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-primary rounded-full animate-pulse blur-sm" />
+              </div>
 
-                    {/* Shine Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-full group-hover:translate-x-0 transition-transform duration-700 opacity-0 group-hover:opacity-100 z-30" />
+              <div className="relative z-10 flex flex-col items-center gap-6 text-center max-w-md">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 via-white/10 to-secondary/20 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-transform duration-700 shadow-inner">
+                  <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+                </div>
+                <div className="space-y-3">
+                  <h2 className="text-3xl font-bold text-white tracking-tight">Cosmic Generator</h2>
+                  <p className="text-sm text-white/50 leading-relaxed font-medium">
+                    Your vision is but a prompt away.<br />
+                    Enter your cosmic dreams below to begin.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
-                    {/* Content */}
-                    <div className="relative h-full flex flex-col justify-between p-5 md:p-6 z-40">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="p-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 group-hover:bg-white/20 transition-all duration-300 shadow-xl flex-shrink-0">
-                          <IconComponent className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-lg" />
-                        </div>
-                        <div className={`px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg flex-shrink-0`}>
-                          Featured
-                        </div>
+        {/* Input Section */}
+        <div className="space-y-6 md:space-y-8">
+          <Card className="p-6 md:p-8 rounded-[2.5rem] bg-white/70 dark:bg-slate-950/40 backdrop-blur-3xl border-2 border-white/50 dark:border-white/5 shadow-2xl animate-fade-in-up moon-glow-sm">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="cosmic-input" className="text-base font-bold text-foreground flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-primary" />
+                    Cosmic Vision
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowPresets(!showPresets)}
+                      className="text-xs font-bold text-primary hover:bg-primary/10 rounded-full"
+                      data-testid="button-toggle-presets"
+                    >
+                      {showPresets ? "Hide Presets" : "Show Presets"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-secondary/30 rounded-[1.5rem] blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                  <Input
+                    id="cosmic-input"
+                    placeholder="Describe a celestial ASMR scene..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    className="relative text-base md:text-lg bg-white/80 dark:bg-slate-900/60 border-2 border-slate-200/50 dark:border-slate-800/50 rounded-2xl h-16 px-6 focus:border-primary/50 transition-all duration-300 font-medium"
+                    disabled={isGenerating}
+                    data-testid="input-cosmic-prompt"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    {prompt && (
+                      <button 
+                        type="button"
+                        onClick={() => setPrompt("")}
+                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Preset Prompts Dropdown */}
+                {showPresets && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                    {PRESET_PROMPTS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handlePresetClick(preset)}
+                        className="p-3 text-left text-xs font-medium bg-white/50 dark:bg-slate-800/30 hover:bg-primary/10 border border-slate-200/40 dark:border-slate-700/40 rounded-xl transition-all hover-elevate group flex items-center gap-2"
+                        data-testid={`button-preset-${idx}`}
+                      >
+                        <Star className={`w-3 h-3 text-primary transition-all ${copiedPreset === preset ? "fill-primary scale-125" : "opacity-40"}`} />
+                        <span className="flex-1 truncate">{preset}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Advanced Controls Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                <div className="space-y-6">
+                  <Label className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    Visual Guidance
+                  </Label>
+                  
+                  {!imagePreview ? (
+                    <div 
+                      className={`relative aspect-video rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:border-primary/50 group cursor-pointer ${isProcessingImage ? 'opacity-50 pointer-events-none' : ''}`}
+                      onClick={() => document.getElementById('image-upload')?.click()}
+                      data-testid="image-upload-zone"
+                    >
+                      <div className="p-4 rounded-full bg-white dark:bg-slate-800 shadow-md group-hover:scale-110 transition-transform duration-500">
+                        {isProcessingImage ? (
+                          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                        ) : (
+                          <ImageIcon className="w-6 h-6 text-slate-400 group-hover:text-primary transition-colors" />
+                        )}
                       </div>
-
-                      <div className="space-y-1.5">
-                        <h3 className="text-lg md:text-xl font-bold text-white drop-shadow-lg leading-tight line-clamp-1">
-                          {example.title}
-                        </h3>
-                        <p className="text-[10px] md:text-xs text-white/80 line-clamp-2 drop-shadow-md leading-relaxed font-medium">
-                          {example.description}
-                        </p>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-slate-600 dark:text-slate-400">Reference Image</p>
+                        <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Optional guide</p>
                       </div>
+                      <input 
+                        id="image-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleImageSelect}
+                        disabled={isGenerating || isProcessingImage}
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative aspect-video rounded-3xl overflow-hidden border-2 border-primary/30 group animate-in zoom-in-95 duration-300">
+                      <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="icon" 
+                          className="rounded-full w-12 h-12 shadow-xl hover-elevate"
+                          onClick={handleRemoveImage}
+                          data-testid="button-remove-image"
+                        >
+                          <X className="w-6 h-6" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                      {/* Play Indicator */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-0.5 bg-white/20 rounded-full overflow-hidden">
-                          <div className="h-full bg-white/60 w-1/3 animate-shimmer" />
-                        </div>
-                        <Play className="w-4 h-4 text-white fill-white drop-shadow-lg" />
+                <div className="space-y-6">
+                  <Label className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-primary" />
+                    Cosmic Parameters
+                  </Label>
+                  
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Duration</p>
+                      <div className="grid grid-cols-2 gap-3" data-testid="length-selection">
+                        {VIDEO_LENGTHS.map((len) => (
+                          <button
+                            key={len}
+                            type="button"
+                            onClick={() => setLength(len)}
+                            disabled={isGenerating}
+                            className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 border-2 ${
+                              length === len 
+                                ? "bg-primary text-white border-primary shadow-lg moon-glow" 
+                                : "bg-white/50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200/50 dark:border-slate-800/50 hover:border-primary/30"
+                            } ${isGenerating ? 'opacity-50' : 'hover-elevate active-elevate-2'}`}
+                            data-testid={`button-length-${len}`}
+                          >
+                            {len} Seconds
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Format</p>
+                      <div className="grid grid-cols-2 gap-3" data-testid="aspect-ratio-selection">
+                        {["16:9", "9:16"].map((ratio) => (
+                          <button
+                            key={ratio}
+                            type="button"
+                            onClick={() => setAspectRatio(ratio)}
+                            disabled={isGenerating}
+                            className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 border-2 ${
+                              aspectRatio === ratio 
+                                ? "bg-secondary text-white border-secondary shadow-lg moon-glow-secondary" 
+                                : "bg-white/50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200/50 dark:border-slate-800/50 hover:border-secondary/30"
+                            } ${isGenerating ? 'opacity-50' : 'hover-elevate active-elevate-2'}`}
+                            data-testid={`button-aspect-ratio-${ratio}`}
+                          >
+                            {ratio === "16:9" ? "Landscape" : "Portrait"}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <Button
+                  type="submit"
+                  disabled={isGenerating || !prompt.trim()}
+                  className="w-full h-16 rounded-2xl text-lg font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-animate text-white shadow-2xl hover:shadow-primary/30 dark:hover:shadow-primary/50 transition-all duration-500 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 moon-glow group overflow-hidden relative"
+                  data-testid="button-generate"
+                >
+                  <div className="relative z-10 flex items-center justify-center gap-3">
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        Consulting the Void...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
+                        Manifest Cosmic Vision
+                      </>
+                    )}
+                  </div>
+                  {/* Internal button shine */}
+                  <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-white/20 skew-x-[45deg] group-hover:left-[150%] transition-all duration-1000 ease-in-out pointer-events-none" />
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+
+        {/* User Stats Card - Integrated at bottom of input area */}
+        {user && (
+          <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <Card className="px-6 py-4 rounded-3xl bg-white/50 dark:bg-slate-950/20 backdrop-blur-xl border border-white/40 dark:border-white/5 flex items-center justify-between group hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-center gap-4">
+                <Avatar className="w-10 h-10 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
+                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.username || 'User'} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-xs font-bold">
+                    {user.username?.slice(0, 2).toUpperCase() || 'LU'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-bold text-foreground dark:text-white">Welcome back, {user.firstName || user.username}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <Badge className={`px-2 py-0 text-[10px] font-bold tracking-wider uppercase ${
+                      user.membershipTier === 'premium' ? 'bg-gradient-to-r from-primary to-secondary' : 
+                      user.membershipTier === 'pro' ? 'bg-primary/80' : 'bg-slate-400/50'
+                    }`}>
+                      {user.membershipTier}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <Link href="/membership">
+                <Button variant="ghost" size="sm" className="text-xs font-bold text-primary hover:bg-primary/10 rounded-xl group/btn">
+                  Upgrade Plan
+                  <ChevronRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </Card>
+          </div>
+        )}
+
+        {/* Featured Gallery Section */}
+        <div className="pt-12 md:pt-20 space-y-12 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+          <div className="text-center space-y-3">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent inline-block">Cosmic Inspiration</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium">Behold creations from the Lunara collective</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+            {EXAMPLE_VIDEOS.map((example, idx) => (
+              <Card key={example.id} className="group relative bg-slate-900/5 dark:bg-slate-900/20 rounded-[2rem] overflow-hidden border-2 border-white/40 dark:border-white/5 hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 animate-fade-in-up" style={{ animationDelay: `${600 + (idx * 100)}ms` }}>
+                <div className="aspect-[4/5] relative bg-slate-950 overflow-hidden">
+                  <video
+                    src={example.videoUrl}
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+                    loop
+                    muted
+                    playsInline
+                    onMouseEnter={(e) => e.currentTarget.play()}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
+                  />
+                  
+                  {/* Top Badge */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <Badge className="bg-black/40 backdrop-blur-md border border-white/20 text-white font-bold text-[10px] uppercase tracking-widest px-3 py-1">
+                      {example.title}
+                    </Badge>
+                  </div>
+
+                  {/* Play Indicator - appears on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-500">
+                      <Play className="w-6 h-6 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+
+                  {/* Bottom Content Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/40 to-transparent p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <div className="space-y-4">
+                      <p className="text-white text-xs md:text-sm font-medium leading-relaxed line-clamp-2 opacity-0 group-hover:opacity-90 transition-opacity duration-700">
+                        {example.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-2 rounded-xl bg-gradient-to-br ${example.gradient} shadow-lg`}>
+                            <example.icon className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">ASMR Vibes</span>
+                        </div>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setPrompt(example.description);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="h-8 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                        >
+                          Remix
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
-      )}
 
-
-      <style>{`
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
+        {/* Footer info */}
+        <div className="text-center pt-10 pb-20 space-y-4 opacity-50">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Powered by Lunara AI Cosmic Engine v2.0</p>
+          <div className="flex items-center justify-center gap-6">
+            <Link href="/contact" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Support</Link>
+            <Link href="/membership" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Pricing</Link>
+            <a href="#" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Privacy</a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
