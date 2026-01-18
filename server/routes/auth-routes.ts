@@ -27,15 +27,35 @@ export function createAuthRouter(): Router {
       const { email, username, password, firstName, lastName } = validation.data;
       const user = await authService.createUser({ email, username, password, firstName, lastName });
 
-      res.status(201).json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
+      const session = {
+        provider: "local",
+        userId: user.id,
+      };
+
+      req.logIn(session, (err) => {
+        if (err) {
+          return res.status(201).json({
+            success: true,
+            user: {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName,
+            },
+            message: "Account created but auto-login failed",
+          });
+        }
+        res.status(201).json({
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
+        });
       });
     } catch (error: any) {
       const fieldErrors: Record<string, string> = {};

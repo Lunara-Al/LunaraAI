@@ -35,11 +35,12 @@ export default function Register() {
       return await apiRequest("POST", "/api/auth/register", data);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Account created!",
-        description: "Welcome to Lunara AI. Redirecting to login...",
+        description: "Welcome to Lunara AI. You are now logged in.",
       });
-      setTimeout(() => setLocation("/login"), 1500);
+      setLocation("/");
     },
     onError: (error: any) => {
       if (error.fieldErrors) {
