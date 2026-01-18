@@ -14,14 +14,15 @@ export function createStripeWebhookRouter(stripe: Stripe | null): Router {
 
     const sig = req.headers["stripe-signature"] as string;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const rawBody = (req as any).rawBody || req.body;
 
     let event: Stripe.Event;
 
     try {
-      if (webhookSecret) {
-        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      if (webhookSecret && sig) {
+        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
       } else {
-        event = req.body as Stripe.Event;
+        event = typeof rawBody === 'string' ? JSON.parse(rawBody) : rawBody;
         console.warn("Stripe webhook secret not configured - accepting unverified events");
       }
     } catch (err: any) {

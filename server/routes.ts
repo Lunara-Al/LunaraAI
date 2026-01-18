@@ -61,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", createShareRouter());
   app.use("/api/social", createSocialRouter());
   
-  app.use("/api/stripe", express.raw({ type: "application/json" }), createStripeWebhookRouter(stripe));
+  app.use("/api/stripe", createStripeWebhookRouter(stripe));
 
   const httpServer = createServer(app);
   return httpServer;
