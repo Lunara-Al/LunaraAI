@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind, ChevronRight } from "lucide-react";
+import { Sparkles, AlertCircle, History, Loader2, Moon, Zap, Wand2, Copy, Check, Image as ImageIcon, X, Upload, Search, Crown, Star, Play, Cloud, Wind, ChevronRight, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import MoonMenu from "@/components/moon-menu";
 import { useConditionalToast } from "@/hooks/useConditionalToast";
 import { VIDEO_LENGTHS, DEFAULT_VIDEO_LENGTH, MEMBERSHIP_TIERS, type VideoJobInitResponse, type VideoJobStatusResponse, type ErrorResponse, type FrontendUser, type MembershipTier } from "@shared/schema";
 import { imageToBase64, compressImage, validateImageFile, formatFileSize } from "@/lib/imageUtils";
+import { useWebNotifications } from "@/hooks/useWebNotifications";
+import { CosmicNotification } from "@/components/cosmic-notification";
 
 
 const PRESET_PROMPTS = [
@@ -80,6 +82,10 @@ type CreationSearchResult = {
 export default function Home() {
   const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
+  const { permission, requestPermission, sendNotification, isSupported } = useWebNotifications();
+  const [showCosmicNotify, setShowCosmicNotify] = useState(false);
+  const [notifyConfig, setNotifyConfig] = useState({ title: "", description: "" });
+
   const [prompt, setPrompt] = useState(() => localStorage.getItem("lunara_prompt") || "");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [length, setLength] = useState(() => Number(localStorage.getItem("lunara_length")) || DEFAULT_VIDEO_LENGTH);
@@ -176,6 +182,20 @@ export default function Home() {
         setIsGenerating(false);
         setVideoUrl(status.videoUrl);
         setCurrentJobId(null);
+        
+        // Custom animated notification
+        setNotifyConfig({
+          title: "Cosmic Vision Manifested!",
+          description: "Your video has been successfully generated and is ready for viewing."
+        });
+        setShowCosmicNotify(true);
+
+        // Phone notification
+        sendNotification("Creation Complete!", {
+          body: "Your cosmic video is ready to view on Lunara AI.",
+          tag: "generation-complete",
+        });
+
         toast({
           title: "Success!",
           description: `Your cosmic video has been created in ${generationTimer}s and saved to your gallery.`,
@@ -483,8 +503,46 @@ export default function Home() {
   return (
     <div className="min-h-screen px-4 py-8 md:p-4 bg-gradient-to-br from-background via-background to-accent/30 dark:from-background dark:via-slate-950 dark:to-slate-900 transition-colors duration-300">
       <MoonMenu />
+      
+      <CosmicNotification
+        show={showCosmicNotify}
+        onClose={() => setShowCosmicNotify(false)}
+        title={notifyConfig.title}
+        description={notifyConfig.description}
+        onAction={() => {
+          if (videoUrl) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+            setLocation("/gallery");
+          }
+        }}
+        actionText="View Now"
+      />
 
       <div className="w-full max-w-3xl mx-auto space-y-6 md:space-y-10 pt-6 md:pt-12 animate-fade-in-up">
+        {/* Notification Permission Request */}
+        {isSupported && permission === "default" && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-primary" />
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Want to know when your video is ready? Enable notifications.
+              </p>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={requestPermission}
+              className="bg-primary text-white font-bold rounded-xl"
+            >
+              Enable
+            </Button>
+          </motion.div>
+        )}
+
         {/* Search Section with Integrated Tabs */}
         <div className="relative group" ref={searchContainerRef}>
           {/* Cosmic glow effect - enhanced */}
