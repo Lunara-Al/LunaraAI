@@ -19,6 +19,14 @@ Lunara AI is a web application designed to generate cosmic ASMR videos from text
 - Integrated real OAuth for social media (TikTok, Instagram, YouTube) with Pro-tier enforcement.
 - Added smart hashtag editor and expanded membership comparison table.
 
+### Bug Fixes (January 2026)
+- **Video Generation Robustness:** Enhanced file saving with `path.resolve()` for absolute paths, comprehensive error handling for mkdir/write operations, and post-write file verification.
+- **Settings System:** Fixed incorrect default values (defaultLength: 6, defaultAspectRatio: "16:9", galleryView: "grid") to match schema constraints.
+- **Membership Page:** Corrected UI to display accurate plan limits (Basic: 5 videos/6s, Pro: 100 videos/8s, Premium: unlimited/8s).
+- **API Route Fix:** Changed creations search endpoint from `/api/creations/search` to `/api/history/search`.
+- **Security:** Removed test POST endpoint from gallery routes that allowed creating fake video entries.
+- **DOM Nesting:** Fixed Link+Button patterns to prevent DOM warnings.
+
 ## System Architecture
 
 ### UI/UX Decisions
