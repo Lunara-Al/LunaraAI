@@ -1091,11 +1091,7 @@ export default function Home() {
                     loop
                     muted
                     playsInline
-                    onMouseEnter={(e) => e.currentTarget.play()}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
+                    autoPlay
                   />
                   
                   {/* Top Badge */}
