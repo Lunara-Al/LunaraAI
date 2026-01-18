@@ -104,10 +104,10 @@ export default function Settings() {
 
   const [activeSection, setActiveSection] = useState<SettingsSection>("generation");
   const [formData, setFormData] = useState({
-    defaultLength: 10,
-    defaultAspectRatio: "1:1",
+    defaultLength: 6,
+    defaultAspectRatio: "16:9",
     emailNotifications: 1,
-    galleryView: "list",
+    galleryView: "grid",
     theme: "dark",
     autoSave: 1,
     showWatermark: 1,
@@ -207,10 +207,10 @@ export default function Settings() {
 
   const resetToDefaults = () => {
     const defaults = {
-      defaultLength: 10,
-      defaultAspectRatio: "1:1",
+      defaultLength: 6,
+      defaultAspectRatio: "16:9",
       emailNotifications: 1,
-      galleryView: "list",
+      galleryView: "grid",
       theme: "dark",
       autoSave: 1,
       showWatermark: 1,

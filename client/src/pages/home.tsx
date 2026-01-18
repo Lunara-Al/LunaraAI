@@ -275,7 +275,7 @@ export default function Home() {
             setShowSearchDropdown(true);
           }
         } else {
-          const response = await fetch(`/api/creations/search?q=${encodeURIComponent(searchQuery)}`);
+          const response = await fetch(`/api/history/search?q=${encodeURIComponent(searchQuery)}`);
           if (response.ok) {
             const results = await response.json();
             setCreationResults(results);

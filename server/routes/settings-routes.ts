@@ -6,9 +6,9 @@ import { getWebSocketManager } from "../websocket";
 
 const DEFAULT_SETTINGS = {
   defaultLength: DEFAULT_VIDEO_LENGTH,
-  defaultAspectRatio: "1:1",
+  defaultAspectRatio: "16:9",
   emailNotifications: 1,
-  galleryView: "list",
+  galleryView: "grid",
   theme: "dark",
   autoSave: 1,
 } as const;
