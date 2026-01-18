@@ -841,7 +841,7 @@ export default function Home() {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="cosmic-input" className="text-base font-bold text-foreground flex items-center gap-2">
+                  <Label htmlFor="cosmic-input" className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <Zap className="w-4 h-4 text-primary" />
                     Cosmic Vision
                   </Label>
@@ -905,7 +905,7 @@ export default function Home() {
               {/* Advanced Controls Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                 <div className="space-y-6">
-                  <Label className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Label className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4 text-primary" />
                     Visual Guidance
                   </Label>
@@ -956,31 +956,52 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-6">
-                  <Label className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Label className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <Wand2 className="w-4 h-4 text-primary" />
                     Cosmic Parameters
                   </Label>
                   
                   <div className="space-y-6">
                     <div className="space-y-3">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Duration</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Duration</p>
+                        {!((user?.membershipTier === "pro" || user?.membershipTier === "premium")) && (
+                          <Link href="/membership" className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 hover:underline">
+                            <Crown className="w-2.5 h-2.5" />
+                            8s needs Pro
+                          </Link>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 gap-3" data-testid="length-selection">
-                        {VIDEO_LENGTHS.map((len) => (
-                          <button
-                            key={len}
-                            type="button"
-                            onClick={() => setLength(len)}
-                            disabled={isGenerating}
-                            className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 border-2 ${
-                              length === len 
-                                ? "bg-primary text-white border-primary shadow-lg moon-glow" 
-                                : "bg-white/50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200/50 dark:border-slate-800/50 hover:border-primary/30"
-                            } ${isGenerating ? 'opacity-50' : 'hover-elevate active-elevate-2'}`}
-                            data-testid={`button-length-${len}`}
-                          >
-                            {len} Seconds
-                          </button>
-                        ))}
+                        {VIDEO_LENGTHS.map((len) => {
+                          const isPremium = len === 8;
+                          const hasAccess = !isPremium || (user?.membershipTier === "pro" || user?.membershipTier === "premium");
+                          
+                          return (
+                            <button
+                              key={len}
+                              type="button"
+                              onClick={() => hasAccess && setLength(len)}
+                              disabled={isGenerating || !hasAccess}
+                              className={`py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 border-2 relative overflow-hidden ${
+                                length === len 
+                                  ? "bg-primary text-white border-primary shadow-lg moon-glow" 
+                                  : hasAccess
+                                    ? "bg-white/50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border-slate-200/50 dark:border-slate-800/50 hover:border-primary/30"
+                                    : "bg-slate-100/30 dark:bg-slate-900/20 text-slate-400 dark:text-slate-600 border-slate-200/30 dark:border-slate-800/30 cursor-not-allowed"
+                              } ${isGenerating ? 'opacity-50' : hasAccess ? 'hover-elevate active-elevate-2' : ''}`}
+                              data-testid={`button-length-${len}`}
+                            >
+                              <div className="flex items-center justify-center gap-2">
+                                {len} Seconds
+                                {isPremium && <Crown className={`w-3 h-3 ${length === len ? "text-white" : "text-amber-500"}`} />}
+                              </div>
+                              {!hasAccess && (
+                                <div className="absolute inset-0 bg-slate-900/5 dark:bg-white/5 backdrop-blur-[0.5px]" />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
