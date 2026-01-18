@@ -1,0 +1,251 @@
+You are my principal engineer (full-stack), product QA lead, and release manager. Your mission is to make my app production-ready with a special focus on video generation reliability and a settings system that actually works, is connected everywhere, and improves results.
+
+Absolute rules (non-negotiable)
+	•	Do not do partial fixes. If you touch a system, you must finish it end-to-end.
+	•	Do not “assume” anything works. Trace it, run it, test it, and prove it.
+	•	No dead UI. Every button, toggle, slider, and setting must have real effects.
+	•	No silent failures. All failures must be caught, surfaced, and recoverable.
+	•	Prefer clean architecture: separation of concerns, predictable state, typed contracts, defensive coding.
+	•	Minimize breaking changes, but correctness > convenience.
+
+⸻
+
+PART A — Diagnose the app like a surgeon (before coding)
+
+1) Build a full system map
+
+Create a written map of:
+	•	App routes/screens/pages and how they connect
+	•	Core modules (auth, generation, gallery, share, payments if any, notifications, etc.)
+	•	State management approach (React state/store, server state, caching)
+	•	Backend endpoints / server functions / workers / queues
+	•	DB schema and key tables/collections for generations, users, settings, credits, jobs
+	•	External vendors/APIs involved in generation (video model provider, storage, webhook callbacks)
+	•	File storage structure (where videos live, naming conventions, public/private ACL)
+	•	Where settings are defined, persisted, read, and applied
+
+Then identify the “critical path” user journey:
+User opens app → chooses settings → generates video → job runs → status updates → preview → save → share → re-open later
+
+⸻
+
+PART B — Fix Video Generation for real (no flakiness)
+
+2) Audit the entire video generation pipeline
+
+You must find every weak link:
+	•	Frontend prompt builder / payload creation
+	•	Settings → payload mapping
+	•	API endpoint request validation
+	•	Provider call (auth, model id, params)
+	•	Job lifecycle (queued → running → processing → complete/failed)
+	•	Polling/websocket updates
+	•	Storage upload + CDN URL generation
+	•	Database record creation/update
+	•	Gallery display + playback
+	•	Retry logic and idempotency
+	•	Webhooks (if used) and signature verification
+	•	Timeouts, rate limits, concurrency rules
+	•	Credits/limits and abuse cases (if applicable)
+
+Required output: a generation flow diagram (text is fine)
+
+Show the exact path: UI event → function → endpoint → provider → storage → DB → UI update.
+
+3) Make generation robust and observable
+
+Implement these improvements so I can trust it in production:
+
+A) Strong API contracts + validation
+	•	Define a single typed schema for a “GenerateVideoRequest”
+	•	Validate inputs on server (length limits, allowed enums, numeric ranges)
+	•	Reject invalid requests with actionable error messages
+
+B) Job system that cannot lie
+	•	Every generation must have a job id
+	•	Job state must be authoritative and persisted
+	•	States: queued, running, uploading, finalizing, completed, failed, canceled
+	•	Every state transition is logged with timestamps
+	•	Failures must include error_code, error_message, and debug_context (safe for prod)
+
+C) Idempotency + retry
+	•	If the client retries, it must not create duplicate jobs unless intended
+	•	Implement idempotency key logic for generation requests
+	•	Implement safe retries for provider errors and transient network failures
+	•	Backoff strategy for polling and retries
+	•	Hard timeouts + graceful fail state when provider stalls
+
+D) Provider integration hardening
+	•	Normalize provider responses
+	•	Handle rate limits, timeouts, malformed responses
+	•	Ensure all API keys are read correctly from env vars and never exposed client-side
+	•	Add provider health check endpoint (internal)
+
+E) Storage correctness
+	•	Ensure uploads always finalize correctly
+	•	Ensure the returned URL is playable (content-type, CORS)
+	•	Ensure access control is correct (public link if intended, signed if private)
+	•	Ensure filenames/paths are deterministic and collision-safe
+
+F) UI resilience
+	•	Loading states that show real job phase
+	•	Cancel button (if supported) or at least “stop polling”
+	•	“Retry generation” that reuses prompt/settings and does not break state
+	•	Clear error messages with steps (retry, adjust settings, contact support)
+	•	No UI freeze, no duplicate submissions, disable buttons while generating
+	•	If user refreshes mid-generation, job resumes correctly from DB state
+
+⸻
+
+PART C — Upgrade Settings into a real system (not fake toggles)
+
+4) Rebuild the settings architecture so it’s actually useful
+
+Right now settings are probably scattered. Fix that.
+
+Requirements:
+	•	Create a single source of truth settings object:
+	•	Stored per user (and optionally per project/preset)
+	•	Has defaults
+	•	Has schema validation
+	•	Is versioned/migratable (settings_v1 → settings_v2)
+	•	Settings must be:
+	•	Editable from UI
+	•	Persisted
+	•	Re-loaded on app launch
+	•	Applied to generation payload consistently
+
+Settings categories (make them real + improve them)
+
+Implement these as working settings (only include ones your app supports, but do a serious upgrade):
+
+1) Output
+	•	duration (with provider constraints)
+	•	aspect ratio (9:16, 1:1, 16:9)
+	•	resolution / quality tier
+	•	fps (if supported)
+	•	output format (mp4/webm)
+
+2) Style / Visual
+	•	realism vs stylized slider
+	•	lighting mode
+	•	camera style (macro, cinematic, handheld, etc.)
+	•	color grading intensity
+	•	motion intensity / smoothness
+	•	depth of field toggle/strength (if supported)
+
+3) Prompt controls
+	•	prompt strength
+	•	negative prompt (optional)
+	•	prompt templates (selectable)
+	•	“strict adherence” vs “creative freedom”
+
+4) Audio (if you do ASMR)
+	•	enable audio generation toggle
+	•	sound profile presets (crispy, wet, glassy, crunchy, soft)
+	•	audio intensity
+	•	noise floor control / denoise
+	•	“no music” hard rule
+
+5) Reliability controls
+	•	max retries
+	•	fallback model (if provider supports multiple)
+	•	safety timeouts
+	•	“safe mode” preset (conservative parameters that succeed more often)
+
+6) Presets
+	•	Save preset
+	•	Load preset
+	•	Rename preset
+	•	Default preset
+	•	“Share preset” (optional)
+
+UI requirements for settings
+	•	Every setting must show:
+	•	name
+	•	short description (“what it changes”)
+	•	valid range
+	•	default value
+	•	a reset-to-default control
+	•	Settings must not allow invalid combos (ex: duration too long for chosen tier)
+	•	If a setting affects cost/credits, show it clearly
+	•	Include a “Preview Summary” panel that shows the final payload in human terms
+
+⸻
+
+PART D — Make everything connected (no orphan features)
+
+5) Full app connectivity + correctness pass
+
+You must scan for and fix:
+	•	Any feature that exists but isn’t reachable
+	•	Any UI control not wired to state
+	•	Any state that isn’t persisted but should be
+	•	Any backend endpoint unused or incorrectly used
+	•	Any broken routes, dead links, missing imports
+	•	Any “TODO” that blocks production stability
+	•	Any mismatched types between client and server
+	•	Any error swallowing (catch without UI feedback)
+	•	Any inconsistent naming between env vars / config / code
+
+⸻
+
+PART E — Testing + Proof (no “trust me bro”)
+
+6) Add a real test/verification plan
+
+Minimum requirements:
+	•	A smoke test checklist for the critical flow:
+	•	create generation
+	•	watch progress
+	•	completion
+	•	playback
+	•	save to gallery
+	•	reload app
+	•	share
+	•	settings persist and apply
+	•	Add automated tests where feasible:
+	•	request validation unit tests
+	•	settings schema tests
+	•	payload mapping tests
+	•	job state machine tests
+	•	Add at least one integration test for generation endpoint using a mocked provider
+
+Also required:
+	•	Add logging that’s useful but safe (no secrets)
+	•	Add “debug mode” for dev that shows provider raw status + payload (only in dev)
+
+⸻
+
+PART F — Clean up, optimize, and ship
+
+7) Code quality upgrades (only after correctness)
+	•	Refactor duplicated logic in generation + settings
+	•	Centralize constants/enums
+	•	Remove dead code and unused dependencies
+	•	Improve UI performance (avoid re-render storms)
+	•	Ensure production build works, no warnings, no type errors
+
+⸻
+
+Deliverables (you MUST output these)
+	1.	What was broken and why (root cause analysis)
+	2.	What you changed (file list + summary)
+	3.	How you verified it (commands run + results + manual test steps)
+	4.	Final architecture summary
+	5.	Remaining risks (if any) and next steps
+	6.	A final verdict: “Release Ready: YES/NO” with justification
+
+⸻
+
+Definition of Done (cannot stop until true)
+	•	Video generation works reliably end-to-end
+	•	Settings are improved, persisted, validated, and actually affect generation
+	•	No broken UI controls
+	•	No silent failures
+	•	App builds in production mode
+	•	Core flow passes smoke test
+	•	Errors are visible and recoverable
+	•	No obvious bugs left in generation/settings paths
+
+Start immediately by mapping the generation pipeline and settings system, then implement fixes and improvements until all requirements are met.

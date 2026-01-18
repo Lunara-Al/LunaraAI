@@ -1149,9 +1149,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-6">
             <Link href="/contact" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Support</Link>
             <Link href="/membership" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Pricing</Link>
-            <Link href="/settings">
-              <a className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Privacy</a>
-            </Link>
+            <Link href="/settings" className="text-xs font-bold text-slate-500 hover:text-primary transition-colors">Privacy</Link>
           </div>
         </div>
       </div>
