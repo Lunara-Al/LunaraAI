@@ -229,6 +229,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateStripeCustomerId(userId: string, stripeCustomerId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        stripeCustomerId,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
   async incrementVideoCount(userId: string): Promise<User> {
     const [user] = await db
       .update(users)

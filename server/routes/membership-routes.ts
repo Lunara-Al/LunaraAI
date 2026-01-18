@@ -65,6 +65,8 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
           metadata: { userId },
         });
         customerId = customer.id;
+        
+        await storage.updateStripeCustomerId(userId, customerId);
       }
 
       const tierConfig = MEMBERSHIP_TIERS[tier];
