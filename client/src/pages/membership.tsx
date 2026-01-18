@@ -347,7 +347,7 @@ export default function Membership() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-900 dark:text-slate-100">5 videos per month</span>
+                  <span className="text-sm text-slate-900 dark:text-slate-100">3 videos per month</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />

@@ -17,7 +17,7 @@ export const MEMBERSHIP_TIERS = {
   free: {
     name: "Basic",
     price: 0,
-    monthlyVideos: 5,
+    monthlyVideos: 3,
     maxLength: 6,
     quality: "basic" as const,
     monthlyCredits: 25,
