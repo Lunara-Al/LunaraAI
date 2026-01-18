@@ -999,7 +999,12 @@ export default function Home() {
                             } ${isGenerating ? 'opacity-50' : 'hover-elevate active-elevate-2'}`}
                             data-testid={`button-aspect-ratio-${ratio}`}
                           >
-                            {ratio === "16:9" ? "Landscape" : "Portrait"}
+                            <div className="flex flex-col items-center gap-1">
+                              <span>{ratio === "16:9" ? "YouTube" : "TikTok"}</span>
+                              <span className="text-[10px] opacity-70 uppercase tracking-widest font-medium">
+                                {ratio} {ratio === "16:9" ? "Landscape" : "Portrait"}
+                              </span>
+                            </div>
                           </button>
                         ))}
                       </div>
