@@ -80,14 +80,14 @@ type CreationSearchResult = {
 export default function Home() {
   const { toast } = useConditionalToast();
   const [, setLocation] = useLocation();
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(() => localStorage.getItem("lunara_prompt") || "");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [length, setLength] = useState(DEFAULT_VIDEO_LENGTH);
-  const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [style, setStyle] = useState<string>("");
+  const [length, setLength] = useState(() => Number(localStorage.getItem("lunara_length")) || DEFAULT_VIDEO_LENGTH);
+  const [aspectRatio, setAspectRatio] = useState(() => localStorage.getItem("lunara_aspectRatio") || "16:9");
+  const [style, setStyle] = useState<string>(() => localStorage.getItem("lunara_style") || "");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(() => localStorage.getItem("lunara_imageBase64") || null);
   const [copiedPreset, setCopiedPreset] = useState<string | null>(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
@@ -98,6 +98,52 @@ export default function Home() {
   const [searchTab, setSearchTab] = useState<"users" | "creations">("users");
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-save settings to localStorage
+  useEffect(() => {
+    localStorage.setItem("lunara_prompt", prompt);
+    localStorage.setItem("lunara_length", length.toString());
+    localStorage.setItem("lunara_aspectRatio", aspectRatio);
+    localStorage.setItem("lunara_style", style);
+    if (imageBase64) {
+      localStorage.setItem("lunara_imageBase64", imageBase64);
+    } else {
+      localStorage.removeItem("lunara_imageBase64");
+    }
+  }, [prompt, length, aspectRatio, style, imageBase64]);
+
+  // Recover image preview from base64 if it exists
+  useEffect(() => {
+    if (imageBase64 && !imagePreview) {
+      setImagePreview(imageBase64);
+    }
+  }, [imageBase64, imagePreview]);
+
+  // Persistence for video generation status
+  useEffect(() => {
+    const savedJobId = localStorage.getItem("lunara_currentJobId");
+    if (savedJobId && !isGenerating && !videoUrl) {
+      const jobId = parseInt(savedJobId);
+      setCurrentJobId(jobId);
+      setIsGenerating(true);
+      setGenerationStatus("Resuming generation...");
+      
+      // Start polling
+      pollIntervalRef.current = setInterval(() => {
+        pollJobStatus(jobId);
+      }, 4000);
+      
+      pollJobStatus(jobId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (currentJobId) {
+      localStorage.setItem("lunara_currentJobId", currentJobId.toString());
+    } else {
+      localStorage.removeItem("lunara_currentJobId");
+    }
+  }, [currentJobId]);
   
   // Fetch user data to check tier
   const { data: user } = useQuery<FrontendUser>({
