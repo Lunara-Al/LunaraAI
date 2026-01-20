@@ -87,10 +87,6 @@ class MembershipService {
     return this.tierHierarchy[targetTier] < this.tierHierarchy[currentTier];
   }
 
-  isSimulatedSubscription(subscriptionId: string | null): boolean {
-    return subscriptionId?.startsWith("sim_") ?? false;
-  }
-
   private calculateDaysUntilReset(user: User): number {
     const now = new Date();
     const lastReset = new Date(user.creditsLastResetDate || user.createdAt);

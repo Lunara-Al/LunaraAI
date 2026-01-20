@@ -51,9 +51,9 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
       }
 
       if (!stripe) {
-        return res.status(200).json({
-          simulated: true,
-          message: "Stripe is not configured. Please use simulation endpoint.",
+        return res.status(503).json({
+          error: "Service Temporarily Unavailable",
+          message: "Payments are currently disabled. Please contact support.",
         });
       }
 
@@ -90,39 +90,6 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
     }
   });
 
-  router.post("/simulate-upgrade", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = await getAuthenticatedUserId(req);
-      if (!userId) return res.status(401).json({ error: "Unauthorized" });
-      
-      const { tier } = req.body as { tier: MembershipTier };
-      if (!tier || !MEMBERSHIP_TIERS[tier]) {
-        return res.status(400).json({ error: "Invalid membership tier" });
-      }
-
-      const updatedUser = await membershipService.upgradeTier(userId, tier, `sim_${Date.now()}`);
-      
-      // Broadcast sync event to all devices
-      const wsManager = getWebSocketManager();
-      if (wsManager) {
-        wsManager.broadcastToUser(userId, {
-          type: 'membership-updated',
-          userId,
-          tier: updatedUser.membershipTier
-        });
-      }
-      
-      res.json({
-        success: true,
-        tier: updatedUser.membershipTier,
-        simulated: true,
-        message: "Subscription updated (simulated - Stripe not configured)",
-      });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to update subscription" });
-    }
-  });
-
   router.post("/downgrade", isAuthenticated, async (req: any, res) => {
     try {
       const userId = await getAuthenticatedUserId(req);
@@ -136,7 +103,7 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
-      if (stripe && user.stripeSubscriptionId && !membershipService.isSimulatedSubscription(user.stripeSubscriptionId)) {
+      if (stripe && user.stripeSubscriptionId) {
         const tierConfig = MEMBERSHIP_TIERS[tier];
         const stripePriceId = "stripePriceId" in tierConfig ? tierConfig.stripePriceId : null;
         
@@ -175,7 +142,7 @@ export function createMembershipRouter(stripe: Stripe | null): Router {
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
-      if (stripe && user.stripeSubscriptionId && !membershipService.isSimulatedSubscription(user.stripeSubscriptionId)) {
+      if (stripe && user.stripeSubscriptionId) {
         await stripe.subscriptions.cancel(user.stripeSubscriptionId);
       }
 
