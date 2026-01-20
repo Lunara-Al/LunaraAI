@@ -9,7 +9,21 @@ import {
   refreshYouTubeToken,
   encryptToken
 } from "./oauth-service";
-import type { SocialAccount, SocialUploadJob, VideoGeneration } from "@shared/schema";
+import type { SocialAccount, SocialUploadJob, VideoGeneration, UploadJobStatus } from "@shared/schema";
+import { UPLOAD_STATUS_PROGRESS } from "@shared/schema";
+import {
+  classifySocialError,
+  isRetryableError,
+  withRetry,
+  formatRetryMessage,
+  DEFAULT_RETRY_CONFIG,
+  type SocialApiError
+} from "./social-error-handler";
+
+async function updateJobProgress(jobId: number, status: UploadJobStatus, customProgress?: number): Promise<void> {
+  const progress = customProgress !== undefined ? customProgress : UPLOAD_STATUS_PROGRESS[status];
+  await storage.updateUploadJobStatus(jobId, status, progress);
+}
 
 async function getValidAccessToken(account: SocialAccount): Promise<string> {
   if (!account.accessTokenEncrypted) {
@@ -65,7 +79,8 @@ async function getValidAccessToken(account: SocialAccount): Promise<string> {
 export async function uploadToTikTok(
   job: SocialUploadJob,
   video: VideoGeneration,
-  account: SocialAccount
+  account: SocialAccount,
+  jobId: number
 ): Promise<{ postId: string; postUrl: string }> {
   const accessToken = await getValidAccessToken(account);
   
@@ -95,16 +110,28 @@ export async function uploadToTikTok(
     }
   );
   
+  if (!initResponse.ok) {
+    const errorData = await initResponse.json().catch(() => ({}));
+    const error = new Error(errorData?.error?.message || `TikTok API error: ${initResponse.status}`);
+    (error as any).status = initResponse.status;
+    (error as any).error = errorData?.error;
+    throw error;
+  }
+  
   const initData = await initResponse.json();
   
   if (initData.error?.code) {
-    throw new Error(initData.error.message || "Failed to initialize TikTok upload");
+    const error = new Error(initData.error.message || "Failed to initialize TikTok upload");
+    (error as any).error = initData.error;
+    throw error;
   }
   
   const publishId = initData.data?.publish_id;
   if (!publishId) {
     throw new Error("No publish ID returned from TikTok");
   }
+  
+  await updateJobProgress(jobId, "processing");
   
   let attempts = 0;
   const maxAttempts = 30;
@@ -126,6 +153,9 @@ export async function uploadToTikTok(
     
     const statusData = await statusResponse.json();
     
+    const processingProgress = 70 + Math.floor((attempts / maxAttempts) * 25);
+    await updateJobProgress(jobId, "processing", processingProgress);
+    
     if (statusData.data?.status === "PUBLISH_COMPLETE") {
       const postId = statusData.data.publicaly_available_post_id?.[0] || publishId;
       return {
@@ -133,7 +163,9 @@ export async function uploadToTikTok(
         postUrl: `https://www.tiktok.com/@${account.displayName}/video/${postId}`,
       };
     } else if (statusData.data?.status === "FAILED") {
-      throw new Error(statusData.data.fail_reason || "TikTok upload failed");
+      const error = new Error(statusData.data.fail_reason || "TikTok upload failed");
+      (error as any).error = statusData.data;
+      throw error;
     }
     
     attempts++;
@@ -145,7 +177,8 @@ export async function uploadToTikTok(
 export async function uploadToInstagram(
   job: SocialUploadJob,
   video: VideoGeneration,
-  account: SocialAccount
+  account: SocialAccount,
+  jobId: number
 ): Promise<{ postId: string; postUrl: string }> {
   const accessToken = await getValidAccessToken(account);
   
@@ -171,10 +204,15 @@ export async function uploadToInstagram(
   const containerData = await containerResponse.json();
   
   if (containerData.error) {
-    throw new Error(containerData.error.message || "Failed to create Instagram media container");
+    const error = new Error(containerData.error.message || "Failed to create Instagram media container");
+    (error as any).error = containerData.error;
+    (error as any).status = containerResponse.status;
+    throw error;
   }
   
   const containerId = containerData.id;
+  
+  await updateJobProgress(jobId, "processing");
   
   let attempts = 0;
   const maxAttempts = 30;
@@ -188,6 +226,9 @@ export async function uploadToInstagram(
     
     const statusData = await statusResponse.json();
     
+    const processingProgress = 70 + Math.floor((attempts / maxAttempts) * 15);
+    await updateJobProgress(jobId, "processing", processingProgress);
+    
     if (statusData.status_code === "FINISHED") {
       break;
     } else if (statusData.status_code === "ERROR") {
@@ -200,6 +241,8 @@ export async function uploadToInstagram(
   if (attempts >= maxAttempts) {
     throw new Error("Instagram video processing timed out");
   }
+  
+  await updateJobProgress(jobId, "publishing");
   
   const publishResponse = await fetch(
     `https://graph.instagram.com/v21.0/${userId}/media_publish`,
@@ -218,7 +261,10 @@ export async function uploadToInstagram(
   const publishData = await publishResponse.json();
   
   if (publishData.error) {
-    throw new Error(publishData.error.message || "Failed to publish Instagram reel");
+    const error = new Error(publishData.error.message || "Failed to publish Instagram reel");
+    (error as any).error = publishData.error;
+    (error as any).status = publishResponse.status;
+    throw error;
   }
   
   const postId = publishData.id;
@@ -238,7 +284,8 @@ export async function uploadToInstagram(
 export async function uploadToYouTube(
   job: SocialUploadJob,
   video: VideoGeneration,
-  account: SocialAccount
+  account: SocialAccount,
+  jobId: number
 ): Promise<{ postId: string; postUrl: string }> {
   const accessToken = await getValidAccessToken(account);
   
@@ -246,6 +293,9 @@ export async function uploadToYouTube(
   const description = formatCaption(job.caption || video.prompt, job.hashtags);
   
   const videoResponse = await fetch(video.videoUrl);
+  if (!videoResponse.ok) {
+    throw new Error(`Failed to fetch video: ${videoResponse.status}`);
+  }
   const videoBuffer = await videoResponse.arrayBuffer();
   
   const metadata = {
@@ -284,6 +334,8 @@ export async function uploadToYouTube(
   combinedBuffer.set(new Uint8Array(videoBuffer), metadataPart.length);
   combinedBuffer.set(endPart, metadataPart.length + videoBuffer.byteLength);
   
+  await updateJobProgress(jobId, "processing", 50);
+  
   const uploadResponse = await fetch(
     "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status",
     {
@@ -296,10 +348,15 @@ export async function uploadToYouTube(
     }
   );
   
+  await updateJobProgress(jobId, "processing", 80);
+  
   const uploadData = await uploadResponse.json();
   
   if (uploadData.error) {
-    throw new Error(uploadData.error.message || "Failed to upload to YouTube");
+    const error = new Error(uploadData.error.message || "Failed to upload to YouTube");
+    (error as any).error = uploadData.error;
+    (error as any).status = uploadResponse.status;
+    throw error;
   }
   
   const videoId = uploadData.id;
@@ -343,12 +400,14 @@ export async function processUploadJob(jobId: number): Promise<void> {
   }
   
   try {
-    await storage.updateUploadJobStatus(job.id, "uploading");
+    await updateJobProgress(job.id, "validating");
     
     const video = await storage.getVideoById(job.videoId);
     if (!video || !video.videoUrl) {
       throw new Error("Video not found or has no URL");
     }
+    
+    await updateJobProgress(job.id, "connecting");
     
     const account = await storage.getSocialAccountById(job.socialAccountId);
     if (!account) {
@@ -360,42 +419,92 @@ export async function processUploadJob(jobId: number): Promise<void> {
       return;
     }
     
-    let result: { postId: string; postUrl: string };
+    await updateJobProgress(job.id, "uploading");
     
-    switch (job.platform) {
-      case "tiktok":
-        result = await uploadToTikTok(job, video, account);
-        break;
-      case "instagram":
-        result = await uploadToInstagram(job, video, account);
-        break;
-      case "youtube":
-        result = await uploadToYouTube(job, video, account);
-        break;
-      default:
-        throw new Error(`Unsupported platform: ${job.platform}`);
-    }
+    const uploadOperation = async (): Promise<{ postId: string; postUrl: string }> => {
+      switch (job.platform) {
+        case "tiktok":
+          return await uploadToTikTok(job, video, account, jobId);
+        case "instagram":
+          return await uploadToInstagram(job, video, account, jobId);
+        case "youtube":
+          return await uploadToYouTube(job, video, account, jobId);
+        default:
+          throw new Error(`Unsupported platform: ${job.platform}`);
+      }
+    };
+    
+    let retryCount = 0;
+    const result = await withRetry(
+      uploadOperation,
+      job.platform,
+      DEFAULT_RETRY_CONFIG,
+      (error: SocialApiError, attempt: number, delayMs: number) => {
+        retryCount = attempt;
+        console.log(
+          `Upload job ${jobId} retry ${attempt}/${DEFAULT_RETRY_CONFIG.maxRetries} ` +
+          `for ${job.platform}: ${error.error} - waiting ${Math.round(delayMs / 1000)}s`
+        );
+      }
+    );
     
     await storage.updateUploadJobStatus(
       job.id,
       "completed",
+      100,
       result.postId,
       result.postUrl
     );
+    
+    if (retryCount > 0) {
+      console.log(`Upload job ${jobId} succeeded after ${retryCount} retries`);
+    }
   } catch (error: any) {
     console.error(`Upload job ${jobId} failed:`, error);
+    
+    let errorMessage: string;
+    let classifiedError: SocialApiError | null = null;
+    
+    if (error.success === false && 'error' in error && 'platform' in error) {
+      classifiedError = error as SocialApiError;
+      errorMessage = formatRetryMessage(classifiedError, DEFAULT_RETRY_CONFIG.maxRetries, DEFAULT_RETRY_CONFIG.maxRetries);
+    } else {
+      classifiedError = classifySocialError(error, job.platform);
+      errorMessage = formatRetryMessage(classifiedError, DEFAULT_RETRY_CONFIG.maxRetries, DEFAULT_RETRY_CONFIG.maxRetries);
+    }
+    
+    const errorWithMetadata = classifiedError 
+      ? JSON.stringify({
+          message: errorMessage,
+          error_code: classifiedError.error,
+          retry_possible: classifiedError.retry_possible,
+          retry_after: classifiedError.retry_after,
+          platform: classifiedError.platform,
+        })
+      : errorMessage;
+    
     await storage.updateUploadJobStatus(
       job.id,
       "failed",
+      0,
       undefined,
       undefined,
-      error.message || "Upload failed"
+      errorWithMetadata
     );
   }
 }
 
 async function simulateUpload(jobId: number, platform: string): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await updateJobProgress(jobId, "uploading");
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  await updateJobProgress(jobId, "processing");
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  if (platform === "instagram") {
+    await updateJobProgress(jobId, "publishing");
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
   
   const mockPostId = `post_${Date.now().toString(36)}`;
   const mockPostUrls: Record<string, string> = {
@@ -407,6 +516,7 @@ async function simulateUpload(jobId: number, platform: string): Promise<void> {
   await storage.updateUploadJobStatus(
     jobId,
     "completed",
+    100,
     mockPostId,
     mockPostUrls[platform]
   );

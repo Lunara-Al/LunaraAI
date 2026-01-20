@@ -339,8 +339,28 @@ export type InsertSocialAccount = typeof socialAccounts.$inferInsert;
 // DATABASE TABLES - Social Upload Jobs
 // ============================================================================
 
-export const UPLOAD_JOB_STATUSES = ["pending", "uploading", "completed", "failed"] as const;
+export const UPLOAD_JOB_STATUSES = [
+  "queued",      // Job created, waiting to start
+  "validating",  // Checking video meets platform requirements
+  "connecting",  // Getting access token / connecting to platform
+  "uploading",   // Actively uploading to platform
+  "processing",  // Platform is processing the upload
+  "publishing",  // Publishing the content (Instagram 2-step)
+  "completed",   // Upload successful
+  "failed"       // Upload failed
+] as const;
 export type UploadJobStatus = (typeof UPLOAD_JOB_STATUSES)[number];
+
+export const UPLOAD_STATUS_PROGRESS: Record<UploadJobStatus, number> = {
+  queued: 0,
+  validating: 10,
+  connecting: 20,
+  uploading: 40,
+  processing: 70,
+  publishing: 90,
+  completed: 100,
+  failed: 0,
+};
 
 export const socialUploadJobs = pgTable("social_upload_jobs", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -348,9 +368,11 @@ export const socialUploadJobs = pgTable("social_upload_jobs", {
   videoId: integer("video_id").references(() => videoGenerations.id).notNull(),
   socialAccountId: integer("social_account_id").references(() => socialAccounts.id).notNull(),
   platform: varchar("platform", { length: 20 }).notNull(),
-  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  status: varchar("status", { length: 20 }).default("queued").notNull(),
+  progress: integer("progress").default(0).notNull(),
   caption: text("caption"),
   hashtags: text("hashtags"),
+  batchId: varchar("batch_id", { length: 64 }),
   externalPostId: varchar("external_post_id"),
   externalPostUrl: varchar("external_post_url"),
   errorMessage: text("error_message"),
@@ -370,6 +392,58 @@ export const createUploadJobSchema = z.object({
 });
 
 export type CreateUploadJobRequest = z.infer<typeof createUploadJobSchema>;
+
+// Validation schema for multi-platform uploads
+export const createMultiPlatformUploadSchema = z.object({
+  videoId: z.number(),
+  platforms: z.array(z.enum(SOCIAL_PLATFORMS)).min(1).max(3),
+  captions: z.object({
+    youtube: z.string().max(5000).optional(),
+    tiktok: z.string().max(2200).optional(),
+    instagram: z.string().max(2200).optional(),
+  }).optional(),
+  hashtags: z.object({
+    youtube: z.array(z.string().max(100)).max(500).optional(),
+    tiktok: z.array(z.string().max(100)).max(30).optional(),
+    instagram: z.array(z.string().max(100)).max(30).optional(),
+  }).optional(),
+  defaultCaption: z.string().max(2200).optional(),
+  defaultHashtags: z.array(z.string().max(100)).max(30).optional(),
+});
+
+export type CreateMultiPlatformUploadRequest = z.infer<typeof createMultiPlatformUploadSchema>;
+
+// Multi-platform upload response type
+export interface MultiPlatformUploadResponse {
+  batchId: string;
+  jobs: Array<{
+    jobId: number;
+    platform: SocialPlatform;
+    status: UploadJobStatus;
+  }>;
+  message: string;
+}
+
+// Multi-platform batch status response type
+export interface MultiPlatformBatchStatus {
+  batchId: string;
+  jobs: Array<{
+    id: number;
+    platform: string;
+    status: string;
+    externalPostUrl?: string | null;
+    errorMessage?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+  summary: {
+    total: number;
+    pending: number;
+    uploading: number;
+    completed: number;
+    failed: number;
+  };
+}
 
 // ============================================================================
 // DATABASE TABLES - Video Generation Jobs (Async Processing)

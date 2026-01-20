@@ -25,8 +25,10 @@ import {
   Crown,
   Hash,
   Plus,
-  Moon
+  Moon,
+  Rocket
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { SiX, SiFacebook, SiLinkedin, SiReddit, SiWhatsapp, SiTelegram, SiTiktok, SiInstagram, SiYoutube, SiSnapchat } from "react-icons/si";
 import type { VideoGeneration, SocialPlatform } from "@shared/schema";
 import { Link } from "wouter";
@@ -482,6 +484,13 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
     youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
   });
+  
+  const [multiUploadState, setMultiUploadState] = useState<{
+    status: "idle" | "uploading" | "completed" | "partial" | "failed";
+    batchId?: string;
+    progress?: number;
+    platformStatuses?: Record<string, { status: string; error?: string; postUrl?: string }>;
+  }>({ status: "idle" });
 
   const { data: user } = useQuery<FrontendUser>({
     queryKey: ["/api/auth/me"],
@@ -507,6 +516,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
         instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
         youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
       });
+      setMultiUploadState({ status: "idle" });
       setCopied(false);
     }
   }, [isOpen]);
@@ -689,6 +699,153 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
     setTimeout(poll, 1000);
   };
 
+  const getAccountByPlatform = (platform: SocialPlatform) => {
+    return socialAccounts?.accounts.find(a => a.platform === platform);
+  };
+
+  const connectedPlatforms = (["tiktok", "instagram", "youtube"] as SocialPlatform[]).filter(
+    p => !!getAccountByPlatform(p)
+  );
+
+  const multiUploadMutation = useMutation({
+    mutationFn: async () => {
+      const captions: Record<string, string> = {};
+      const hashtags: Record<string, string[]> = {};
+      
+      connectedPlatforms.forEach(platform => {
+        if (uploadStates[platform].caption) {
+          captions[platform] = uploadStates[platform].caption;
+        }
+        if (uploadStates[platform].hashtags.length > 0) {
+          hashtags[platform] = uploadStates[platform].hashtags;
+        }
+      });
+      
+      const response = await apiRequest("POST", "/api/social/multi-upload", {
+        videoId: video.id,
+        platforms: connectedPlatforms,
+        captions,
+        hashtags,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to start multi-upload");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setMultiUploadState({
+        status: "uploading",
+        batchId: data.batchId,
+        progress: 0,
+        platformStatuses: Object.fromEntries(
+          data.jobs.map((job: { platform: string; status: string }) => [
+            job.platform, 
+            { status: job.status }
+          ])
+        ),
+      });
+      pollBatchStatus(data.batchId);
+    },
+    onError: (error: Error) => {
+      setMultiUploadState({ status: "failed" });
+      toast({
+        variant: "destructive",
+        title: "Multi-Upload Failed",
+        description: error.message,
+      });
+    },
+  });
+
+  const pollBatchStatus = async (batchId: string) => {
+    let attempts = 0;
+    const maxAttempts = 60;
+    
+    const poll = async () => {
+      try {
+        const response = await apiRequest("GET", `/api/social/multi-upload/${batchId}/status`);
+        if (!response.ok) throw new Error("Failed to fetch batch status");
+        
+        const data = await response.json();
+        
+        const platformStatuses: Record<string, { status: string; error?: string; postUrl?: string }> = {};
+        data.jobs.forEach((job: { platform: string; status: string; errorMessage?: string; externalPostUrl?: string }) => {
+          platformStatuses[job.platform] = {
+            status: job.status,
+            error: job.errorMessage,
+            postUrl: job.externalPostUrl,
+          };
+        });
+        
+        const { summary } = data;
+        const totalDone = summary.completed + summary.failed;
+        const progress = Math.round((totalDone / summary.total) * 100);
+        
+        if (totalDone === summary.total) {
+          const finalStatus = summary.failed === 0 
+            ? "completed" 
+            : summary.completed === 0 
+              ? "failed" 
+              : "partial";
+          
+          setMultiUploadState({
+            status: finalStatus,
+            batchId,
+            progress: 100,
+            platformStatuses,
+          });
+          
+          if (finalStatus === "completed") {
+            toast({
+              title: "All Uploads Complete",
+              description: `Video posted to ${summary.completed} platform${summary.completed > 1 ? 's' : ''} successfully!`,
+            });
+          } else if (finalStatus === "partial") {
+            toast({
+              title: "Uploads Partially Complete",
+              description: `Posted to ${summary.completed}/${summary.total} platforms`,
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Uploads Failed",
+              description: "All platform uploads failed",
+            });
+          }
+          return;
+        }
+        
+        setMultiUploadState(prev => ({
+          ...prev,
+          progress,
+          platformStatuses,
+        }));
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 1500);
+        } else {
+          setMultiUploadState(prev => ({
+            ...prev,
+            status: "failed",
+          }));
+        }
+      } catch (error) {
+        setMultiUploadState(prev => ({
+          ...prev,
+          status: "failed",
+        }));
+      }
+    };
+    
+    setTimeout(poll, 1500);
+  };
+
+  const handleMultiUpload = () => {
+    setMultiUploadState({ status: "uploading", progress: 0 });
+    multiUploadMutation.mutate();
+  };
+
   const handleOpen = () => {
     if (!shareData && !createShareMutation.isPending) {
       createShareMutation.mutate();
@@ -864,10 +1021,7 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
       instagram: { platform: "instagram", status: "idle", caption: "", hashtags: [] },
       youtube: { platform: "youtube", status: "idle", caption: "", hashtags: [] },
     });
-  };
-
-  const getAccountByPlatform = (platform: SocialPlatform) => {
-    return socialAccounts?.accounts.find(a => a.platform === platform);
+    setMultiUploadState({ status: "idle" });
   };
 
   const socialPlatforms = [
@@ -1068,6 +1222,173 @@ export function ShareModal({ video, isOpen, onClose }: ShareModalProps) {
               </div>
 
               <CosmicDivider />
+
+              {/* Post to All Connected Section - Only shows with 2+ connected accounts */}
+              {isPro && connectedPlatforms.length >= 2 && (
+                <div className="space-y-3">
+                  <div 
+                    className="relative p-4 rounded-xl border transition-all duration-300 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-purple-500/10 border-purple-400/30"
+                    style={{ boxShadow: '0 0 25px rgba(168, 85, 247, 0.2)' }}
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/30 to-pink-500/30">
+                          <Rocket className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground">
+                            Post to All Connected
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Upload to {connectedPlatforms.length} platforms at once
+                          </p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant="secondary" 
+                        className="gap-1 text-xs bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        Quick
+                      </Badge>
+                    </div>
+
+                    {multiUploadState.status === "idle" && (
+                      <Button
+                        onClick={handleMultiUpload}
+                        className="w-full bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-white hover:from-purple-700 hover:via-pink-600 hover:to-purple-700"
+                        disabled={multiUploadMutation.isPending}
+                        data-testid="button-post-to-all"
+                      >
+                        {multiUploadMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-4 h-4 mr-2" />
+                            Post to All ({connectedPlatforms.length} Platforms)
+                          </>
+                        )}
+                      </Button>
+                    )}
+
+                    {multiUploadState.status === "uploading" && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Uploading to platforms...</span>
+                          <span className="font-medium text-purple-500">{multiUploadState.progress || 0}%</span>
+                        </div>
+                        <Progress value={multiUploadState.progress || 0} className="h-2" />
+                        <div className="flex gap-2">
+                          {connectedPlatforms.map(platform => {
+                            const status = multiUploadState.platformStatuses?.[platform];
+                            const Icon = platform === "tiktok" ? SiTiktok : platform === "instagram" ? SiInstagram : SiYoutube;
+                            return (
+                              <div 
+                                key={platform}
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/10 dark:bg-slate-800/30"
+                              >
+                                <Icon className="w-3.5 h-3.5" />
+                                {status?.status === "completed" ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                ) : status?.status === "failed" ? (
+                                  <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                                ) : (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {(multiUploadState.status === "completed" || multiUploadState.status === "partial" || multiUploadState.status === "failed") && (
+                      <div className="space-y-3">
+                        <div className={`flex items-center gap-2 p-3 rounded-lg ${
+                          multiUploadState.status === "completed" 
+                            ? "bg-green-500/10 border border-green-500/30" 
+                            : multiUploadState.status === "partial"
+                              ? "bg-yellow-500/10 border border-yellow-500/30"
+                              : "bg-red-500/10 border border-red-500/30"
+                        }`}>
+                          {multiUploadState.status === "completed" ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                          ) : multiUploadState.status === "partial" ? (
+                            <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                          )}
+                          <span className={`text-sm font-medium ${
+                            multiUploadState.status === "completed" 
+                              ? "text-green-600 dark:text-green-400"
+                              : multiUploadState.status === "partial"
+                                ? "text-yellow-600 dark:text-yellow-400"
+                                : "text-red-600 dark:text-red-400"
+                          }`}>
+                            {multiUploadState.status === "completed" 
+                              ? `Posted to all ${connectedPlatforms.length} platforms!`
+                              : multiUploadState.status === "partial"
+                                ? `Posted to ${Object.values(multiUploadState.platformStatuses || {}).filter(s => s.status === "completed").length}/${connectedPlatforms.length} platforms`
+                                : "All uploads failed"}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {connectedPlatforms.map(platform => {
+                            const status = multiUploadState.platformStatuses?.[platform];
+                            const Icon = platform === "tiktok" ? SiTiktok : platform === "instagram" ? SiInstagram : SiYoutube;
+                            const isSuccess = status?.status === "completed";
+                            const isFailed = status?.status === "failed";
+                            
+                            return (
+                              <div 
+                                key={platform}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs ${
+                                  isSuccess 
+                                    ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/30" 
+                                    : isFailed
+                                      ? "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30"
+                                      : "bg-muted/50 text-muted-foreground"
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5" />
+                                <span className="capitalize">{platform}</span>
+                                {isSuccess ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                ) : isFailed ? (
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                ) : null}
+                                {isSuccess && status.postUrl && (
+                                  <a 
+                                    href={status.postUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-purple-500 hover:underline ml-1"
+                                  >
+                                    View
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        <Button
+                          onClick={() => setMultiUploadState({ status: "idle" })}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          Upload Again
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">

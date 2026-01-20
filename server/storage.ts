@@ -93,7 +93,8 @@ export interface IStorage {
   createUploadJob(data: InsertSocialUploadJob): Promise<SocialUploadJob>;
   getUploadJobs(userId: string, limit?: number): Promise<SocialUploadJob[]>;
   getUploadJob(id: number): Promise<SocialUploadJob | undefined>;
-  updateUploadJobStatus(id: number, status: UploadJobStatus, externalPostId?: string, externalPostUrl?: string, errorMessage?: string): Promise<SocialUploadJob>;
+  getUploadJobsByBatchId(batchId: string, userId: string): Promise<SocialUploadJob[]>;
+  updateUploadJobStatus(id: number, status: UploadJobStatus, progress?: number, externalPostId?: string, externalPostUrl?: string, errorMessage?: string): Promise<SocialUploadJob>;
 
   // Video generation job operations (async processing)
   createVideoGenerationJob(data: InsertVideoGenerationJob): Promise<VideoGenerationJob>;
@@ -637,9 +638,21 @@ export class DatabaseStorage implements IStorage {
     return job;
   }
 
+  async getUploadJobsByBatchId(batchId: string, userId: string): Promise<SocialUploadJob[]> {
+    return await db
+      .select()
+      .from(socialUploadJobs)
+      .where(and(
+        eq(socialUploadJobs.batchId, batchId),
+        eq(socialUploadJobs.userId, userId)
+      ))
+      .orderBy(desc(socialUploadJobs.createdAt));
+  }
+
   async updateUploadJobStatus(
     id: number, 
-    status: UploadJobStatus, 
+    status: UploadJobStatus,
+    progress?: number,
     externalPostId?: string, 
     externalPostUrl?: string, 
     errorMessage?: string
@@ -648,6 +661,7 @@ export class DatabaseStorage implements IStorage {
       status, 
       updatedAt: new Date() 
     };
+    if (progress !== undefined) updateData.progress = progress;
     if (externalPostId) updateData.externalPostId = externalPostId;
     if (externalPostUrl) updateData.externalPostUrl = externalPostUrl;
     if (errorMessage) updateData.errorMessage = errorMessage;

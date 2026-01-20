@@ -4,7 +4,9 @@ import { isAuthenticated, getAuthenticatedUserId, getAuthenticatedUser } from ".
 import { 
   SOCIAL_PLATFORMS, 
   type SocialPlatform,
-  createUploadJobSchema
+  createUploadJobSchema,
+  createMultiPlatformUploadSchema,
+  type UploadJobStatus
 } from "@shared/schema";
 import crypto from "crypto";
 import {
@@ -25,6 +27,15 @@ import {
   getYouTubeUserInfo,
 } from "../services/oauth-service";
 import { processUploadJob } from "../services/social-upload-service";
+import { validateVideoForPlatform, PLATFORM_REQUIREMENTS } from "../services/video-validation-service";
+import { revokeToken } from "../services/token-revocation-service";
+import { 
+  getPlatformFeatureFlags, 
+  isPlatformEnabled, 
+  isPlatformUploadEnabled, 
+  isPlatformOAuthEnabled,
+  getPlatformDisabledReason 
+} from "../services/feature-flags-service";
 
 declare module "express-session" {
   interface SessionData {
@@ -50,6 +61,7 @@ export function createSocialRouter(): Router {
       const tiktokConfig = getTikTokConfig();
       const instagramConfig = getInstagramConfig();
       const youtubeConfig = getYouTubeConfig();
+      const featureFlags = getPlatformFeatureFlags();
 
       res.json({
         platforms: {
@@ -66,6 +78,7 @@ export function createSocialRouter(): Router {
             usesOAuth: !!youtubeConfig,
           },
         },
+        featureFlags,
       });
     } catch (error: any) {
       console.error("Error fetching social config:", error);
@@ -113,6 +126,14 @@ export function createSocialRouter(): Router {
 
       if (!SOCIAL_PLATFORMS.includes(platform as SocialPlatform)) {
         return res.status(400).json({ error: "Invalid platform" });
+      }
+
+      if (!isPlatformOAuthEnabled(platform as SocialPlatform)) {
+        const reason = getPlatformDisabledReason(platform as SocialPlatform);
+        return res.status(503).json({ 
+          error: reason || `${platform} OAuth is currently disabled`,
+          platformDisabled: true
+        });
       }
 
       const existingAccount = await storage.getSocialAccountByPlatform(user.id, platform as SocialPlatform);
@@ -408,12 +429,31 @@ export function createSocialRouter(): Router {
         return res.status(400).json({ error: "Invalid account ID" });
       }
 
+      const account = await storage.getSocialAccountById(accountId);
+      if (!account || account.userId !== userId) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+
+      let tokenRevoked = false;
+      try {
+        tokenRevoked = await revokeToken(account.platform as SocialPlatform, account);
+        if (!tokenRevoked) {
+          console.log(`Token revocation returned false for ${account.platform} account ${accountId}, continuing with deletion`);
+        }
+      } catch (revocationError) {
+        console.error(`Token revocation error for ${account.platform} account ${accountId}:`, revocationError);
+      }
+
       const success = await storage.deleteSocialAccount(accountId, userId);
       if (!success) {
         return res.status(400).json({ error: "Unable to disconnect account" });
       }
 
-      res.json({ success: true, message: "Account disconnected successfully" });
+      res.json({ 
+        success: true, 
+        message: "Account disconnected successfully",
+        tokenRevoked 
+      });
     } catch (error: any) {
       console.error("Error disconnecting social account:", error);
       res.status(500).json({ error: "Failed to disconnect account" });
@@ -439,6 +479,14 @@ export function createSocialRouter(): Router {
 
       const { videoId, platform, caption, hashtags } = validation.data;
 
+      if (!isPlatformUploadEnabled(platform)) {
+        const reason = getPlatformDisabledReason(platform);
+        return res.status(503).json({ 
+          error: reason || `${platform} uploads are currently disabled`,
+          platformDisabled: true
+        });
+      }
+
       const video = await storage.getVideoById(videoId);
       if (!video || video.userId !== user.id) {
         return res.status(404).json({ error: "Video not found" });
@@ -449,12 +497,29 @@ export function createSocialRouter(): Router {
         return res.status(400).json({ error: `No ${platform} account connected` });
       }
 
+      if (video.videoUrl) {
+        const validationResult = await validateVideoForPlatform(video.videoUrl, platform);
+        
+        if (!validationResult.isValid) {
+          return res.status(400).json({ 
+            error: "Video does not meet platform requirements",
+            validationErrors: validationResult.errors,
+            validationWarnings: validationResult.warnings,
+            platformRequirements: validationResult.platformRequirements
+          });
+        }
+
+        if (validationResult.warnings.length > 0) {
+          console.log(`Video validation warnings for ${platform}:`, validationResult.warnings);
+        }
+      }
+
       const job = await storage.createUploadJob({
         userId: user.id,
         videoId,
         socialAccountId: socialAccount.id,
         platform,
-        status: "pending",
+        status: "queued",
         caption: caption || null,
         hashtags: hashtags || null,
         externalPostId: null,
@@ -472,7 +537,7 @@ export function createSocialRouter(): Router {
         success: true, 
         jobId: job.id,
         message: `Video queued for upload to ${platform}`,
-        status: "pending"
+        status: "queued"
       });
     } catch (error: any) {
       console.error("Error creating upload job:", error);
@@ -502,6 +567,7 @@ export function createSocialRouter(): Router {
         id: job.id,
         platform: job.platform,
         status: job.status,
+        progress: job.progress,
         externalPostUrl: job.externalPostUrl,
         errorMessage: job.errorMessage,
         createdAt: job.createdAt,
@@ -527,6 +593,7 @@ export function createSocialRouter(): Router {
           id: job.id,
           platform: job.platform,
           status: job.status,
+          progress: job.progress,
           caption: job.caption,
           hashtags: job.hashtags,
           externalPostUrl: job.externalPostUrl,
@@ -537,6 +604,183 @@ export function createSocialRouter(): Router {
     } catch (error: any) {
       console.error("Error fetching upload jobs:", error);
       res.status(500).json({ error: "Failed to fetch upload history" });
+    }
+  });
+
+  router.post("/multi-upload", isAuthenticated, async (req, res) => {
+    try {
+      const user = await getAuthenticatedUser(req);
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      if (!isPaidTier(user.membershipTier)) {
+        return res.status(403).json({ error: PRO_REQUIRED_MESSAGE });
+      }
+
+      const validation = createMultiPlatformUploadSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: validation.error.issues 
+        });
+      }
+
+      const { videoId, platforms, captions, hashtags, defaultCaption, defaultHashtags } = validation.data;
+
+      const disabledPlatforms = platforms.filter(p => !isPlatformUploadEnabled(p));
+      if (disabledPlatforms.length > 0) {
+        return res.status(503).json({ 
+          error: `Uploads disabled for: ${disabledPlatforms.join(", ")}`,
+          disabledPlatforms: disabledPlatforms.map(p => ({
+            platform: p,
+            reason: getPlatformDisabledReason(p)
+          }))
+        });
+      }
+
+      const video = await storage.getVideoById(videoId);
+      if (!video || video.userId !== user.id) {
+        return res.status(404).json({ error: "Video not found" });
+      }
+
+      const missingAccounts: string[] = [];
+      const platformAccounts: Map<SocialPlatform, Awaited<ReturnType<typeof storage.getSocialAccountByPlatform>>> = new Map();
+
+      for (const platform of platforms) {
+        const account = await storage.getSocialAccountByPlatform(user.id, platform);
+        if (!account) {
+          missingAccounts.push(platform);
+        } else {
+          platformAccounts.set(platform, account);
+        }
+      }
+
+      if (missingAccounts.length > 0) {
+        return res.status(400).json({ 
+          error: "Missing connected accounts for platforms",
+          missingPlatforms: missingAccounts,
+          message: `Please connect your ${missingAccounts.join(", ")} account(s) before uploading`
+        });
+      }
+
+      if (video.videoUrl) {
+        const validationErrors: Array<{ platform: string; errors: string[] }> = [];
+        
+        for (const platform of platforms) {
+          const validationResult = await validateVideoForPlatform(video.videoUrl, platform);
+          if (!validationResult.isValid) {
+            validationErrors.push({
+              platform,
+              errors: validationResult.errors
+            });
+          }
+        }
+
+        if (validationErrors.length > 0) {
+          return res.status(400).json({
+            error: "Video does not meet platform requirements",
+            validationErrors
+          });
+        }
+      }
+
+      const batchId = crypto.randomBytes(16).toString("hex");
+      const createdJobs: Array<{ jobId: number; platform: SocialPlatform; status: UploadJobStatus }> = [];
+
+      for (const platform of platforms) {
+        const account = platformAccounts.get(platform)!;
+        
+        const platformCaption = captions?.[platform as keyof typeof captions] || defaultCaption || null;
+        const platformHashtags = hashtags?.[platform as keyof typeof hashtags] || defaultHashtags;
+        const hashtagsString = platformHashtags ? platformHashtags.map(h => h.startsWith('#') ? h : `#${h}`).join(' ') : null;
+
+        const job = await storage.createUploadJob({
+          userId: user.id,
+          videoId,
+          socialAccountId: account.id,
+          platform,
+          status: "queued",
+          caption: platformCaption,
+          hashtags: hashtagsString,
+          batchId,
+          externalPostId: null,
+          externalPostUrl: null,
+          errorMessage: null,
+        });
+
+        createdJobs.push({
+          jobId: job.id,
+          platform: platform as SocialPlatform,
+          status: job.status as UploadJobStatus
+        });
+      }
+
+      setImmediate(async () => {
+        const uploadPromises = createdJobs.map(job => 
+          processUploadJob(job.jobId).catch(err => {
+            console.error(`Failed to process upload job ${job.jobId}:`, err);
+          })
+        );
+        await Promise.allSettled(uploadPromises);
+      });
+
+      res.json({
+        batchId,
+        jobs: createdJobs,
+        message: `Video queued for upload to ${platforms.join(", ")}`
+      });
+    } catch (error: any) {
+      console.error("Error creating multi-platform upload:", error);
+      res.status(500).json({ error: "Failed to queue video for multi-platform upload" });
+    }
+  });
+
+  router.get("/multi-upload/:batchId/status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = await getAuthenticatedUserId(req);
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const { batchId } = req.params;
+
+      if (!batchId || batchId.length !== 32) {
+        return res.status(400).json({ error: "Invalid batch ID" });
+      }
+
+      const jobs = await storage.getUploadJobsByBatchId(batchId, userId);
+
+      if (jobs.length === 0) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+
+      const summary = {
+        total: jobs.length,
+        pending: jobs.filter(j => j.status === "pending").length,
+        uploading: jobs.filter(j => j.status === "uploading").length,
+        completed: jobs.filter(j => j.status === "completed").length,
+        failed: jobs.filter(j => j.status === "failed").length,
+      };
+
+      res.json({
+        batchId,
+        jobs: jobs.map(job => ({
+          id: job.id,
+          platform: job.platform,
+          status: job.status,
+          caption: job.caption,
+          hashtags: job.hashtags,
+          externalPostUrl: job.externalPostUrl,
+          errorMessage: job.errorMessage,
+          createdAt: job.createdAt,
+          updatedAt: job.updatedAt,
+        })),
+        summary
+      });
+    } catch (error: any) {
+      console.error("Error fetching batch status:", error);
+      res.status(500).json({ error: "Failed to fetch batch status" });
     }
   });
 

@@ -1,0 +1,229 @@
+```
+MEGA PROMPT: Multi-Platform Video Auto-Posting System Implementation
+
+You are building a complete OAuth-based video auto-posting system for a video generator app. The system must allow users to connect their YouTube, TikTok, and Instagram accounts and automatically post generated videos to these platforms with customizable captions and hashtags.
+
+CRITICAL REQUIREMENTS:
+
+1. Backend Framework: Use Node.js with Express (or specify your preferred stack)
+2. Database: Use PostgreSQL (or specify your DB) to store user tokens and post configurations
+3. Security: All tokens must be encrypted at rest, never exposed to frontend
+
+IMPLEMENTATION CHECKLIST:
+
+Phase 1: Project Setup & Dependencies
+- Initialize a new Node.js backend project with Express
+- Install required packages: express, axios, dotenv, pg (PostgreSQL), bcrypt for encryption, cors, multer for file uploads
+- Create .env file structure for storing API credentials (CLIENT_ID, CLIENT_SECRET for each platform)
+- Set up database schema with tables: users, connected_accounts, post_queue
+
+Phase 2: Database Schema
+Create tables with the following structure:
+
+users:
+- id (primary key)
+- email
+- created_at
+
+connected_accounts:
+- id (primary key)
+- user_id (foreign key)
+- platform (enum: youtube, tiktok, instagram)
+- access_token (encrypted)
+- refresh_token (encrypted)
+- token_expires_at
+- platform_user_id
+- connected_at
+
+post_queue:
+- id (primary key)
+- user_id (foreign key)
+- video_file_path
+- platforms (array: [youtube, tiktok, instagram])
+- captions (jsonb: {youtube: '', tiktok: '', instagram: ''})
+- hashtags (jsonb: {youtube: [], tiktok: [], instagram: []})
+- status (enum: pending, processing, completed, failed)
+- created_at
+
+Phase 3: OAuth Implementation for Each Platform
+
+YOUTUBE (Google OAuth):
+1. Register app at Google Cloud Console (https://console.cloud.google.com)
+2. Enable YouTube Data API v3
+3. Get OAuth 2.0 credentials (Client ID, Client Secret)
+4. Set redirect URI: http://localhost:3000/auth/youtube/callback (adjust for production)
+5. Implement routes:
+   - GET /auth/youtube - Initiates OAuth flow, redirects to Google consent screen
+   - Scopes needed: https://www.googleapis.com/auth/youtube.upload
+   - GET /auth/youtube/callback - Handles OAuth callback, exchanges code for tokens
+   - Store access_token, refresh_token in database (encrypted)
+6. Implement token refresh logic (tokens expire in 1 hour)
+
+TIKTOK:
+1. Apply for TikTok Developer access (https://developers.tiktok.com)
+2. Create app and get Client Key and Client Secret
+3. Request Content Posting API permissions (requires approval)
+4. Implement routes:
+   - GET /auth/tiktok - Initiates OAuth flow
+   - Scopes needed: video.upload, video.publish
+   - GET /auth/tiktok/callback - Handles callback
+5. Note: TikTok has strict video requirements (format, duration limits)
+
+INSTAGRAM (Meta Graph API):
+1. Create app at Meta for Developers (https://developers.facebook.com)
+2. Add Instagram Graph API product
+3. Note: Requires Instagram Business or Creator account
+4. Implement routes:
+   - GET /auth/instagram - Initiates OAuth flow
+   - Scopes needed: instagram_content_publish, pages_read_engagement
+   - GET /auth/instagram/callback - Handles callback
+5. Important: Instagram posting requires 2-step process (create media container, then publish)
+
+Phase 4: Video Upload & Posting Logic
+
+Create a unified posting service with these functions:
+
+Token Refresh Handler:
+- Check if access_token is expired before each API call
+- If expired, use refresh_token to get new access_token
+- Update database with new tokens
+- Retry original API call
+
+YouTube Upload Function:
+- Endpoint: POST https://www.googleapis.com/upload/youtube/v3/videos
+- Parameters: part=snippet,status
+- Headers: Authorization: Bearer {access_token}
+- Body: multipart form data with video file
+- Snippet: {title, description (include hashtags), categoryId}
+- Status: {privacyStatus: public}
+- Handle: Upload progress tracking, quota limits (10,000 units/day)
+
+TikTok Upload Function:
+- Step 1: Initialize upload via POST to /share/video/upload/
+- Step 2: Upload video chunks
+- Step 3: Publish with caption and hashtags
+- Handle: Video format requirements (MP4, H.264, max 287.6MB)
+
+Instagram Upload Function:
+- Step 1: Create media container via POST /{ig-user-id}/media
+- Parameters: video_url (must be publicly accessible), caption (with hashtags)
+- Step 2: Publish via POST /{ig-user-id}/media_publish
+- Handle: Video requirements (max 60 seconds for feed, longer for Reels)
+- Important: Video must be hosted at accessible URL temporarily
+
+Phase 5: Main API Endpoints
+
+POST /api/connect/{platform}
+- Validates user session
+- Returns OAuth authorization URL
+- Frontend redirects user to this URL
+
+GET /api/accounts/connected
+- Returns list of user's connected accounts
+- Shows connection status for each platform
+
+DELETE /api/disconnect/{platform}
+- Revokes tokens and removes account connection
+- Calls platform's token revocation endpoint
+
+POST /api/post-video
+- Body: {video_file, platforms: [], captions: {}, hashtags: {}}
+- Validates video file and platforms
+- Checks user has connected accounts for selected platforms
+- Queues video for posting
+- Returns job ID for status tracking
+
+GET /api/post-status/{job_id}
+- Returns posting status for each platform
+- Shows success/failure with error messages
+
+Phase 6: Error Handling & Edge Cases
+
+Implement comprehensive error handling for:
+- Expired or invalid tokens (auto-refresh)
+- API rate limits (queue system with retry logic)
+- Network timeouts (retry with exponential backoff)
+- Invalid video formats (pre-validate before upload)
+- Platform-specific errors (clear error messages to user)
+- Failed uploads (rollback and notify user)
+
+Create error response format:
+{
+  success: false,
+  platform: youtube,
+  error: token_expired,
+  message: Please reconnect your YouTube account,
+  retry_possible: true
+}
+
+Phase 7: Video Format Validation
+
+Create pre-upload validator:
+- Check file size, format, resolution, duration for each platform
+- YouTube: Max 256GB, 12 hours, most formats accepted
+- TikTok: MP4/MOV, max 287.6MB, 3-60 seconds (or up to 10 min)
+- Instagram: MP4, max 100MB (feed), H.264 codec, 30fps max
+- Auto-convert if possible, otherwise reject with clear message
+
+Phase 8: Frontend Integration Points
+
+Create these frontend API calls:
+1. connectPlatform(platform) - Opens OAuth popup/redirect
+2. getConnectedAccounts() - Displays connection status
+3. postVideo(videoFile, config) - Submits video for posting
+4. trackPostingStatus(jobId) - Polls for completion
+
+Phase 9: Testing Checklist
+
+Test each scenario:
+- Fresh OAuth connection for each platform
+- Token refresh when expired
+- Posting to single platform
+- Posting to multiple platforms simultaneously
+- Different caption/hashtags per platform
+- Disconnecting accounts
+- Error handling (invalid tokens, network failures)
+- Video format validation
+- Rate limit handling
+
+Phase 10: Security Best Practices
+
+Implement:
+- Encrypt all tokens before database storage
+- Use HTTPS only (especially for OAuth redirects)
+- Validate all user inputs
+- Implement CSRF protection
+- Set secure session cookies
+- Rate limit API endpoints
+- Never log tokens or sensitive data
+- Use environment variables for all secrets
+
+DELIVERABLES:
+
+1. Complete backend API with all routes implemented
+2. Database migrations and schema
+3. Token management system with auto-refresh
+4. Video upload handlers for all 3 platforms
+5. Error handling and logging
+6. API documentation with example requests
+7. Frontend integration examples
+8. Environment variable template (.env.example)
+
+IMPORTANT NOTES:
+- Start with YouTube (easiest API) to validate architecture
+- TikTok requires developer approval - may take days/weeks
+- Instagram requires Business/Creator accounts - document this requirement
+- All platform APIs have breaking changes - build with version pinning
+- Implement feature flags to enable/disable platforms individually
+
+OUTPUT FORMAT:
+Provide complete, production-ready code with:
+- Proper error handling in every function
+- Comments explaining complex logic
+- No placeholder/TODO code
+- All edge cases handled
+- Logging for debugging
+- Clean, modular structure
+
+Build this system completely and ensure it handles all real-world scenarios including token expiration, API errors, and platform-specific quirks. The system must be robust enough for production use.
+```
