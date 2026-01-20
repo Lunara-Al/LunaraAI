@@ -127,7 +127,32 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - PlatformCard components showing connection status with badges
     - Account management: connect/disconnect from Share Modal
     - Database tables: social_accounts, social_upload_jobs
-    - Status tracking: pending → uploading → completed/failed
+    - Status tracking with 8 granular states: queued → validating → connecting → uploading → processing → publishing → completed/failed
+    - **Multi-Platform Posting (January 2026):**
+      - "Post to All Connected" button to upload to multiple platforms simultaneously
+      - Per-platform captions and hashtags for customized posts
+      - Batch tracking with unique batchId for grouped uploads
+      - Combined progress indicator showing overall completion
+      - Platform-specific status icons during upload
+      - Results summary with success/failure breakdown
+      - Retry capability for failed multi-uploads
+    - **Video Format Validation:**
+      - Platform-specific file size limits (YouTube: 256GB, TikTok: 287.6MB, Instagram: 100MB)
+      - Duration validation (TikTok: 3s-60s/10min, Instagram: 60s, YouTube: 12hr)
+      - Aspect ratio validation per platform
+      - Resolution and codec checks
+    - **Error Handling & Retry Logic:**
+      - 12 standardized error codes (VALIDATION_ERROR, RATE_LIMIT, AUTH_ERROR, etc.)
+      - Automatic retry with exponential backoff (max 3 retries, 2s-30s delays)
+      - Retry only for transient errors (network, rate limit, server errors)
+    - **Feature Flags:**
+      - Per-platform enable/disable via FEATURE_{PLATFORM}_ENABLED environment variables
+      - Runtime checks for platform availability
+      - Graceful degradation when platforms disabled
+    - **Token Management:**
+      - Best-effort token revocation on account disconnect
+      - Automatic token refresh before expiry
+      - Secure token storage with AES-256-GCM encryption
     - **Required Environment Variables for Real OAuth:**
       - TikTok: TIKTOK_CLIENT_KEY, TIKTOK_CLIENT_SECRET
       - Instagram: INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET
