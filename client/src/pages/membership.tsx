@@ -111,42 +111,25 @@ export default function Membership() {
   // Upgrade/Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: async (tier: string) => {
-      if (tier !== "basic") {
-        try {
-          const response = await apiRequest("POST", "/api/subscription/create", { tier });
-          const data = await response.json();
-          
-          if (data.url && !data.simulated) {
-            window.location.href = data.url;
-            return data;
-          }
-          
-          if (data.simulated) {
-            const simResponse = await apiRequest("POST", "/api/subscription/simulate-upgrade", { tier });
-            return await simResponse.json();
-          }
-        } catch (error) {
-          console.warn("Stripe checkout unavailable, using simulation mode", error);
-          const simResponse = await apiRequest("POST", "/api/subscription/simulate-upgrade", { tier });
-          return await simResponse.json();
-        }
+      const response = await apiRequest("POST", "/api/subscription/create", { tier });
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
       }
       
-      const response = await apiRequest("POST", "/api/subscription/simulate-upgrade", { tier });
-      return await response.json();
+      return data;
     },
     onSuccess: (data) => {
       if (!data.url) {
         toast({
-          title: data.simulated ? "Subscription Updated (Simulated)" : "Success",
-          description: data.simulated 
-            ? "Subscription updated in simulation mode. Add Stripe keys to enable real payments."
-            : "Subscription updated successfully!",
+          title: "Success",
+          description: "Subscription updated successfully!",
         });
         refetch();
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -158,9 +141,10 @@ export default function Membership() {
         }, 500);
         return;
       }
+      const message = error?.message || "Failed to update subscription. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to update subscription. Please try again.",
+        description: message,
         variant: "destructive",
       });
     },

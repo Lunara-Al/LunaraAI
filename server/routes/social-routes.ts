@@ -377,38 +377,10 @@ export function createSocialRouter(): Router {
         });
       }
 
-      const platformDisplayNames: Record<string, string> = {
-        tiktok: "TikTok User",
-        instagram: "Instagram Creator",
-        youtube: "YouTube Channel"
-      };
-
-      const mockExternalId = `${platform}_${crypto.randomBytes(8).toString('hex')}`;
-      
-      const account = await storage.createSocialAccount({
-        userId: user.id,
-        platform,
-        externalAccountId: mockExternalId,
-        displayName: `${user.firstName || 'User'}'s ${platformDisplayNames[platform]}`,
-        profileImageUrl: null,
-        accessTokenEncrypted: null,
-        refreshTokenEncrypted: null,
-        tokenExpiresAt: null,
-        scopes: null,
-        metadata: { simulated: true, connectedAt: new Date().toISOString() },
-        isActive: 1,
-      });
-
-      res.json({ 
-        success: true, 
-        account: {
-          id: account.id,
-          platform: account.platform,
-          displayName: account.displayName,
-          isActive: account.isActive === 1,
-          createdAt: account.createdAt,
-        },
-        message: `Connected to ${platform} successfully (simulation mode)`
+      // OAuth not configured for this platform
+      return res.status(503).json({ 
+        error: "Service Unavailable",
+        message: `${platform.charAt(0).toUpperCase() + platform.slice(1)} OAuth is not configured. Please contact support.`
       });
     } catch (error: any) {
       console.error("Error connecting social account:", error);

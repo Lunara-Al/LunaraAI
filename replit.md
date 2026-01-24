@@ -61,14 +61,14 @@ The application employs a "Glass Bubble Moon" design system characterized by:
     - OIDC: Type "DELETE" to confirm
   - All user data (videos, settings, account) removed on deletion
   - Audit logs preserved for compliance
-- **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows, with a fallback to simulation mode if Stripe API keys are not configured.
+- **Payment Processing:** Integrates with Stripe for subscription management, including checkout flows. Returns appropriate error messages if Stripe API keys are not configured.
   - **Stripe Integration Status:** 
     - Environment variables configured: STRIPE_SECRET_KEY, VITE_STRIPE_PUBLIC_KEY, STRIPE_PRICE_ID_PRO, STRIPE_PRICE_ID_PREMIUM
     - Added validation and sanitization (trim whitespace, strip control characters, regex validation)
-    - Automatic fallback to simulation mode if Stripe unavailable
-    - Current limitation: Stripe checkout may encounter connection issues; simulation mode works perfectly for testing
-    - To use real Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
-- **Video Generation Parameters:** Supports customizable video length (5s or 8s matching Gemini Veo API), aspect ratio (16:9, 9:16), and an optional style input. Reference images and styles are now available to all membership tiers (including Basic). Videos are generated via Google Gemini Veo API (veo-3.1-generate-preview model) using the `predictLongRunning` endpoint with async polling-based status checks and saved locally to public/generated/ to prevent URL expiration.
+    - Returns 503 Service Unavailable if Stripe is not configured (no simulation mode)
+    - To use Stripe checkout: Ensure STRIPE_SECRET_KEY is exactly as shown in Stripe Dashboard (sk_test_* or sk_live_*) with no extra characters
+- **Video Generation Parameters:** Supports customizable video length (6s or 8s matching Gemini Veo API), aspect ratio (16:9, 9:16), optional style input, and reference images. Reference images and styles are available to all membership tiers (including Basic). Videos are generated via Google Gemini Veo API (veo-3.1-generate-preview model) using the `predictLongRunning` endpoint with async polling-based status checks and saved locally to public/generated/ to prevent URL expiration.
+  - **Reference Image Support:** Users can upload reference images (JPEG, PNG, WebP) that are sent to the Gemini Veo API as base64-encoded data to guide video generation. Images are stored in the `video_generation_jobs` table in the `image_base64` column.
 
 ### Feature Specifications
 - **Video Generation:** Users input text prompts to generate cosmic ASMR videos (5s or 8s based on membership tier) with autoplay and looping.

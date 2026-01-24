@@ -460,6 +460,7 @@ export const videoGenerationJobs = pgTable("video_generation_jobs", {
   length: integer("length").default(DEFAULT_VIDEO_LENGTH).notNull(),
   aspectRatio: varchar("aspect_ratio", { length: 10 }).default("16:9").notNull(),
   style: text("style"),
+  imageBase64: text("image_base64"),
   status: varchar("status", { length: 20 }).default("pending").notNull(),
   progress: integer("progress").default(0).notNull(),
   operationName: text("operation_name"),

@@ -81,10 +81,25 @@ async function processVideoGenerationJob(jobId: number): Promise<void> {
     
     console.log(`[Job ${jobId}] Job data - length: ${job.length} (type: ${typeof job.length}), aspectRatio: ${job.aspectRatio}`);
     
+    // Build instance with prompt and optional reference image
+    const instance: Record<string, any> = { 
+      prompt: job.enhancedPrompt 
+    };
+    
+    // Add reference image if provided
+    if (job.imageBase64) {
+      // Extract MIME type and base64 data from data URL
+      const matches = job.imageBase64.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        instance.image = {
+          bytesBase64Encoded: matches[2],
+          mimeType: matches[1]
+        };
+      }
+    }
+    
     const requestBody = {
-      instances: [{ 
-        prompt: job.enhancedPrompt 
-      }],
+      instances: [instance],
       parameters: {
         aspectRatio: job.aspectRatio,
         sampleCount: 1,
@@ -416,7 +431,7 @@ export function createGeneratorRouter(): Router {
         return res.status(400).json(errorResponse);
       }
 
-      const { prompt, length = 6, aspectRatio = "16:9", style } = validation.data;
+      const { prompt, length = 6, aspectRatio = "16:9", style, imageBase64 } = validation.data;
 
       // Calculate credit cost
       // Base cost 10, +2 for 8s, +3 for 4K (Premium), +2 for HD (Pro)
@@ -468,6 +483,7 @@ export function createGeneratorRouter(): Router {
         length: videoDuration,
         aspectRatio: veoAspectRatio,
         style: style || null,
+        imageBase64: imageBase64 || null,
         status: "pending",
         progress: 0
       });

@@ -414,9 +414,9 @@ export async function processUploadJob(jobId: number): Promise<void> {
       throw new Error("Social account not found");
     }
     
-    if (account.metadata && (account.metadata as any).simulated) {
-      await simulateUpload(job.id, job.platform);
-      return;
+    // Verify account has valid OAuth tokens
+    if (!account.accessTokenEncrypted) {
+      throw new Error("Social account not properly authenticated. Please reconnect your account.");
     }
     
     await updateJobProgress(job.id, "uploading");
@@ -494,30 +494,3 @@ export async function processUploadJob(jobId: number): Promise<void> {
   }
 }
 
-async function simulateUpload(jobId: number, platform: string): Promise<void> {
-  await updateJobProgress(jobId, "uploading");
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  await updateJobProgress(jobId, "processing");
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  if (platform === "instagram") {
-    await updateJobProgress(jobId, "publishing");
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  
-  const mockPostId = `post_${Date.now().toString(36)}`;
-  const mockPostUrls: Record<string, string> = {
-    tiktok: `https://www.tiktok.com/@user/video/${mockPostId}`,
-    instagram: `https://www.instagram.com/reel/${mockPostId}`,
-    youtube: `https://www.youtube.com/shorts/${mockPostId}`,
-  };
-  
-  await storage.updateUploadJobStatus(
-    jobId,
-    "completed",
-    100,
-    mockPostId,
-    mockPostUrls[platform]
-  );
-}

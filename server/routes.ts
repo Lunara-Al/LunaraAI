@@ -21,14 +21,14 @@ function initializeStripe(): Stripe | null {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/[\r\n\t\s]/g, "");
   
   if (!stripeSecretKey) {
-    console.warn("STRIPE_SECRET_KEY not set - payment processing will be simulated");
+    console.warn("STRIPE_SECRET_KEY not set - payment processing unavailable");
     return null;
   }
 
   const stripeKeyRegex = /^sk_(test|live)_[A-Za-z0-9_]+$/;
   if (!stripeKeyRegex.test(stripeSecretKey)) {
     console.error("STRIPE_SECRET_KEY has invalid format - expected sk_test_* or sk_live_*");
-    console.warn("Payment processing will be simulated until a valid Stripe key is provided");
+    console.warn("Payment processing unavailable until a valid Stripe key is provided");
     return null;
   }
 
@@ -38,7 +38,7 @@ function initializeStripe(): Stripe | null {
     return stripe;
   } catch (error: any) {
     console.error("Failed to initialize Stripe:", error.message);
-    console.warn("Payment processing will be simulated");
+    console.warn("Payment processing unavailable");
     return null;
   }
 }
