@@ -168,9 +168,22 @@ export default function Home() {
 
   const pollJobStatus = useCallback(async (jobId: number) => {
     try {
+      // Don't poll if we're not supposed to be generating
+      const savedJobId = localStorage.getItem("lunara_currentJobId");
+      if (!savedJobId || parseInt(savedJobId) !== jobId) {
+        stopPolling();
+        return;
+      }
+
       const response = await fetch(`/api/generate/status/${jobId}`);
       if (!response.ok) {
         console.error("Status check failed:", response.status);
+        if (response.status === 404) {
+          stopPolling();
+          setIsGenerating(false);
+          localStorage.removeItem("lunara_currentJobId");
+          setCurrentJobId(null);
+        }
         return;
       }
       const status: VideoJobStatusResponse = await response.json();
@@ -182,6 +195,7 @@ export default function Home() {
         stopPolling();
         setIsGenerating(false);
         setVideoUrl(status.videoUrl);
+        localStorage.removeItem("lunara_currentJobId");
         setCurrentJobId(null);
         
         // Custom animated notification
@@ -244,6 +258,7 @@ export default function Home() {
             setGenerationStatus("Resuming generation...");
             
             // Start polling
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = setInterval(() => {
               pollJobStatus(jobId);
             }, 4000);
@@ -263,12 +278,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (currentJobId) {
+    if (currentJobId && isGenerating) {
       localStorage.setItem("lunara_currentJobId", currentJobId.toString());
-    } else {
+    } else if (!isGenerating) {
       localStorage.removeItem("lunara_currentJobId");
     }
-  }, [currentJobId]);
+  }, [currentJobId, isGenerating]);
 
   // Handle search with debounce
   useEffect(() => {
@@ -363,11 +378,18 @@ export default function Home() {
       setGenerationStatus("Video generation started...");
       setGenerationProgress(5);
       
-      pollIntervalRef.current = setInterval(() => {
-        pollJobStatus(data.jobId);
-      }, 4000);
-      
-      setTimeout(() => pollJobStatus(data.jobId), 1000);
+      // Start polling status
+      setTimeout(() => {
+        // Only start if this is still the current job
+        const savedJobId = localStorage.getItem("lunara_currentJobId");
+        if (savedJobId && parseInt(savedJobId) === data.jobId) {
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = setInterval(() => {
+            pollJobStatus(data.jobId);
+          }, 4000);
+          pollJobStatus(data.jobId);
+        }
+      }, 1000);
     },
     onError: (error: any) => {
       stopPolling();
