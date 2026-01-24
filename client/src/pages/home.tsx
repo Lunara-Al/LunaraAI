@@ -204,6 +204,9 @@ export default function Home() {
       } else if (status.status === "failed") {
         stopPolling();
         setIsGenerating(false);
+        
+        // Clear localStorage immediately to prevent recovery loops
+        localStorage.removeItem("lunara_currentJobId");
         setCurrentJobId(null);
         
         // Show specific error from job if available
@@ -217,7 +220,6 @@ export default function Home() {
         });
         
         // Update mutation state manually since it's used for error display
-        // We'll use setGenerationStatus to show error in UI
         setGenerationStatus(`Error: ${errorMsg}`);
       }
     } catch (error) {
@@ -225,23 +227,40 @@ export default function Home() {
     }
   }, [generationTimer, getStatusMessage, stopPolling, toast]);
 
-  // Persistence for video generation status
+  // Persistence for video generation status - run only on mount
   useEffect(() => {
     const savedJobId = localStorage.getItem("lunara_currentJobId");
-    if (savedJobId && !isGenerating && !videoUrl) {
+    if (savedJobId) {
       const jobId = parseInt(savedJobId);
-      setCurrentJobId(jobId);
-      setIsGenerating(true);
-      setGenerationStatus("Resuming generation...");
       
-      // Start polling
-      pollIntervalRef.current = setInterval(() => {
-        pollJobStatus(jobId);
-      }, 4000);
-      
-      pollJobStatus(jobId);
+      // Check job status before resuming
+      fetch(`/api/generate/status/${jobId}`)
+        .then(res => res.json())
+        .then(status => {
+          // Only resume if job is still in progress
+          if (status.status === "pending" || status.status === "processing" || status.status === "polling" || status.status === "downloading") {
+            setCurrentJobId(jobId);
+            setIsGenerating(true);
+            setGenerationStatus("Resuming generation...");
+            
+            // Start polling
+            pollIntervalRef.current = setInterval(() => {
+              pollJobStatus(jobId);
+            }, 4000);
+            
+            pollJobStatus(jobId);
+          } else {
+            // Job is already done (completed or failed), clear localStorage
+            localStorage.removeItem("lunara_currentJobId");
+          }
+        })
+        .catch(() => {
+          // On error, clear the saved job
+          localStorage.removeItem("lunara_currentJobId");
+        });
     }
-  }, [pollJobStatus, isGenerating, videoUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (currentJobId) {
